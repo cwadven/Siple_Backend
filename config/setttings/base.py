@@ -24,7 +24,9 @@ DJANGO_APPS = [
 
 THIRD_APPS = []
 
-PROJECT_APPS = []
+PROJECT_APPS = [
+    'member',
+]
 
 PROJECT_SETTING_APPS = []
 
