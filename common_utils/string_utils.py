@@ -1,7 +1,11 @@
 import random
 
 import string
-from typing import Sequence, List, Union
+from typing import (
+    Sequence,
+    List,
+    Union,
+)
 
 
 def generate_random_string_digits(length: int = 4) -> str:
