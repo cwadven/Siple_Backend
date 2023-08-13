@@ -52,7 +52,7 @@ INTERNAL_IPS = [
 
 ROOT_URLCONF = 'config.urls'
 
-AUTH_USER_MODEL = 'member.User'
+AUTH_USER_MODEL = 'member.Member'
 
 TEMPLATES = [
     {
