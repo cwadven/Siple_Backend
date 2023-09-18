@@ -42,7 +42,9 @@ DJANGO_MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-THIRD_MIDDLEWARE = []
+THIRD_MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+]
 
 MIDDLEWARE = DJANGO_MIDDLEWARE + THIRD_MIDDLEWARE
 
@@ -86,6 +88,14 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'EXCEPTION_HANDLER': 'config.middleware.exception_middlewares.custom_exception_handler'
+}
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
