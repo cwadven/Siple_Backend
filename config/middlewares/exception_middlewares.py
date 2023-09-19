@@ -5,7 +5,6 @@ from config.settings.base import logger
 
 
 def custom_exception_handler(exc, context):
-    print('ER|%s| %s' % (exc, context))
     logger.error(f'{exc}, {context}')
 
     response = exception_handler(exc, context)

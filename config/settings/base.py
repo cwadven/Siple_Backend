@@ -94,7 +94,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
-    'EXCEPTION_HANDLER': 'config.middleware.exception_middlewares.custom_exception_handler'
+    'EXCEPTION_HANDLER': 'config.middlewares.exception_middlewares.custom_exception_handler'
 }
 
 AUTHENTICATION_BACKENDS = (
