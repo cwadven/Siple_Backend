@@ -56,10 +56,10 @@ class SocialLoginModule(ABC):
             self.request_access_token_path,
             data={
                 'grant_type': 'authorization_code',
-                "client_id": self.client_id,
-                "client_secret": self.secret,
-                "redirect_uri": self.redirect_uri,
-                "code": code
+                'client_id': self.client_id,
+                'client_secret': self.secret,
+                'redirect_uri': self.redirect_uri,
+                'code': code
             }
         )
         if access_data.status_code != 200:
