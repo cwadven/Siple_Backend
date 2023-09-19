@@ -1,7 +1,7 @@
 from rest_framework.exceptions import APIException
 
 
-class ResponseException(Exception):
+class ResponseException(APIException):
     status_code = 400
     default_detail = '예상치 못한 에러가 발생했습니다.'
     default_code = 'unexpected-error'
