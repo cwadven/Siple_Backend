@@ -11,29 +11,29 @@ def custom_exception_handler(exc, context):
 
     if response is not None:
         if isinstance(exc, exceptions.ParseError):
-            msg = exc.detail
+            message = exc.detail
         elif isinstance(exc, exceptions.AuthenticationFailed):
-            msg = exc.detail
+            message = exc.detail
         elif isinstance(exc, exceptions.NotAuthenticated):
-            msg = 'No Auth'
+            message = 'No Auth'
         elif isinstance(exc, exceptions.PermissionDenied):
-            msg = exc.detail
+            message = exc.detail
         elif isinstance(exc, exceptions.NotFound):
-            msg = exc.detail
+            message = exc.detail
         elif isinstance(exc, exceptions.MethodNotAllowed):
-            msg = exc.detail
+            message = exc.detail
         elif isinstance(exc, exceptions.NotAcceptable):
-            msg = exc.detail
+            message = exc.detail
         elif isinstance(exc, exceptions.UnsupportedMediaType):
-            msg = exc.detail
+            message = exc.detail
         elif isinstance(exc, exceptions.Throttled):
-            msg = exc.detail
+            message = exc.detail
         elif isinstance(exc, exceptions.ValidationError):
-            msg = exc.detail
+            message = exc.detail
         elif isinstance(exc, exceptions.APIException):
-            msg = exc.detail
+            message = exc.detail
 
-        response.data['error'] = msg
+        response.data['message'] = message
 
         try:
             del response.data['detail']
