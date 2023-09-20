@@ -22,7 +22,13 @@ DJANGO_APPS = [
     'django.contrib.humanize',
 ]
 
-THIRD_APPS = []
+THIRD_APPS = [
+    'debug_toolbar',
+    'rest_framework',
+    'corsheaders',
+    'django_celery_results',
+    'cacheops',
+]
 
 PROJECT_APPS = [
     'member',
@@ -43,6 +49,7 @@ DJANGO_MIDDLEWARE = [
 ]
 
 THIRD_MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
 
@@ -125,6 +132,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
 
 LOGGING = {
     'version': 1,
