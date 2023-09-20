@@ -2,3 +2,7 @@ django==4.1.10
 djangorestframework==3.14.0
 django-cors-headers==4.2.0
 djangorestframework-jwt==1.11.0
+fabric2==3.2.2
+requests==2.31.0
+django-redis==5.3.0
+flake8==6.1.0
