@@ -26,8 +26,8 @@ DATABASES = {
 
 # CELERY SETTINGS
 timezone = 'Asia/Seoul'
-CELERY_BROKER_URL = 'redis://localhost:6379/1'
-result_backend = 'redis://localhost:6379/1'
+CELERY_BROKER_URL = 'redis://localhost:6379/2'
+result_backend = 'redis://localhost:6379/2'
 accept_content = ["json"]
 task_serializer = "json"
 result_serializer = "json"
