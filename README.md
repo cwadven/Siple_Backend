@@ -45,4 +45,7 @@ python manage.py migrate
 
 # Run the server
 python manage.py runserver
+
+# Run the celery worker
+celery -A config worker -l INFO -P solo
 ```
