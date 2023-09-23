@@ -10,6 +10,7 @@ Easy to set up Django backend API template with PostgreSQL database.
 
 - Python 3.11
 - PostgreSQL 13.12
+- Redis (Celery, Cache)
 
 ## CI/CD
 
