@@ -3,20 +3,27 @@ from unittest.mock import (
     Mock,
     patch,
 )
+from django.test import TestCase
 from botocore.exceptions import NoCredentialsError
-from common_utils.s3_utils import generate_presigned_url
+from django.conf import settings
+
+from common_utils.s3_utils import generate_presigned_url_info
 
 
-class TestGeneratePresignedURL(unittest.TestCase):
+class TestGeneratePresignedURLInfo(TestCase):
     @patch('common_utils.s3_utils.boto3.client')
-    def test_generate_presigned_url(self, mock_boto3_client):
-        # Given: Mock boto3.client
+    def test_generate_presigned_url_info(self, mock_boto3_client):
+        # Given: Set up the test data
+        file_name = 'test.txt'
+        _type = 'test'
+        unique = '123'
+        expires_in = 3600
+
+        # Mock the boto3.client and s3_client.generate_presigned_post calls
         mock_s3_client = Mock()
         mock_boto3_client.return_value = mock_s3_client
-
-        # And: Mock S3 response
-        mock_presigned_url = {
-            'url': 'https://mocked-url.com',
+        mock_generate_presigned_post_response = {
+            'url': 'https://s3-bucket-url.com',
             'fields': {
                 'key': 'mock-key',
                 'AWSAccessKeyId': 'mock-access-key',
@@ -24,47 +31,40 @@ class TestGeneratePresignedURL(unittest.TestCase):
                 'Signature': 'mock-signature'
             }
         }
-        mock_s3_client.generate_presigned_post.return_value = mock_presigned_url
+        mock_s3_client.generate_presigned_post.return_value = mock_generate_presigned_post_response
 
-        # And: Mock settings
-        mock_settings = Mock()
-        mock_settings.AWS_IAM_ACCESS_KEY = 'mock-access-key'
-        mock_settings.AWS_IAM_SECRET_ACCESS_KEY = 'mock-secret-key'
-        mock_settings.AWS_S3_BUCKET_NAME = 'mock-bucket-name'
+        # When: Call the function
+        response = generate_presigned_url_info(file_name, _type, unique, expires_in)
 
-        with patch('common_utils.s3_utils.settings', mock_settings):
-            # When: Call the function
-            url = generate_presigned_url('test.txt', _type='test', unique='123', expires_in=3600)
-
-        # Then: Assertions
-        expected_url = mock_presigned_url['url'] + mock_presigned_url['fields']['key']
-        self.assertEqual(url, expected_url)
+        # Then: Assert that s3_client.generate_presigned_post is called with the correct data
         mock_boto3_client.assert_called_once_with(
             's3',
             region_name='ap-northeast-2',
-            aws_access_key_id=mock_settings.AWS_IAM_ACCESS_KEY,
-            aws_secret_access_key=mock_settings.AWS_IAM_SECRET_ACCESS_KEY,
+            aws_access_key_id=settings.AWS_IAM_ACCESS_KEY,
+            aws_secret_access_key=settings.AWS_IAM_SECRET_ACCESS_KEY,
             config=unittest.mock.ANY  # Ensure that the Config object is created
         )
         mock_s3_client.generate_presigned_post.assert_called_once_with(
-            Bucket=mock_settings.AWS_S3_BUCKET_NAME,
+            Bucket=settings.AWS_S3_BUCKET_NAME,
             Key=unittest.mock.ANY,  # Ensure the Key is generated with a UUID
             Conditions=[
                 ['content-length-range', 0, 10485760]
             ],
-            ExpiresIn=3600  # Ensure the ExpiresIn parameter is passed correctly
+            ExpiresIn=expires_in  # Ensure the ExpiresIn parameter is passed correctly
         )
 
-    def test_generate_presigned_url_with_exception(self):
-        # Given: Mock settings
-        mock_settings = Mock()
-        mock_settings.AWS_IAM_ACCESS_KEY = 'mock-access-key'
-        mock_settings.AWS_IAM_SECRET_ACCESS_KEY = 'mock-secret-key'
-        mock_settings.AWS_S3_BUCKET_NAME = 'mock-bucket-name'
+        # Assert the response
+        expected_response = mock_generate_presigned_post_response
+        self.assertEqual(response, expected_response)
 
-        # And: Mock boto3.client to raise an exception
-        with patch('common_utils.s3_utils.boto3.client', side_effect=NoCredentialsError()):
-            with patch('common_utils.s3_utils.settings', mock_settings):
-                # Expected: Call the function and expect an exception
-                with self.assertRaises(Exception):
-                    generate_presigned_url('test.txt', _type='test', unique='123', expires_in=3600)
+    @patch('common_utils.s3_utils.boto3.client', side_effect=NoCredentialsError())
+    def test_generate_presigned_url_info_with_exception(self, mock_boto3_client):
+        # Given: Set up the test data
+        file_name = 'test.txt'
+        _type = 'test'
+        unique = '123'
+        expires_in = 3600
+
+        # When: Call the function and expect an exception
+        with self.assertRaises(Exception):
+            generate_presigned_url_info(file_name, _type, unique, expires_in)
