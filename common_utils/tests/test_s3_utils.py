@@ -4,7 +4,6 @@ from unittest.mock import (
     patch,
 )
 from botocore.exceptions import NoCredentialsError
-
 from common_utils.s3_utils import generate_presigned_url
 
 
@@ -35,10 +34,11 @@ class TestGeneratePresignedURL(unittest.TestCase):
 
         with patch('common_utils.s3_utils.settings', mock_settings):
             # When: Call the function
-            response = generate_presigned_url('test.txt', _type='test', unique=123, expires_in=3600)
+            url = generate_presigned_url('test.txt', _type='test', unique='123', expires_in=3600)
 
         # Then: Assertions
-        self.assertEqual(response, mock_presigned_url)
+        expected_url = mock_presigned_url['url'] + mock_presigned_url['fields']['key']
+        self.assertEqual(url, expected_url)
         mock_boto3_client.assert_called_once_with(
             's3',
             region_name='ap-northeast-2',
@@ -67,4 +67,4 @@ class TestGeneratePresignedURL(unittest.TestCase):
             with patch('common_utils.s3_utils.settings', mock_settings):
                 # Expected: Call the function and expect an exception
                 with self.assertRaises(Exception):
-                    generate_presigned_url('test.txt', _type='test', unique=123, expires_in=3600)
+                    generate_presigned_url('test.txt', _type='test', unique='123', expires_in=3600)
