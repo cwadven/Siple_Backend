@@ -1,5 +1,7 @@
 import boto3
 import uuid
+
+import requests
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
@@ -26,3 +28,15 @@ def generate_presigned_url_info(file_name: str, _type: str = 'common', unique: s
         return response
     except ClientError as e:
         raise Exception(e)
+
+
+def upload_file_to_presigned_url(presined_url: str, presigned_data: dict, file: bytes) -> int:
+    try:
+        response = requests.post(
+            url=presined_url,
+            data=presigned_data,
+            files={'file': file},
+        )
+        return response.status_code == 204
+    except Exception:
+        return False

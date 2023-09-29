@@ -3,11 +3,16 @@ from unittest.mock import (
     Mock,
     patch,
 )
+
+import requests
 from django.test import TestCase
 from botocore.exceptions import NoCredentialsError
 from django.conf import settings
 
-from common_utils.s3_utils import generate_presigned_url_info
+from common_utils.s3_utils import (
+    generate_presigned_url_info,
+    upload_file_to_presigned_url,
+)
 
 
 class TestGeneratePresignedURLInfo(TestCase):
@@ -68,3 +73,43 @@ class TestGeneratePresignedURLInfo(TestCase):
         # When: Call the function and expect an exception
         with self.assertRaises(Exception):
             generate_presigned_url_info(file_name, _type, unique, expires_in)
+
+
+class TestUploadFileToPresignedURL(unittest.TestCase):
+    @patch('common_utils.s3_utils.requests.post')
+    def test_upload_file_to_presigned_url(self, mock_requests_post):
+        # Given: Set up the test data
+        presigned_url = 'https://example.com/upload'
+        presigned_data = {'key': 'value'}
+        file_data = b'file_content'
+
+        # Mock the requests.post method
+        mock_response = Mock()
+        mock_response.status_code = 204
+        mock_requests_post.return_value = mock_response
+
+        # When: Call the function
+        result = upload_file_to_presigned_url(presigned_url, presigned_data, file_data)
+
+        # Then: Assert that requests.post is called with the correct data
+        mock_requests_post.assert_called_once_with(
+            url=presigned_url,
+            data=presigned_data,
+            files={'file': file_data}
+        )
+
+        # Assert the result
+        self.assertTrue(result)
+
+    @patch('common_utils.s3_utils.requests.post', side_effect=requests.exceptions.RequestException())
+    def test_upload_file_to_presigned_url_with_exception(self, mock_requests_post):
+        # Given: Set up the test data
+        presigned_url = 'https://example.com/upload'
+        presigned_data = {'key': 'value'}
+        file_data = b'file_content'
+
+        # When: Call the function and expect an exception
+        result = upload_file_to_presigned_url(presigned_url, presigned_data, file_data)
+
+        # Then: Assert that the function returns False when an exception occurs
+        self.assertFalse(result)
