@@ -14,6 +14,8 @@ AWS_IAM_ACCESS_KEY = 'development_AWS_IAM_ACCESS_KEY'
 AWS_IAM_SECRET_ACCESS_KEY = 'development_AWS_IAM_SECRET_ACCESS_KEY'
 AWS_S3_BUCKET_NAME = 'bucket_name'
 
+AWS_SQS_URL = 'development_AWS_SQS_URL'
+
 EMAIL_HOST_USER = 'puzztory@gmail.com'
 EMAIL_HOST_PASSWORD = 'tehorlvcuzxivawo'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
