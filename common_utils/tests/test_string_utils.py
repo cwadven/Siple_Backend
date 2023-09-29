@@ -1,5 +1,6 @@
-from unittest import TestCase
 from unittest.mock import patch
+
+from django.test import TestCase
 
 from common_utils.string_utils import (
     generate_random_string_digits,

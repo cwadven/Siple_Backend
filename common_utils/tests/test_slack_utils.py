@@ -1,10 +1,13 @@
-import unittest
-from unittest.mock import Mock, patch
+from django.test import TestCase
+from unittest.mock import (
+    Mock,
+    patch,
+)
 
 from common_utils.slack_utils import notify_slack_simple_text
 
 
-class TestNotifySlackSimpleText(unittest.TestCase):
+class TestNotifySlackSimpleText(TestCase):
     @patch('common_utils.slack_utils.requests.post')
     def test_notify_slack_simple_text(self, mock_requests_post):
         # Given: Set up the test data and expected values

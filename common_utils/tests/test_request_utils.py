@@ -1,4 +1,4 @@
-from unittest import TestCase
+from django.test import TestCase
 from unittest.mock import Mock
 
 from common_utils.request_utils import get_request_ip
