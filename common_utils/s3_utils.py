@@ -6,7 +6,7 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 
 
-def generate_presigned_url(file_name: str, expires_in: int = 1000) -> str:
+def generate_presigned_url(file_name, _type='common', unique=0, expires_in=1000):
     s3_client = boto3.client(
         's3',
         region_name='ap-northeast-2',
@@ -15,14 +15,14 @@ def generate_presigned_url(file_name: str, expires_in: int = 1000) -> str:
         config=Config(signature_version='s3v4')
     )
     try:
-        url = s3_client.generate_presigned_url(
-            ClientMethod='put_object',
-            Params={
-                'Bucket': settings.AWS_S3_BUCKET_NAME,
-                'Key': f'{uuid.uuid4()}_{file_name}'
-            },
+        response = s3_client.generate_presigned_post(
+            Bucket=settings.AWS_S3_BUCKET_NAME,
+            Key=f'{_type}/{unique}/{uuid.uuid4()}_{file_name}',
+            Conditions=[
+                ['content-length-range', 0, 10485760]
+            ],
             ExpiresIn=expires_in
         )
-        return url
+        return response
     except ClientError as e:
         raise Exception(e)
