@@ -12,3 +12,4 @@ boto3==1.28.51
 fabric2==3.2.2
 requests==2.31.0
 flake8==6.1.0
+psycopg2==2.9.8
