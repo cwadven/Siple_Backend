@@ -4,17 +4,20 @@ Easy to set up Django backend API template with PostgreSQL database.
 
 ## Features
 
-- Social Login (Google, Naver, Kakao)
+Social Login<br>
+![KakaoTalk](https://img.shields.io/badge/kakaotalk-ffcd00.svg?style=for-the-badge&logo=kakaotalk&logoColor=000000) <br>
+![Google](https://img.shields.io/badge/google-4285F4?style=for-the-badge&logo=google&logoColor=white)<br>
+**Naver**
 
 ## Requirements
 
-- Python 3.11
-- PostgreSQL 13.12
-- Redis (Celery, Cache)
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) Version 3.11 <br>
+![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) Version 13.12 <br>
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white) (Celery, Cache) <br>
 
 ## CI/CD
 
-- GitHub Actions
+![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
 
 ## Getting Started
 
