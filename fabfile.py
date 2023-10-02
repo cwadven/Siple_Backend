@@ -31,6 +31,8 @@ def generate_env(c):
                 },
             },
         },
+        'CELERY_BROKER_URL': _get_or_set_environment('CELERY_BROKER_URL'),
+        'result_backend': _get_or_set_environment('result_backend'),
         'CACHEOPS_REDIS': {
             'host': _get_or_set_environment('CACHEOPS_REDIS_HOST'),
             'port': int(_get_or_set_environment('CACHEOPS_REDIS_PORT')),
@@ -56,8 +58,6 @@ def generate_env(c):
         'AWS_IAM_SECRET_ACCESS_KEY': _get_or_set_environment('AWS_IAM_SECRET_ACCESS_KEY'),
         'AWS_S3_BUCKET_NAME': _get_or_set_environment('AWS_S3_BUCKET_NAME'),
         'AWS_SQS_URL': _get_or_set_environment('AWS_SQS_URL'),
-        'CELERY_BROKER_URL': _get_or_set_environment('CELERY_BROKER_URL'),
-        'result_backend': _get_or_set_environment('result_backend'),
     }
 
     with open(env_file_path, 'w', encoding='utf-8') as f:
