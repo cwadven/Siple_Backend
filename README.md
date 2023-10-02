@@ -207,5 +207,5 @@ Need to use by django command
 **[ Example ]**
 
 ```
-30 * * * * . /var/www/P/ProjectName/bin/activate && cd /var/www/ProjectName && python manage.py django_commands >> /var/log/django_commands.log 2>&1
+30 * * * * . /var/www/ProjectName/bin/activate && cd /var/www/ProjectName && python manage.py django_commands >> /var/log/django_commands.log 2>&1
 ```
