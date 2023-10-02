@@ -177,7 +177,7 @@ celery -A config worker -l INFO -P solo
 
 ## CI/CD Setting
 
-### Deploying
+### Deploying (self-hosted)
 
 .github/workflows/deploy.yml
 
