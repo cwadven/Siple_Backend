@@ -86,18 +86,22 @@ You can get it here: https://console.cloud.google.com/apis/credentials
 ----------------5-----------------------
 - Input CHANNEL_HOST:
 - Input CHANNEL_PORT:
+----------------------------------------
+Channels uses Redis as a channel layer.
+
+"CHANNEL_HOST" Example: 127.0.0.1
+"CHANNEL_PORT" Example: 6379
+----------------------------------------
+----------------6-----------------------
 - Input CELERY_BROKER_URL:
 - Input result_backend:
 ----------------------------------------
 Celery uses Redis as a message broker.
 Need to install Redis: https://redis.io/
 
-"CHANNEL_HOST" Example: 127.0.0.1
-"CHANNEL_PORT" Example: 6379
 "CELERY_BROKER_URL" Example: redis://localhost:6379/2
 "result_backend" Example: redis://localhost:6379/2
-----------------------------------------
-----------------6-----------------------
+----------------7-----------------------
 - Input CACHEOPS_REDIS_HOST:
 - Input CACHEOPS_REDIS_PORT:
 - Input CACHEOPS_REDIS_DB:
@@ -109,14 +113,14 @@ Cacheops uses Redis as a cache.
 "CACHEOPS_REDIS_DB" Example: 10
 (redis db number)
 ----------------------------------------
-----------------7-----------------------
+----------------8-----------------------
 - Input CACHES_LOCATION:
 ----------------------------------------
 Cache uses location.
 
 "CACHES_LOCATION" Example: redis://localhost:6379/1
 ----------------------------------------
------------------8----------------------
+-----------------9----------------------
 - Input DB_ENGINE:
 - Input DB_NAME:
 - Input DB_USER:
@@ -135,7 +139,7 @@ Database settings.
 "DB_PORT" Example: 5432
 "DB_TEST_NAME" Example: nully_test
 ----------------------------------------
-------------------9---------------------
+------------------10---------------------
 - Input EMAIL_HOST_USER:
 - Input EMAIL_HOST_PASSWORD:
 ----------------------------------------
@@ -145,7 +149,7 @@ Default Gmail if you want to use other email services, you need to change the se
 "EMAIL_HOST_USER" Example: nully@gmail.com
 "EMAIL_HOST_PASSWORD" Example: 1234
 ----------------------------------------
-----------------------------------------
+-----------------11---------------------
 - Input AWS_IAM_ACCESS_KEY:
 - Input AWS_IAM_SECRET_ACCESS_KEY:
 - Input AWS_S3_BUCKET_NAME:
