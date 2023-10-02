@@ -197,3 +197,15 @@ sudo /etc/init.d/celeryd restart
 ## Database
 
 ![NullyBackendAPITemplate](./docs/Database/NullyBakendAPITemplate.png)
+
+## Setting CRON
+
+Need to use by django command
+
+`command.cron`
+
+**[ Example ]**
+
+```
+30 * * * * . /var/www/P/ProjectName/bin/activate && cd /var/www/ProjectName && python manage.py django_commands >> /var/log/django_commands.log 2>&1
+```
