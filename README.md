@@ -193,3 +193,7 @@ sudo /etc/init.d/celeryd restart
 ### Testing
 
 .github/workflows/test.yml
+
+## Database
+
+![NullyBackendAPITemplate](./docs/Database/NullyBakendAPITemplate.png)
