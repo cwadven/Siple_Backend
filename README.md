@@ -4,7 +4,7 @@ Easy to set up Django backend API template with PostgreSQL database.
 
 ## Features
 
-Social Login<br>
+### Social Login
 ![KakaoTalk](https://img.shields.io/badge/kakaotalk-ffcd00.svg?style=for-the-badge&logo=kakaotalk&logoColor=000000) <br>
 ![Google](https://img.shields.io/badge/google-4285F4?style=for-the-badge&logo=google&logoColor=white)<br>
 **Naver**
@@ -173,3 +173,23 @@ python manage.py runserver
 # Run the celery worker
 celery -A config worker -l INFO -P solo
 ```
+
+
+## CI/CD Setting
+
+### Deploying
+
+.github/workflows/deploy.yml
+
+1. Edit `DJANGO_SETTINGS_MODULE`
+2. `/var/www/ProjectName/` file directory of your project
+3. Set well celery directory or remove celery part
+```
+name: celery restart
+run: |
+sudo /etc/init.d/celeryd restart
+```
+
+### Testing
+
+.github/workflows/test.yml
