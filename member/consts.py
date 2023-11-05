@@ -1,4 +1,4 @@
-from common_consts.common_enums import (
+from common.common_consts.common_enums import (
     IntValueSelector,
     StrValueLabel,
 )
