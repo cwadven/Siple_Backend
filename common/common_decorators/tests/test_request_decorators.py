@@ -1,7 +1,7 @@
 from django.http import HttpRequest
 from django.test import TestCase
 
-from common_decorators.request_decorators import (
+from common.common_decorators.request_decorators import (
     mandatories,
     optionals,
 )
