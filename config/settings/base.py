@@ -31,6 +31,7 @@ THIRD_APPS = [
 ]
 
 PROJECT_APPS = [
+    'common',
     'member',
 ]
 
