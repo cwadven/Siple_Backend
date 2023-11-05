@@ -10,7 +10,7 @@ from member.utils.social_utils import SocialLoginHandler
 
 class MemberManager(UserManager):
     def get_or_create_member_by_token(self, token: str, provider: int) -> tuple:
-        from common_utils.string_utils import generate_random_string_digits
+        from common.common_utils import generate_random_string_digits
 
         data = SocialLoginHandler(
             SocialLoginModuleSelector(int(provider)).selector()

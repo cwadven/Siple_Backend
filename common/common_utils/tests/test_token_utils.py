@@ -1,7 +1,7 @@
 from django.test import TestCase
 from unittest.mock import patch
 
-from common_utils.token_utils import get_jwt_login_token
+from common.common_utils.token_utils import get_jwt_login_token
 from member.models import Member
 
 

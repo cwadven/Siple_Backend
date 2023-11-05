@@ -9,7 +9,7 @@ from django.test import TestCase
 from django.conf import settings
 
 from botocore.exceptions import NoCredentialsError
-from common_utils.s3_utils import (
+from common.common_utils.s3_utils import (
     generate_presigned_url_info,
     upload_file_to_presigned_url,
 )

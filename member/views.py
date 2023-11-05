@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from common.common_decorators.request_decorators import mandatories
-from common_utils.token_utils import get_jwt_login_token
+from common.common_utils import get_jwt_login_token
 from member.models import Member
 
 

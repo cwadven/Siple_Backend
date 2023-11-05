@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.conf import settings
 from unittest.mock import patch
 
-from common_utils.io_utils import send_email
+from common.common_utils.io_utils import send_email
 
 
 class EmailSendingTestCase(TestCase):

@@ -4,7 +4,7 @@ from unittest.mock import (
     patch,
 )
 
-from common_utils.slack_utils import notify_slack_simple_text
+from common.common_utils.slack_utils import notify_slack_simple_text
 
 
 class TestNotifySlackSimpleText(TestCase):

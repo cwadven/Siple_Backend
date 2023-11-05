@@ -8,7 +8,7 @@ import json
 
 from django.conf import settings
 
-from common_utils.aws_sqs_utils import (
+from common.common_utils.aws_sqs_utils import (
     create_sqs_event,
     get_sqs_messages,
 )
