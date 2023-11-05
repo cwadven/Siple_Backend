@@ -5,7 +5,7 @@ from common.common_decorators.request_decorators import (
     mandatories,
     optionals,
 )
-from common_exceptions.exceptions import (
+from common.common_exceptions.exceptions import (
     CodeInvalidateException,
     MissingMandatoryParameterException,
 )

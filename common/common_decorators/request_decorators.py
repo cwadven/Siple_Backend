@@ -4,7 +4,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
 from rest_framework.request import Request
 
-from common_exceptions.exceptions import MissingMandatoryParameterException, CodeInvalidateException
+from common.common_exceptions.exceptions import MissingMandatoryParameterException, CodeInvalidateException
 
 
 def mandatories(*keys):

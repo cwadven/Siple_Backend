@@ -1,4 +1,4 @@
-from common_exceptions.exceptions import ResponseException
+from common.common_exceptions import ResponseException
 
 
 class LoginFailedException(ResponseException):
