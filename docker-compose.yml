@@ -34,7 +34,7 @@ services:
 
   celery:
     build: .
-    command: celery -A config worker -l INFO -P
+    command: celery -A config worker -l info
     volumes:
       - .:/app
     depends_on:
