@@ -13,5 +13,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 애플리케이션 코드 복사
 COPY . .
 
-# Django 서비스 실행
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# gunicorn으로 Django 서비스 실행
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi"]
