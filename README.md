@@ -22,6 +22,7 @@ Easy to set up Django backend API template with PostgreSQL database.
 ## Getting Started
 
 If you want to use docker, you can use docker-compose.
+I docker-compose.yml file change `environment` for your DJANGO_SETTINGS_MODULE
 
 ```shell
 docker-compose up --build
