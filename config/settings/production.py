@@ -7,6 +7,10 @@ with open(Path(BASE_DIR) / '.env', 'r') as file:  # noqa
     data = json.load(file)
 
 
+DEBUG = False
+
+ALLOWED_HOSTS = ['*']
+
 SECRET_KEY = data['SECRET_KEY']
 KAKAO_API_KEY = data['KAKAO_API_KEY']
 KAKAO_SECRET_KEY = data['KAKAO_SECRET_KEY']
