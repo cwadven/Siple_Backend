@@ -19,7 +19,7 @@ class DefaultAuthentication(SessionAuthentication):
         jwt_value = self.get_jwt_value(request)
 
         if jwt_value is None:
-            member = getattr(request._request, 'user', None)
+            member = getattr(request._request, 'member', None)
             if not member or isinstance(member, AnonymousUser):
                 return None, None
             member.raise_if_inaccessible()
