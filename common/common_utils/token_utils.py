@@ -1,11 +1,9 @@
-import uuid
 from datetime import (
     timedelta,
     datetime,
 )
 
 from rest_framework_jwt.compat import (
-    get_username_field,
     get_username,
 )
 from rest_framework_jwt.settings import api_settings
@@ -17,21 +15,13 @@ jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 
 
 def jwt_payload_handler(member: Member):
-    username_field = get_username_field()
     username = get_username(member)
-
     payload = {
         'member_id': member.pk,
+        'email': member.email,
+        'exp': datetime.utcnow() + api_settings.JWT_EXPIRATION_DELTA,
         'username': username,
-        'exp': datetime.utcnow() + api_settings.JWT_EXPIRATION_DELTA
     }
-    if hasattr(member, 'email'):
-        payload['email'] = member.email
-    if isinstance(member.pk, uuid.UUID):
-        payload['member_id'] = str(member.pk)
-
-    payload[username_field] = username
-
     return payload
 
 

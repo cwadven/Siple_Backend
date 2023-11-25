@@ -68,4 +68,4 @@ class JWTPayloadHandlerTest(TestCase):
         payload = jwt_payload_handler(self.member)
 
         # Then:
-        self.assertEqual(payload['member_id'], str(self.member.pk))
+        self.assertEqual(payload['member_id'], self.member.pk)
