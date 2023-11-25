@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from common.common_decorators.request_decorators import mandatories
 from common.common_utils import get_jwt_login_token
 from member.dtos.request_dtos import NormalLoginRequest, SocialLoginRequest
+from member.dtos.response_dtos import NormalLoginResponse, SocialLoginResponse
 from member.models import Member
 
 
@@ -28,10 +29,8 @@ class LoginView(APIView):
             return Response({'message': '아이디 및 비밀번호 정보가 일치하지 않습니다.'}, status=400)
 
         login(request, member)
-        context = {
-            'access_token': get_jwt_login_token(member),
-        }
-        return Response(context, status=200)
+        normal_login_response = NormalLoginResponse(access_token=get_jwt_login_token(member))
+        return Response(normal_login_response.model_dump(), status=200)
 
 
 class SocialLoginView(APIView):
@@ -48,10 +47,8 @@ class SocialLoginView(APIView):
         member.raise_if_inaccessible()
 
         login(request, member)
-
-        context = {
-            'access_token': get_jwt_login_token(member),
-            'is_created': is_created,
-        }
-
-        return Response(context, status=200)
+        social_login_response = SocialLoginResponse(
+            access_token=get_jwt_login_token(member),
+            is_created=is_created,
+        )
+        return Response(social_login_response.model_dump(), status=200)
