@@ -2,6 +2,7 @@ from types import FunctionType
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
+from functools import wraps
 from rest_framework.request import Request
 
 from common.common_exceptions.exceptions import MissingMandatoryParameterException, CodeInvalidateException
@@ -9,6 +10,7 @@ from common.common_exceptions.exceptions import MissingMandatoryParameterExcepti
 
 def mandatories(*keys):
     def _mandatories(func):
+        @wraps(func)
         def wrapper(*args, **kwargs):
             # Here we assume that the first argument is the request
             request = next((x for x in args if isinstance(x, (WSGIRequest, HttpRequest, Request))), None)
@@ -49,6 +51,7 @@ def mandatories(*keys):
 
 def optionals(*keys):
     def _optionals(func):
+        @wraps(func)
         def wrapper(*args, **kwargs):
             # Here we assume that the first argument is the request
             request = next((x for x in args if isinstance(x, (WSGIRequest, HttpRequest, Request))), None)
