@@ -7,7 +7,8 @@ from unittest.mock import (
     patch,
 )
 
-from member.consts import SIGNUP_MACRO_COUNT, MemberCreationExceptionMessage
+from member.consts import SIGNUP_MACRO_COUNT, MemberCreationExceptionMessage, USERNAME_MIN_LENGTH, USERNAME_MAX_LENGTH, \
+    NICKNAME_MIN_LENGTH, NICKNAME_MAX_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH
 from member.models import Member
 
 
@@ -430,4 +431,164 @@ class SignUpEmailTokenValidationEndViewTestCase(TestCase):
         self.assertEqual(
             Member.objects.filter(email=mock_get_cache_value_by_key.return_value['email']).exists(),
             True
+        )
+
+
+class SignUpValidationTestCase(TestCase):
+    def setUp(self):
+        super(SignUpValidationTestCase, self).setUp()
+        self.body = {
+            'username': 'testtest',
+            'nickname': 'testto',
+            'password1': '12341234123412341234',
+            'password2': '12341234123412341234',
+            'email': 'aaaa@naver.com',
+            'one_time_token': '1234',
+        }
+
+    def test_sign_up_validation_success(self):
+        # When: 회원가입 검증 요청
+        response = self.client.post(reverse('member:sign_up_validation'), self.body)
+
+        # Then: 성공
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['message'], 'success')
+
+    def test_sign_up_validation_should_fail_when_email_regexp_is_not_valid(self):
+        self.body['email'] = 'something'
+
+        # When: 회원가입 검증 요청
+        response = self.client.post(reverse('member:sign_up_validation'), self.body)
+
+        # Then: email 문제로 에러 반환
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['email'][0], MemberCreationExceptionMessage.EMAIL_REG_EXP_INVALID.label)
+
+    def test_sign_up_validation_should_fail_when_username_length_is_invalid(self):
+        # Given: username 길이 설정
+        self.body['username'] = 'a'
+
+        # When: 회원가입 검증 요청
+        response = self.client.post(reverse('member:sign_up_validation'), self.body)
+
+        # Then: username 길이 문제로 에러 반환
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data['username'][0],
+            MemberCreationExceptionMessage.USERNAME_LENGTH_INVALID.label.format(
+                USERNAME_MIN_LENGTH,
+                USERNAME_MAX_LENGTH,
+            )
+        )
+
+    def test_sign_up_validation_should_fail_when_username_regexp_is_invalid(self):
+        # Given: username 한글 설정
+        self.body['username'] = '한글'
+
+        # When: 회원가입 검증 요청
+        response = self.client.post(reverse('member:sign_up_validation'), self.body)
+
+        # Then: username 글자 문제로 에러 반환
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(
+            MemberCreationExceptionMessage.USERNAME_REG_EXP_INVALID.label,
+            response.data['username'],
+        )
+
+    def test_sign_up_validation_should_fail_when_nickname_length_is_invalid(self):
+        # Given: nickname 길이 설정
+        self.body['nickname'] = 'a'
+
+        # When: 회원가입 검증 요청
+        response = self.client.post(reverse('member:sign_up_validation'), self.body)
+
+        # Then: nickname 길이 문제로 에러 반환
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data['nickname'][0],
+            MemberCreationExceptionMessage.NICKNAME_LENGTH_INVALID.label.format(
+                NICKNAME_MIN_LENGTH,
+                NICKNAME_MAX_LENGTH,
+            )
+        )
+
+    def test_sign_up_validation_should_fail_when_nickname_regex_is_invalid(self):
+        # Given: nickname 특수 문자 설정
+        self.body['nickname'] = '특수문자!@#$%^&*()'
+
+        # When: 회원가입 검증 요청
+        response = self.client.post(reverse('member:sign_up_validation'), self.body)
+
+        # Then: nickname 글자 문제로 에러 반환
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(
+            MemberCreationExceptionMessage.NICKNAME_REG_EXP_INVALID.label,
+            response.data['nickname'],
+        )
+
+    def test_sign_up_validation_should_fail_when_username_already_exists(self):
+        # Given: 유저를 생성
+        Member.objects.create_user(username='test')
+        # And: username 중복 설정
+        self.body['username'] = 'test'
+
+        # When: 회원가입 검증 요청
+        response = self.client.post(reverse('member:sign_up_validation'), self.body)
+
+        # Then: username 중복 에러 반환
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['username'][0], MemberCreationExceptionMessage.USERNAME_EXISTS.label)
+
+    def test_sign_up_validation_should_fail_when_nickname_already_exists(self):
+        # Given: 유저를 생성
+        Member.objects.create_user(username='test2', nickname='test_token')
+        # And: nickname 중복 설정
+        self.body['nickname'] = 'test_token'
+
+        # When: 회원가입 검증 요청
+        response = self.client.post(reverse('member:sign_up_validation'), self.body)
+
+        # Then: nickname 중복 에러 반환
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['nickname'][0], MemberCreationExceptionMessage.NICKNAME_EXISTS.label)
+
+    def test_sign_up_validation_should_fail_when_email_already_exists(self):
+        # Given: 유저를 생성
+        Member.objects.create_user(username='test3', nickname='tes2t_token22', email='aaaa@naver.com')
+        # And: 중복 닉네임 설정
+        self.body['email'] = 'aaaa@naver.com'
+
+        # When: 회원가입 검증 요청
+        response = self.client.post(reverse('member:sign_up_validation'), self.body)
+
+        # Then: nickname 중복 에러 반환
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['email'][0], MemberCreationExceptionMessage.EMAIL_EXISTS.label)
+
+    def test_sign_up_validation_should_fail_when_password_wrong(self):
+        # Given: 비밀번호 다르게 설정
+        self.body['password2'] = '12312312'
+
+        # When: 회원가입 검증 요청
+        response = self.client.post(reverse('member:sign_up_validation'), self.body)
+
+        # Then: password 확인 에러 반환
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['password2'][0], MemberCreationExceptionMessage.CHECK_PASSWORD.label)
+
+    def test_sign_up_validation_should_fail_when_password_length_is_invalid(self):
+        # Given: password1 길이 설정
+        self.body['password1'] = 'a'
+
+        # When: 회원가입 검증 요청
+        response = self.client.post(reverse('member:sign_up_validation'), self.body)
+
+        # Then: password1 길이 문제로 에러 반환
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data['password1'][0],
+            MemberCreationExceptionMessage.PASSWORD_LENGTH_INVALID.label.format(
+                PASSWORD_MIN_LENGTH,
+                PASSWORD_MAX_LENGTH,
+            )
         )
