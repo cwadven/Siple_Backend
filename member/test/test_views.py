@@ -7,8 +7,16 @@ from unittest.mock import (
     patch,
 )
 
-from member.consts import SIGNUP_MACRO_COUNT, MemberCreationExceptionMessage, USERNAME_MIN_LENGTH, USERNAME_MAX_LENGTH, \
-    NICKNAME_MIN_LENGTH, NICKNAME_MAX_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH
+from member.consts import (
+    MemberCreationExceptionMessage,
+    NICKNAME_MIN_LENGTH,
+    NICKNAME_MAX_LENGTH,
+    PASSWORD_MIN_LENGTH,
+    PASSWORD_MAX_LENGTH,
+    SIGNUP_MACRO_COUNT,
+    USERNAME_MIN_LENGTH,
+    USERNAME_MAX_LENGTH,
+)
 from member.models import Member
 
 
