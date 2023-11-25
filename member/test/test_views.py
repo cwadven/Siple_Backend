@@ -108,7 +108,7 @@ class RefreshTokenViewViewTestCase(TestCase):
             'refresh_token': 'test_refresh_token',
         }
         mock_jwt_decode_handler.return_value = {
-            'user_id': self.member.id,
+            'member_id': self.member.id,
         }
         mock_get_jwt_login_token.return_value = 'test_jwt_login_token'
         mock_get_jwt_refresh_token.return_value = 'test_jwt_refresh_token'
