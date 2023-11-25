@@ -4,7 +4,6 @@ from datetime import (
     datetime,
 )
 
-from calendar import timegm
 from rest_framework_jwt.compat import (
     get_username_field,
     get_username,
@@ -32,17 +31,6 @@ def jwt_payload_handler(member: Member):
         payload['member_id'] = str(member.pk)
 
     payload[username_field] = username
-
-    if api_settings.JWT_ALLOW_REFRESH:
-        payload['orig_iat'] = timegm(
-            datetime.utcnow().utctimetuple()
-        )
-
-    if api_settings.JWT_AUDIENCE is not None:
-        payload['aud'] = api_settings.JWT_AUDIENCE
-
-    if api_settings.JWT_ISSUER is not None:
-        payload['iss'] = api_settings.JWT_ISSUER
 
     return payload
 
