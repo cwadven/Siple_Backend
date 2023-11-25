@@ -9,3 +9,7 @@ class NormalLoginRequest(BaseModel):
 class SocialLoginRequest(BaseModel):
     token: str = Field(...)
     provider: int = Field(...)
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str = Field(...)
