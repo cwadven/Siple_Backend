@@ -1,5 +1,6 @@
 import jwt
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext as _
 from rest_framework import exceptions
@@ -19,7 +20,7 @@ class DefaultAuthentication(SessionAuthentication):
 
         if jwt_value is None:
             member = getattr(request._request, 'user', None)
-            if not member:
+            if not member or isinstance(member, AnonymousUser):
                 return None, None
             member.raise_if_inaccessible()
             self.enforce_csrf(request)
