@@ -1,13 +1,27 @@
+import re
+
 from member.models import Member
 
 
-def check_username_exists(username):
+def check_username_exists(username) -> bool:
     return Member.objects.filter(username=username).exists()
 
 
-def check_nickname_exists(nickname):
+def check_nickname_exists(nickname) -> bool:
     return Member.objects.filter(nickname=nickname).exists()
 
 
-def check_email_exists(email):
+def check_email_exists(email) -> bool:
     return Member.objects.filter(email=email).exists()
+
+
+def check_only_alphanumeric(string) -> bool:
+    return bool(re.match(r'^[a-zA-Z0-9]+$', string))
+
+
+def check_only_korean_english_alphanumeric(string) -> bool:
+    return bool(re.match(r'^[ㄱ-ㅎ가-힣a-zA-Z0-9]+$', string))
+
+
+def check_email_reg_exp_valid(email) -> bool:
+    return bool(re.match(r'^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email))
