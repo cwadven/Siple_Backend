@@ -54,7 +54,11 @@ THIRD_MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
-MIDDLEWARE = DJANGO_MIDDLEWARE + THIRD_MIDDLEWARE
+CUSTOM_MIDDLEWARE = [
+    'config.middlewares.custom_middlewares.RequestUserToMemberMiddleware'
+]
+
+MIDDLEWARE = DJANGO_MIDDLEWARE + THIRD_MIDDLEWARE + CUSTOM_MIDDLEWARE
 
 INTERNAL_IPS = [
     '127.0.0.1',
