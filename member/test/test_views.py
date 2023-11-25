@@ -1,7 +1,11 @@
 import jwt
+from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
-from unittest.mock import patch
+from unittest.mock import (
+    Mock,
+    patch,
+)
 
 from member.models import Member
 
@@ -163,3 +167,58 @@ class RefreshTokenViewViewTestCase(TestCase):
 
         # Check the response data for expected keys
         self.assertEqual(response.data['message'], '잘못된 리프레시 토큰입니다.')
+
+
+class SignUpEmailTokenSendTestCase(TestCase):
+    def setUp(self):
+        super(SignUpEmailTokenSendTestCase, self).setUp()
+        self.body = {
+            'username': 'test',
+            'nickname': 'test_token',
+            'password2': '12341234123412341234',
+            'email': 'aaaa@naver.com',
+        }
+
+    @patch('member.views.send_one_time_token_email')
+    @patch('member.views.get_cache_value_by_key')
+    @patch('member.views.generate_random_string_digits')
+    def test_email_token_create_when_token_create_successful(self, mock_generate_random_string_digits, mock_get_cache_value_by_key, mock_send_one_time_token_email):
+        # Given:
+        mock_generate_random_string_digits.return_value = '1234'
+        mock_get_cache_value_by_key.return_value = {
+            'one_time_token': mock_generate_random_string_digits.return_value,
+            'email': self.body['email'],
+            'username': self.body['username'],
+            'nickname': self.body['nickname'],
+            'password2': self.body['password2'],
+        }
+
+        # When:
+        response = self.client.post(reverse('member:sign_up_check'), self.body)
+
+        # Then: 성공 했다는 메시지 반환
+        self.assertEqual(response.status_code, 200)
+        mock_send_one_time_token_email.apply_async.assert_called_once_with(
+            (
+                self.body['email'],
+                mock_get_cache_value_by_key.return_value['one_time_token'],
+            )
+        )
+        self.assertEqual(response.data['message'], '인증번호를 이메일로 전송했습니다.')
+        # And: cache 에 값이 저장되었는지 확인
+        self.assertDictEqual(cache.get(self.body['email']), mock_get_cache_value_by_key.return_value)
+
+    @patch('member.views.generate_dict_value_by_key_to_cache', Mock())
+    @patch('member.views.send_one_time_token_email')
+    @patch('member.views.get_cache_value_by_key')
+    def test_email_token_create_when_token_create_failed(self, mock_get_cache_value_by_key, mock_send_one_time_token_email):
+        # Given:
+        mock_get_cache_value_by_key.return_value = None
+
+        # When:
+        response = self.client.post(reverse('member:sign_up_check'), self.body)
+
+        # Then: 실패 했다는 메시지 반환
+        self.assertEqual(response.status_code, 400)
+        mock_send_one_time_token_email.assert_not_called()
+        self.assertEqual(response.data['message'], '인증번호를 이메일로 전송하지 못했습니다.')
