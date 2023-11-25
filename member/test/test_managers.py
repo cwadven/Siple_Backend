@@ -14,7 +14,7 @@ class TestMemberManagerManager(TestCase):
         pass
 
     @patch('member.managers.SocialLoginHandler.validate')
-    @patch('common.common_utils.string_utils.generate_random_string_digits')
+    @patch('member.managers.generate_random_string_digits')
     def test_get_or_create_member_by_token_when_create_user_email_and_nickname_not_exists(self, mock_random_string, mock_validate):
         # Given:
         token = 'test_token'
