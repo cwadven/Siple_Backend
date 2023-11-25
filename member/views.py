@@ -13,7 +13,8 @@ from common.common_utils import (
     get_jwt_login_token,
     get_jwt_refresh_token,
 )
-from common.common_utils.cache_utils import generate_dict_value_by_key_to_cache, get_cache_value_by_key
+from common.common_utils.cache_utils import generate_dict_value_by_key_to_cache, get_cache_value_by_key, \
+    increase_cache_int_value_by_key, delete_cache_value_by_key
 from config.middlewares.authentications import jwt_decode_handler
 from member.dtos.request_dtos import (
     NormalLoginRequest,
@@ -26,7 +27,9 @@ from member.dtos.response_dtos import (
     SocialLoginResponse,
 )
 from member.models import Member
-from .consts import SIGNUP_EMAIL_TOKEN_TTL
+from .consts import SIGNUP_EMAIL_TOKEN_TTL, SIGNUP_MACRO_VALIDATION_KEY, SIGNUP_MACRO_COUNT, \
+    MemberCreationExceptionMessage, MemberTypeEnum, MemberProviderEnum
+from .services import check_username_exists, check_nickname_exists, check_email_exists
 
 from .tasks import send_one_time_token_email
 
@@ -120,6 +123,52 @@ class SignUpEmailTokenSendView(APIView):
         return Response({'message': '인증번호를 이메일로 전송하지 못했습니다.'}, 400)
 
 
+class SignUpEmailTokenValidationEndView(APIView):
+    @mandatories('email', 'one_time_token')
+    def post(self, request, m):
+        macro_count = increase_cache_int_value_by_key(
+            key=SIGNUP_MACRO_VALIDATION_KEY.format(m['email']),
+        )
+        if macro_count >= SIGNUP_MACRO_COUNT:
+            return Response(
+                data={
+                    'message': '{}회 이상 인증번호를 틀리셨습니다. 현 이메일은 {}시간 동안 인증할 수 없습니다.'.format(
+                        SIGNUP_MACRO_COUNT,
+                        24
+                    )
+                },
+                status=400,
+            )
+
+        value = get_cache_value_by_key(m['email'])
+
+        if not value:
+            return Response({'message': '이메일 인증번호를 다시 요청하세요.'}, 400)
+
+        if not value.get('one_time_token') or value.get('one_time_token') != m['one_time_token']:
+            return Response({'message': '인증번호가 다릅니다.'}, 400)
+
+        if check_username_exists(value['username']):
+            return Response({'message': MemberCreationExceptionMessage.USERNAME_EXISTS.label}, 400)
+        if check_nickname_exists(value['nickname']):
+            return Response({'message': MemberCreationExceptionMessage.NICKNAME_EXISTS.label}, 400)
+        if check_email_exists(value['email']):
+            return Response({'message': MemberCreationExceptionMessage.EMAIL_EXISTS.label}, 400)
+
+        Member.objects.create_user(
+            username=value['username'],
+            nickname=value['nickname'],
+            email=value['email'],
+            member_type_id=MemberTypeEnum.NORMAL_MEMBER.value,
+            password=value['password2'],
+            member_provider_id=MemberProviderEnum.EMAIL.value,
+        )
+
+        delete_cache_value_by_key(value['email'])
+        delete_cache_value_by_key(SIGNUP_MACRO_VALIDATION_KEY.format(m['email']))
+        return Response({'message': '회원가입에 성공했습니다.'}, 200)
+
+
 # class SignUpValidationView(APIView):
 #     @mandatories('username', 'email', 'nickname', 'password1', 'password2')
 #     def post(self, request, m):
@@ -158,11 +207,11 @@ class SignUpEmailTokenSendView(APIView):
 #
 #         # 회원 가입 제약을 위해 더블 체킹 validation
 #         if is_username_exists(value['username']):
-#             return Response({'message': UserCreationExceptionMessage.USERNAME_EXISTS.label}, 400)
+#             return Response({'message': MemberCreationExceptionMessage.USERNAME_EXISTS.label}, 400)
 #         if is_nickname_exists(value['nickname']):
-#             return Response({'message': UserCreationExceptionMessage.NICKNAME_EXISTS.label}, 400)
+#             return Response({'message': MemberCreationExceptionMessage.NICKNAME_EXISTS.label}, 400)
 #         if is_email_exists(value['email']):
-#             return Response({'message': UserCreationExceptionMessage.EMAIL_EXISTS.label}, 400)
+#             return Response({'message': MemberCreationExceptionMessage.EMAIL_EXISTS.label}, 400)
 #
 #         User.objects.create_user(
 #             username=value['username'],

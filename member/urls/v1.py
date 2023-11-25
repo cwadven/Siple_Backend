@@ -4,6 +4,7 @@ from member.views import (
     LoginView,
     RefreshTokenView,
     SignUpEmailTokenSendView,
+    SignUpEmailTokenValidationEndView,
     SocialLoginView,
 )
 
@@ -16,4 +17,5 @@ urlpatterns = [
     path('refresh-token', RefreshTokenView.as_view(), name='refresh_token'),
 
     path('sign-up-check', SignUpEmailTokenSendView.as_view(), name='sign_up_check'),
+    path('sign-up-validate-token', SignUpEmailTokenValidationEndView.as_view(), name='sign_up_token_validation'),
 ]

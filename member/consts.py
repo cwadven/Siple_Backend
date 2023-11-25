@@ -37,7 +37,7 @@ class MemberStatusExceptionTypeSelector(IntValueSelector):
     DORMANT_MEMBER_EXCEPTION = (4, DormantMemberException)
 
 
-class UserCreationExceptionMessage(StrValueLabel):
+class MemberCreationExceptionMessage(StrValueLabel):
     USERNAME_EXISTS = ('already-exists-username', '이미 사용중인 아이디입니다.')
     USERNAME_LENGTH_INVALID = ('username-length-invalid', '아이디는 {}자 이상 {}자 이하로 입력해주세요.')
     USERNAME_REG_EXP_INVALID = ('username-reg-exp-invalid', '아이디는 영문, 숫자만 입력 가능합니다.')
