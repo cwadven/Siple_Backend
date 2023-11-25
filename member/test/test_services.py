@@ -1,7 +1,11 @@
 from django.test import TestCase
 
 from member.models import Member
-from member.services import check_username_exists, check_nickname_exists, check_email_exists
+from member.services import (
+    check_email_exists,
+    check_nickname_exists,
+    check_username_exists,
+)
 
 
 class MemberCheckMemberInfoTestCase(TestCase):
