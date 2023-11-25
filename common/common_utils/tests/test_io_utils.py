@@ -6,8 +6,8 @@ from common.common_utils.io_utils import send_email
 
 
 class EmailSendingTestCase(TestCase):
-    @patch('common_utils.io_utils.send_mail')
-    @patch('common_utils.io_utils.render_to_string')
+    @patch('common.common_utils.io_utils.send_mail')
+    @patch('common.common_utils.io_utils.render_to_string')
     def test_send_email(self, mock_render_to_string, mock_send_mail):
         # Given: 모킹된 send_mail 함수의 반환값 설정
         mock_send_mail.return_value = 1

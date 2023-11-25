@@ -15,7 +15,7 @@ from common.common_utils.aws_sqs_utils import (
 
 
 class TestCreateSQSEvent(TestCase):
-    @patch('common_utils.aws_sqs_utils.boto3.client')
+    @patch('common.common_utils.aws_sqs_utils.boto3.client')
     def test_create_sqs_event(self, mock_boto3_client):
         # Given: Set up the test data
         queue_url = 'https://sqs.us-east-1.amazonaws.com/123456789012/test-queue'
@@ -47,7 +47,7 @@ class TestCreateSQSEvent(TestCase):
 
 
 class TestGetSQSMessages(TestCase):
-    @patch('common_utils.aws_sqs_utils.boto3.client')
+    @patch('common.common_utils.aws_sqs_utils.boto3.client')
     def test_get_sqs_messages(self, mock_boto3_client):
         # Given: Set up the test data
         queue_url = 'https://sqs.us-east-1.amazonaws.com/123456789012/test-queue'
@@ -89,7 +89,7 @@ class TestGetSQSMessages(TestCase):
         expected_result = {'key': 'value'}
         self.assertEqual(result, expected_result)
 
-    @patch('common_utils.aws_sqs_utils.boto3.client', side_effect=NoCredentialsError())
+    @patch('common.common_utils.aws_sqs_utils.boto3.client', side_effect=NoCredentialsError())
     def test_get_sqs_messages_with_exception(self, mock_boto3_client):
         # Given: Set up the test data
         queue_url = 'https://sqs.us-east-1.amazonaws.com/123456789012/test-queue'

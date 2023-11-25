@@ -8,7 +8,7 @@ from common.common_utils.slack_utils import notify_slack_simple_text
 
 
 class TestNotifySlackSimpleText(TestCase):
-    @patch('common_utils.slack_utils.requests.post')
+    @patch('common.common_utils.slack_utils.requests.post')
     def test_notify_slack_simple_text(self, mock_requests_post):
         # Given: Set up the test data and expected values
         channel_url = 'https://slack.com/webhook-url'

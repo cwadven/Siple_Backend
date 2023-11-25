@@ -16,7 +16,7 @@ from common.common_utils.s3_utils import (
 
 
 class TestGeneratePresignedURLInfo(TestCase):
-    @patch('common_utils.s3_utils.boto3.client')
+    @patch('common.common_utils.s3_utils.boto3.client')
     def test_generate_presigned_url_info(self, mock_boto3_client):
         # Given: Set up the test data
         file_name = 'test.txt'
@@ -62,7 +62,7 @@ class TestGeneratePresignedURLInfo(TestCase):
         expected_response = mock_generate_presigned_post_response
         self.assertEqual(response, expected_response)
 
-    @patch('common_utils.s3_utils.boto3.client', side_effect=NoCredentialsError())
+    @patch('common.common_utils.s3_utils.boto3.client', side_effect=NoCredentialsError())
     def test_generate_presigned_url_info_with_exception(self, mock_boto3_client):
         # Given: Set up the test data
         file_name = 'test.txt'
@@ -76,7 +76,7 @@ class TestGeneratePresignedURLInfo(TestCase):
 
 
 class TestUploadFileToPresignedURL(unittest.TestCase):
-    @patch('common_utils.s3_utils.requests.post')
+    @patch('common.common_utils.s3_utils.requests.post')
     def test_upload_file_to_presigned_url(self, mock_requests_post):
         # Given: Set up the test data
         presigned_url = 'https://example.com/upload'
@@ -101,7 +101,7 @@ class TestUploadFileToPresignedURL(unittest.TestCase):
         # Assert the result
         self.assertTrue(result)
 
-    @patch('common_utils.s3_utils.requests.post', side_effect=requests.exceptions.RequestException())
+    @patch('common.common_utils.s3_utils.requests.post', side_effect=requests.exceptions.RequestException())
     def test_upload_file_to_presigned_url_with_exception(self, mock_requests_post):
         # Given: Set up the test data
         presigned_url = 'https://example.com/upload'

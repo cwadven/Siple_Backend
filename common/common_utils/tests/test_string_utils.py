@@ -8,7 +8,7 @@ from common.common_utils.string_utils import (
 )
 
 
-@patch("common_utils.string_utils.random.choice")
+@patch("common.common_utils.string_utils.random.choice")
 class TestStringUtils(TestCase):
     def test_generate_random_string_digits_default_length(self, mock_choice):
         # Given: Mocking random
