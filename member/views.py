@@ -79,7 +79,7 @@ class RefreshTokenView(APIView):
         )
         try:
             payload = jwt_decode_handler(refresh_token_request.refresh_token)
-            member = Member.objects.get(id=payload.get('user_id'))
+            member = Member.objects.get(id=payload.get('member_id'))
             refresh_token_response = RefreshTokenResponse(
                 access_token=get_jwt_login_token(member),
                 refresh_token=get_jwt_refresh_token(member),

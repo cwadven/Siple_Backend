@@ -40,6 +40,6 @@ class TestGetJWTRefreshToken(TestCase):
 
         # Then: Ensure the function executes and returns the expected result
         mock_jwt_encode_handler.assert_called_once_with({
-            'user_id': self.member.id,
+            'member_id': self.member.id,
             'exp': datetime(2020, 1, 8)
         })

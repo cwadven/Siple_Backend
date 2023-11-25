@@ -132,7 +132,7 @@ class RefreshTokenViewViewTestCase(TestCase):
         }
         # And: set the mock member as not exists
         mock_jwt_decode_handler.return_value = {
-            'user_id': 0,
+            'member_id': 0,
         }
 
         # When
