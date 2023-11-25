@@ -8,6 +8,7 @@ django-cacheops==7.0.1
 celery==5.3.4
 django-celery-results==2.5.1
 flower==2.0.1
+freezegun==1.2.2
 boto3==1.28.51
 fabric2==3.2.2
 requests==2.31.0
