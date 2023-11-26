@@ -1,5 +1,5 @@
 class ValidationErrorContext(dict):
-    def add_error(self, field, error):
+    def add_error(self, field: str, error: str):
         value = self.setdefault(field, [])
         value.append(error)
 
@@ -10,14 +10,14 @@ class PayloadValidator(object):
         self.error_context = ValidationErrorContext()
         self.skip_validate_keys = set()
 
-    def add_error_context(self, key, description):
+    def add_error_context(self, key: str, description: str):
         """
         only add error if key is not in 'skip_validate_keys'
         """
         if not (key in self.skip_validate_keys):
             self.error_context.add_error(key, description)
 
-    def add_error_and_skip_validation_key(self, key, description):
+    def add_error_and_skip_validation_key(self, key: str, description: str):
         """
         add only main error so other errors cannot add
         """
