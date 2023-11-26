@@ -24,27 +24,27 @@ class SocialLoginModule(ABC):
 
     @property
     @abstractmethod
-    def request_access_token_path(self):
+    def request_access_token_path(self) -> str:
         pass
 
     @property
     @abstractmethod
-    def request_user_info_path(self):
+    def request_user_info_path(self) -> str:
         pass
 
     @property
     @abstractmethod
-    def client_id(self):
+    def client_id(self) -> str:
         pass
 
     @property
     @abstractmethod
-    def secret(self):
+    def secret(self) -> str:
         pass
 
     @property
     @abstractmethod
-    def redirect_uri(self):
+    def redirect_uri(self) -> str:
         pass
 
     @abstractmethod
@@ -80,23 +80,23 @@ class KakaoSocialLoginModule(SocialLoginModule):
         self._redirect_uri = ''
 
     @property
-    def request_access_token_path(self):
+    def request_access_token_path(self) -> str:
         return self._request_access_token_path
 
     @property
-    def request_user_info_path(self):
+    def request_user_info_path(self) -> str:
         return self._request_user_info_path
 
     @property
-    def client_id(self):
+    def client_id(self) -> str:
         return self._client_id
 
     @property
-    def secret(self):
+    def secret(self) -> str:
         return self._secret
 
     @property
-    def redirect_uri(self):
+    def redirect_uri(self) -> str:
         return self._redirect_uri
 
     @staticmethod
@@ -176,23 +176,23 @@ class NaverSocialLoginModule(SocialLoginModule):
         self._redirect_uri = ''
 
     @property
-    def request_access_token_path(self):
+    def request_access_token_path(self) -> str:
         return self._request_access_token_path
 
     @property
-    def request_user_info_path(self):
+    def request_user_info_path(self) -> str:
         return self._request_user_info_path
 
     @property
-    def client_id(self):
+    def client_id(self) -> str:
         return self._client_id
 
     @property
-    def secret(self):
+    def secret(self) -> str:
         return self._secret
 
     @property
-    def redirect_uri(self):
+    def redirect_uri(self) -> str:
         return self._redirect_uri
 
     @staticmethod
@@ -254,23 +254,23 @@ class GoogleSocialLoginModule(SocialLoginModule):
         self._redirect_uri = settings.GOOGLE_REDIRECT_URL
 
     @property
-    def request_access_token_path(self):
+    def request_access_token_path(self) -> str:
         return self._request_access_token_path
 
     @property
-    def request_user_info_path(self):
+    def request_user_info_path(self) -> str:
         return self._request_user_info_path
 
     @property
-    def client_id(self):
+    def client_id(self) -> str:
         return self._client_id
 
     @property
-    def secret(self):
+    def secret(self) -> str:
         return self._secret
 
     @property
-    def redirect_uri(self):
+    def redirect_uri(self) -> str:
         return self._redirect_uri
 
     def get_user_info_with_access_token(self, access_token: str) -> dict:
@@ -297,9 +297,9 @@ class GoogleSocialLoginModule(SocialLoginModule):
 
 
 class SocialLoginHandler:
-    def __init__(self, social_module):
+    def __init__(self, social_module: SocialLoginModule):
         self.social_module = social_module
 
-    def validate(self, code):
+    def validate(self, code: str) -> dict:
         access_token = self.social_module.get_access_token_by_code(code)
         return self.social_module.get_user_info_with_access_token(access_token)
