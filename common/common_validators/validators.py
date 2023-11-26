@@ -5,7 +5,7 @@ class ValidationErrorContext(dict):
 
 
 class PayloadValidator(object):
-    def __init__(self, payload):
+    def __init__(self, payload: dict):
         self.payload = payload
         self.error_context = ValidationErrorContext()
         self.skip_validate_keys = set()

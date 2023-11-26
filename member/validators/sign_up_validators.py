@@ -19,7 +19,7 @@ from member.services import (
 
 
 class SignUpPayloadValidator(PayloadValidator):
-    def __init__(self, payload):
+    def __init__(self, payload: dict):
         super(SignUpPayloadValidator, self).__init__(payload)
 
     def validate(self):

@@ -19,7 +19,7 @@ from config.middlewares.authentications import jwt_decode_handler
 from member.dtos.request_dtos import (
     NormalLoginRequest,
     RefreshTokenRequest,
-    SocialLoginRequest,
+    SocialLoginRequest, SignUpEmailTokenSendRequest, SignUpEmailTokenValidationEndRequest, SignUpValidationRequest,
 )
 from member.dtos.response_dtos import (
     NormalLoginResponse,
@@ -111,22 +111,28 @@ class RefreshTokenView(APIView):
 class SignUpEmailTokenSendView(APIView):
     @mandatories('email', 'username', 'nickname', 'password2')
     def post(self, request, m):
+        sign_up_email_token_send_request = SignUpEmailTokenSendRequest(
+            email=m['email'],
+            username=m['username'],
+            nickname=m['nickname'],
+            password2=m['password2'],
+        )
         generate_dict_value_by_key_to_cache(
-            key=m['email'],
+            key=sign_up_email_token_send_request.email,
             value={
                 'one_time_token': generate_random_string_digits(),
-                'email': m['email'],
-                'username': m['username'],
-                'nickname': m['nickname'],
-                'password2': m['password2'],
+                'email': sign_up_email_token_send_request.email,
+                'username': sign_up_email_token_send_request.username,
+                'nickname': sign_up_email_token_send_request.nickname,
+                'password2': sign_up_email_token_send_request.password2,
             },
             expire_seconds=SIGNUP_EMAIL_TOKEN_TTL
         )
-        value = get_cache_value_by_key(m['email'])
+        value = get_cache_value_by_key(sign_up_email_token_send_request.email)
         if value:
             send_one_time_token_email.apply_async(
                 (
-                    m['email'],
+                    sign_up_email_token_send_request.email,
                     value['one_time_token'],
                 )
             )
@@ -137,8 +143,12 @@ class SignUpEmailTokenSendView(APIView):
 class SignUpEmailTokenValidationEndView(APIView):
     @mandatories('email', 'one_time_token')
     def post(self, request, m):
+        payload = SignUpEmailTokenValidationEndRequest(
+            email=m['email'],
+            one_time_token=m['one_time_token']
+        )
         macro_count = increase_cache_int_value_by_key(
-            key=SIGNUP_MACRO_VALIDATION_KEY.format(m['email']),
+            key=SIGNUP_MACRO_VALIDATION_KEY.format(payload.email),
         )
         if macro_count >= SIGNUP_MACRO_COUNT:
             return Response(
@@ -151,12 +161,12 @@ class SignUpEmailTokenValidationEndView(APIView):
                 status=400,
             )
 
-        value = get_cache_value_by_key(m['email'])
+        value = get_cache_value_by_key(payload.email)
 
         if not value:
             return Response({'message': '이메일 인증번호를 다시 요청하세요.'}, 400)
 
-        if not value.get('one_time_token') or value.get('one_time_token') != m['one_time_token']:
+        if not value.get('one_time_token') or value.get('one_time_token') != payload.one_time_token:
             return Response({'message': '인증번호가 다릅니다.'}, 400)
 
         if check_username_exists(value['username']):
@@ -176,14 +186,21 @@ class SignUpEmailTokenValidationEndView(APIView):
         )
 
         delete_cache_value_by_key(value['email'])
-        delete_cache_value_by_key(SIGNUP_MACRO_VALIDATION_KEY.format(m['email']))
+        delete_cache_value_by_key(SIGNUP_MACRO_VALIDATION_KEY.format(payload.email))
         return Response({'message': '회원가입에 성공했습니다.'}, 200)
 
 
 class SignUpValidationView(APIView):
     @mandatories('username', 'email', 'nickname', 'password1', 'password2')
     def post(self, request, m):
-        payload_validator = SignUpPayloadValidator(m)
+        payload = SignUpValidationRequest(
+            username=m['username'],
+            nickname=m['nickname'],
+            email=m['email'],
+            password1=m['password1'],
+            password2=m['password2'],
+        )
+        payload_validator = SignUpPayloadValidator(payload.model_dump())
         error_dict = payload_validator.validate()
         if error_dict:
             return Response(error_dict, 400)
