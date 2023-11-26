@@ -14,19 +14,13 @@ Easy to set up Django backend API template with PostgreSQL database.
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) Version 3.11 <br>
 ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) Version 13.12 <br>
 ![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white) (Celery, Cache) <br>
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white) (Optional) <br>
 
 ## CI/CD
 
 ![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
 
 ## Getting Started
-
-If you want to use docker, you can use docker-compose.
-I docker-compose.yml file change `environment` for your DJANGO_SETTINGS_MODULE
-
-```shell
-docker-compose up --build
-```
 
 ```shell
 # Clone the repository
@@ -185,6 +179,14 @@ python manage.py runserver
 celery -A config worker -l INFO -P solo
 ```
 
+If you want to use docker, you can use docker-compose.
+`docker-compose.yml` file change `environment` for your `DJANGO_SETTINGS_MODULE`
+
+```shell
+# Before you start, you need set .env file
+
+docker-compose up --build
+```
 
 ## CI/CD Setting
 
