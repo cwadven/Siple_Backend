@@ -22,7 +22,7 @@ class SignUpPayloadValidator(PayloadValidator):
     def __init__(self, payload: dict):
         super(SignUpPayloadValidator, self).__init__(payload)
 
-    def validate(self):
+    def validate(self) -> dict:
         # username
         if check_username_exists(self.payload['username']):
             self.add_error_context('username', MemberCreationExceptionMessage.USERNAME_EXISTS.label)
@@ -77,3 +77,4 @@ class SignUpPayloadValidator(PayloadValidator):
 
         if self.error_context:
             return self.error_context
+        return {}
