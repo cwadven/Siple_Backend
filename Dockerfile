@@ -15,3 +15,9 @@ COPY . .
 
 # gunicorn으로 Django 서비스 실행
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi"]
+
+# CRON 적용
+RUN apt-get update && apt-get install -y cron
+COPY command.cron /etc/cron.d/command.cron
+RUN chmod 0644 /etc/cron.d/command.cron
+RUN crontab /etc/cron.d/command.cron
