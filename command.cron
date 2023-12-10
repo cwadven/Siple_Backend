@@ -1,0 +1,2 @@
+PATH=/usr/local/bin:/usr/bin:/bin
+* * * * * cd /app && python manage.py check >> /tmp/log/django_commands.log 2>&1

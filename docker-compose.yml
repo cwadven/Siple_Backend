@@ -32,10 +32,13 @@ services:
     build: .
     volumes:
       - .:/app
+      - cron_log:/tmp
     depends_on:
       - web
     command: >
-      sh -c "cron -f"
+      sh -c "cat /etc/cron.d/command.cron | crontab - &&
+             service cron start &&
+             tail -f /dev/null"
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.production
 
@@ -68,3 +71,4 @@ services:
 
 volumes:
   postgres_data:
+  cron_log:
