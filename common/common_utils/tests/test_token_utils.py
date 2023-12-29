@@ -30,10 +30,10 @@ class TestGetJWTLoginToken(TestCase):
     def test_get_jwt_login_token(self, mock_jwt_encode_handler, mock_jwt_payload_handler):
         # Given:
         # When:
-        get_jwt_login_token(self.guest)
+        get_jwt_login_token(self.member)
 
         # Then: Ensure the function executes and returns the expected result
-        mock_jwt_payload_handler.assert_called_once_with(self.guest)
+        mock_jwt_payload_handler.assert_called_once_with(self.member.guest)
         mock_jwt_encode_handler.assert_called_once_with(mock_jwt_payload_handler.return_value)
 
 
