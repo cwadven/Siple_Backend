@@ -53,7 +53,7 @@ class Guest(models.Model):
     email = models.EmailField(max_length=256, blank=True, null=True, db_index=True)
     member = models.OneToOneField(Member, models.DO_NOTHING, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    last_joined_at = models.DateTimeField(db_index=True)
+    last_joined_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
         verbose_name = '비회원'
