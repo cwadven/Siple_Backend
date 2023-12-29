@@ -17,8 +17,8 @@ def jwt_payload_handler(guest: 'Guest') -> dict:  # noqa
     return payload
 
 
-def get_jwt_login_token(member: 'Member') -> str:  # noqa
-    payload = jwt_payload_handler(member)
+def get_jwt_login_token(guest: 'Guest') -> str:  # noqa
+    payload = jwt_payload_handler(guest)
     token = jwt_encode_handler(payload)
     return token
 

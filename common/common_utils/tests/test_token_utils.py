@@ -18,16 +18,22 @@ from member.models import Member, Guest
 class TestGetJWTLoginToken(TestCase):
     def setUp(self):
         self.member = Member.objects.all().first()
+        self.guest = Guest.objects.create(
+            temp_nickname='temp_nickname',
+            ip='192.168.0.1',
+            email='email',
+            member=self.member,
+        )
 
     @patch('common.common_utils.token_utils.jwt_payload_handler')
     @patch('common.common_utils.token_utils.jwt_encode_handler')
     def test_get_jwt_login_token(self, mock_jwt_encode_handler, mock_jwt_payload_handler):
         # Given:
         # When:
-        get_jwt_login_token(self.member)
+        get_jwt_login_token(self.guest)
 
         # Then: Ensure the function executes and returns the expected result
-        mock_jwt_payload_handler.assert_called_once_with(self.member)
+        mock_jwt_payload_handler.assert_called_once_with(self.guest)
         mock_jwt_encode_handler.assert_called_once_with(mock_jwt_payload_handler.return_value)
 
 
