@@ -40,17 +40,24 @@ class TestGetJWTLoginToken(TestCase):
 class TestGetJWTRefreshToken(TestCase):
     def setUp(self):
         self.member = Member.objects.all().first()
+        self.guest = Guest.objects.create(
+            temp_nickname='temp_nickname',
+            ip='192.168.0.1',
+            email='email',
+            member=self.member,
+        )
 
     @freeze_time('2020-01-01 00:00:00')
     @patch('common.common_utils.token_utils.jwt_encode_handler')
     def test_get_jwt_refresh_token(self, mock_jwt_encode_handler):
         # Given:
         # When:
-        get_jwt_refresh_token(self.member)
+        get_jwt_refresh_token(self.guest)
 
         # Then: Ensure the function executes and returns the expected result
         mock_jwt_encode_handler.assert_called_once_with({
-            'member_id': self.member.id,
+            'guest_id': self.guest.id,
+            'member_id': self.guest.member.id,
             'exp': datetime(2020, 1, 8)
         })
 

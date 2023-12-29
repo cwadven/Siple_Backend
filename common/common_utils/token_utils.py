@@ -23,10 +23,11 @@ def get_jwt_login_token(guest: 'Guest') -> str:  # noqa
     return token
 
 
-def get_jwt_refresh_token(member: 'Member') -> str:  # noqa
+def get_jwt_refresh_token(guest: 'Guest') -> str:  # noqa
     refresh_expiration = timedelta(days=7)
     refresh_token = jwt_encode_handler({
-        'member_id': member.id,
+        'guest_id': guest.id,
+        'member_id': guest.member_id,
         'exp': datetime.utcnow() + refresh_expiration
     })
     return refresh_token
