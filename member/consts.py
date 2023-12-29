@@ -44,6 +44,7 @@ class MemberCreationExceptionMessage(StrValueLabel):
     NICKNAME_EXISTS = ('already-exists-nickname', '이미 사용중인 닉네임입니다.')
     NICKNAME_LENGTH_INVALID = ('nickname-length-invalid', '닉네임은 {}자 이상 {}자 이하로 입력해주세요.')
     NICKNAME_REG_EXP_INVALID = ('nickname-reg-exp-invalid', '닉네임은 한글, 영문, 숫자만 입력 가능합니다.')
+    NICKNAME_BLACKLIST = ('nickname-black-list', '{} 는 사용할 수 없는 닉네임입니다.')
     EMAIL_EXISTS = ('already-exists-email', '이미 가입한 이메일입니다.')
     CHECK_PASSWORD = ('check-password', '비밀번호와 비밀번호 확인이 동일하지 않습니다.')
     PASSWORD_LENGTH_INVALID = ('password-length-invalid', '비밀번호는 {}자 이상 {}자 이하로 입력해주세요.')
