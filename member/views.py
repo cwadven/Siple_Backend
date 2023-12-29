@@ -1,7 +1,6 @@
 import jwt
 from django.contrib.auth import (
     authenticate,
-    login,
 )
 
 from rest_framework.views import APIView
@@ -67,7 +66,6 @@ class LoginView(APIView):
         if not member:
             return Response({'message': '아이디 및 비밀번호 정보가 일치하지 않습니다.'}, status=400)
 
-        login(request, member)
         normal_login_response = NormalLoginResponse(
             access_token=get_jwt_login_token(member),
             refresh_token=get_jwt_refresh_token(member.guest),
@@ -88,7 +86,6 @@ class SocialLoginView(APIView):
         )
         member.raise_if_inaccessible()
 
-        login(request, member)
         social_login_response = SocialLoginResponse(
             access_token=get_jwt_login_token(member),
             refresh_token=get_jwt_refresh_token(member.guest),

@@ -1,30 +1,26 @@
 import jwt
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AnonymousUser
+from django.apps import apps
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext as _
 from rest_framework import exceptions
-from rest_framework.authentication import SessionAuthentication, get_authorization_header
+from rest_framework.authentication import (
+    BaseAuthentication,
+    get_authorization_header,
+)
 from rest_framework_jwt.settings import api_settings
 
 
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
-jwt_get_username_from_payload = api_settings.JWT_PAYLOAD_GET_USERNAME_HANDLER
 
 
-class DefaultAuthentication(SessionAuthentication):
+class DefaultAuthentication(BaseAuthentication):
     www_authenticate_realm = 'api'
 
     def authenticate(self, request):
         jwt_value = self.get_jwt_value(request)
 
         if jwt_value is None:
-            member = getattr(request._request, 'member', None)
-            if not member or isinstance(member, AnonymousUser):
-                return None, None
-            member.raise_if_inaccessible()
-            self.enforce_csrf(request)
-            return member, None
+            return None, None
 
         try:
             payload = jwt_decode_handler(jwt_value)
@@ -38,9 +34,10 @@ class DefaultAuthentication(SessionAuthentication):
             msg = _('유효하지 않은 토큰 입니다.')
             raise exceptions.AuthenticationFailed(msg)
 
-        member = self.authenticate_credentials(payload)
-        member.raise_if_inaccessible()
-        return member, jwt_value
+        guest = self.authenticate_credentials(payload)
+        if guest.member:
+            guest.member.raise_if_inaccessible()
+        return guest, jwt_value
 
     def enforce_csrf(self, request):
         return
@@ -71,17 +68,17 @@ class DefaultAuthentication(SessionAuthentication):
         return '{0} realm="{1}"'.format(api_settings.JWT_AUTH_HEADER_PREFIX, self.www_authenticate_realm)
 
     def authenticate_credentials(self, payload):
-        Member = get_user_model()
-        username = jwt_get_username_from_payload(payload)
+        Guest = apps.get_model('member', 'Guest')
+        guest_id = payload.get('guest_id')
 
-        if not username:
+        if not guest_id:
             msg = _('잘못된 Token 입니다.')
             raise exceptions.AuthenticationFailed(msg)
 
         try:
-            member = Member.objects.get_by_natural_key(username)
-        except Member.DoesNotExist:
-            msg = _('존재하지 않는 유저입니다.')
+            guest = Guest.objects.select_related('member').get(id=guest_id)
+        except Guest.DoesNotExist:
+            msg = _('존재하지 않는 사용자입니다.')
             raise exceptions.AuthenticationFailed(msg)
 
-        return member
+        return guest

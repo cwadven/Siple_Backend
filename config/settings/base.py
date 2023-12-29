@@ -55,7 +55,7 @@ THIRD_MIDDLEWARE = [
 ]
 
 CUSTOM_MIDDLEWARE = [
-    'config.middlewares.custom_middlewares.RequestUserToMemberMiddleware'
+    'config.middlewares.custom_middlewares.RequestUserToMemberMiddleware',
 ]
 
 MIDDLEWARE = DJANGO_MIDDLEWARE + THIRD_MIDDLEWARE + CUSTOM_MIDDLEWARE
@@ -104,8 +104,6 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'config.middlewares.authentications.DefaultAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
     ],
     'EXCEPTION_HANDLER': 'config.middlewares.exception_middlewares.custom_exception_handler'
 }
