@@ -12,6 +12,7 @@ from member.models import (
 class GuestAdmin(admin.ModelAdmin):
     list_display = [
         'id',
+        'ip',
         'temp_nickname',
         'email',
         'member',

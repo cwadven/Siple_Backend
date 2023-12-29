@@ -49,6 +49,7 @@ class Member(AbstractUser):
 
 class Guest(models.Model):
     temp_nickname = models.CharField(max_length=45, unique=True, db_index=True)
+    ip = models.CharField(max_length=256, blank=True, null=True, db_index=True)
     email = models.EmailField(max_length=256, blank=True, null=True, db_index=True)
     member = models.OneToOneField(Member, models.DO_NOTHING, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
