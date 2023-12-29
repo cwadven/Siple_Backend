@@ -31,3 +31,9 @@ def get_jwt_refresh_token(guest: 'Guest') -> str:  # noqa
         'exp': datetime.utcnow() + refresh_expiration
     })
     return refresh_token
+
+
+def get_jwt_guest_token(guest: 'Guest') -> str:  # noqa
+    payload = jwt_payload_handler(guest)
+    token = jwt_encode_handler(payload)
+    return token
