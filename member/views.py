@@ -13,13 +13,20 @@ from common.common_utils import (
     get_jwt_login_token,
     get_jwt_refresh_token,
 )
-from common.common_utils.cache_utils import generate_dict_value_by_key_to_cache, get_cache_value_by_key, \
-    increase_cache_int_value_by_key, delete_cache_value_by_key
+from common.common_utils.cache_utils import (
+    generate_dict_value_by_key_to_cache,
+    get_cache_value_by_key,
+    increase_cache_int_value_by_key,
+    delete_cache_value_by_key,
+)
 from config.middlewares.authentications import jwt_decode_handler
 from member.dtos.request_dtos import (
     NormalLoginRequest,
     RefreshTokenRequest,
-    SocialLoginRequest, SignUpEmailTokenSendRequest, SignUpEmailTokenValidationEndRequest, SignUpValidationRequest,
+    SocialLoginRequest,
+    SignUpEmailTokenSendRequest,
+    SignUpEmailTokenValidationEndRequest,
+    SignUpValidationRequest,
 )
 from member.dtos.response_dtos import (
     NormalLoginResponse,
@@ -63,7 +70,7 @@ class LoginView(APIView):
         login(request, member)
         normal_login_response = NormalLoginResponse(
             access_token=get_jwt_login_token(member),
-            refresh_token=get_jwt_refresh_token(member),
+            refresh_token=get_jwt_refresh_token(member.guest),
         )
         return Response(normal_login_response.model_dump(), status=200)
 
@@ -84,7 +91,7 @@ class SocialLoginView(APIView):
         login(request, member)
         social_login_response = SocialLoginResponse(
             access_token=get_jwt_login_token(member),
-            refresh_token=get_jwt_refresh_token(member),
+            refresh_token=get_jwt_refresh_token(member.guest),
             is_created=is_created,
         )
         return Response(social_login_response.model_dump(), status=200)
@@ -101,7 +108,7 @@ class RefreshTokenView(APIView):
             member = Member.objects.get(id=payload.get('member_id'))
             refresh_token_response = RefreshTokenResponse(
                 access_token=get_jwt_login_token(member),
-                refresh_token=get_jwt_refresh_token(member),
+                refresh_token=get_jwt_refresh_token(member.guest),
             )
         except (Member.DoesNotExist, jwt.InvalidTokenError):
             return Response({'message': '잘못된 리프레시 토큰입니다.'}, status=401)
