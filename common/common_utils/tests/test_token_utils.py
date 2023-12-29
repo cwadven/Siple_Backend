@@ -12,40 +12,28 @@ from common.common_utils.token_utils import (
     get_jwt_refresh_token,
     jwt_payload_handler,
 )
-from member.models import Member, Guest
+from member.models import Guest
 
 
 class TestGetJWTLoginToken(TestCase):
     def setUp(self):
-        self.member = Member.objects.all().first()
-        self.guest = Guest.objects.create(
-            temp_nickname='temp_nickname',
-            ip='192.168.0.1',
-            email='email',
-            member=self.member,
-        )
+        self.guest = Guest.objects.all().first()
 
     @patch('common.common_utils.token_utils.jwt_payload_handler')
     @patch('common.common_utils.token_utils.jwt_encode_handler')
     def test_get_jwt_login_token(self, mock_jwt_encode_handler, mock_jwt_payload_handler):
         # Given:
         # When:
-        get_jwt_login_token(self.member)
+        get_jwt_login_token(self.guest.member)
 
         # Then: Ensure the function executes and returns the expected result
-        mock_jwt_payload_handler.assert_called_once_with(self.member.guest)
+        mock_jwt_payload_handler.assert_called_once_with(self.guest)
         mock_jwt_encode_handler.assert_called_once_with(mock_jwt_payload_handler.return_value)
 
 
 class TestGetJWTRefreshToken(TestCase):
     def setUp(self):
-        self.member = Member.objects.all().first()
-        self.guest = Guest.objects.create(
-            temp_nickname='temp_nickname',
-            ip='192.168.0.1',
-            email='email',
-            member=self.member,
-        )
+        self.guest = Guest.objects.all().first()
 
     @freeze_time('2020-01-01 00:00:00')
     @patch('common.common_utils.token_utils.jwt_encode_handler')
@@ -65,14 +53,9 @@ class TestGetJWTRefreshToken(TestCase):
 class JWTPayloadHandlerTest(TestCase):
     def setUp(self):
         self.UserModel = get_user_model()
-        self.member = Member.objects.all().first()
-        self.guest = Guest.objects.create(
-            temp_nickname='temp_nickname',
-            ip='192.168.0.1',
-            email='email',
-            member=self.member,
-        )
+        self.guest = Guest.objects.all().first()
 
+    @freeze_time('2020-01-01 00:00:00')
     def test_jwt_payload_handler_with_standard_user(self):
         # When:
         payload = jwt_payload_handler(self.guest)
@@ -81,8 +64,8 @@ class JWTPayloadHandlerTest(TestCase):
         self.assertDictEqual(
             payload,
             {
-                'guest_id': self.guest.pk,
-                'member_id': self.member.pk,
+                'guest_id': self.guest.id,
+                'member_id': self.guest.member.id,
                 'exp': datetime.utcnow() + api_settings.JWT_EXPIRATION_DELTA,
             }
         )
