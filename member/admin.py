@@ -1,11 +1,22 @@
 from django.contrib import admin
 
 from member.models import (
+    Guest,
     Member,
     MemberProvider,
     MemberStatus,
     MemberType,
 )
+
+
+class GuestAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'temp_nickname',
+        'email',
+        'member',
+        'last_joined_at',
+    ]
 
 
 class MemberAdmin(admin.ModelAdmin):
@@ -42,6 +53,7 @@ class MemberTypeAdmin(admin.ModelAdmin):
     ]
 
 
+admin.site.register(Guest, GuestAdmin)
 admin.site.register(Member, MemberAdmin)
 admin.site.register(MemberProvider, MemberProviderAdmin)
 admin.site.register(MemberStatus, MemberStatusAdmin)

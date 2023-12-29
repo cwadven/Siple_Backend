@@ -45,3 +45,15 @@ class Member(AbstractUser):
     def raise_if_inaccessible(self):
         if self.member_status_id != 1:
             raise MemberStatusExceptionTypeSelector(self.member_status_id).selector()
+
+
+class Guest(models.Model):
+    temp_nickname = models.CharField(max_length=45, unique=True, db_index=True)
+    email = models.EmailField(max_length=256, blank=True, null=True, db_index=True)
+    member = models.OneToOneField(Member, models.DO_NOTHING, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    last_joined_at = models.DateTimeField(db_index=True)
+
+    class Meta:
+        verbose_name = '비회원'
+        verbose_name_plural = '비회원'
