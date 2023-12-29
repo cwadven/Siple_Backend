@@ -35,7 +35,9 @@ class DefaultAuthentication(BaseAuthentication):
             raise exceptions.AuthenticationFailed(msg)
 
         guest = self.authenticate_credentials(payload)
+        request.guest = guest
         if guest.member:
+            request.member = guest.member
             guest.member.raise_if_inaccessible()
         return guest, jwt_value
 

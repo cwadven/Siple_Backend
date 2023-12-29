@@ -4,5 +4,6 @@ class RequestUserToMemberMiddleware:
 
     def __call__(self, request):
         request.member = request.user
+        request.guest = None
         response = self.get_response(request)
         return response
