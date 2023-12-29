@@ -16,6 +16,7 @@ class GuestAdmin(admin.ModelAdmin):
         'temp_nickname',
         'email',
         'member',
+        'is_blacklisted',
         'last_joined_at',
     ]
 
