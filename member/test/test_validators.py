@@ -94,6 +94,22 @@ class SignUpPayloadValidatorTest(TestCase):
         self.assertIn('nickname', errors)
         self.assertEqual(errors['nickname'], [MemberCreationExceptionMessage.NICKNAME_EXISTS.label])
 
+    @patch('member.validators.sign_up_validators.check_nickname_valid')
+    def test_validate_with_nickname_when_invalid_word(self, mock_check_nickname_valid):
+        # Given: check_nickname_valid 함수를 임시로 False 로 설정
+        mock_check_nickname_valid.return_value = False
+
+        # When:
+        validator = SignUpPayloadValidator(self.valid_payload)
+        errors = validator.validate()
+
+        # Then:
+        self.assertIn('nickname', errors)
+        self.assertEqual(
+            errors['nickname'],
+            [MemberCreationExceptionMessage.NICKNAME_BLACKLIST.label.format(self.valid_payload['nickname'])]
+        )
+
     def test_validate_with_invalid_nickname_length(self):
         # Given: 유효하지 않은 nickname 길이
         invalid_lengths = [NICKNAME_MIN_LENGTH - 1, NICKNAME_MAX_LENGTH + 1]

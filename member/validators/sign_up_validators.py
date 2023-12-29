@@ -14,7 +14,7 @@ from member.services import (
     check_nickname_exists,
     check_email_reg_exp_valid,
     check_only_alphanumeric,
-    check_only_korean_english_alphanumeric,
+    check_only_korean_english_alphanumeric, check_nickname_valid,
 )
 
 
@@ -43,6 +43,13 @@ class SignUpPayloadValidator(PayloadValidator):
         # nickname
         if check_nickname_exists(self.payload['nickname']):
             self.add_error_context('nickname', MemberCreationExceptionMessage.NICKNAME_EXISTS.label)
+        if not check_nickname_valid(self.payload['nickname']):
+            self.add_error_context(
+                'nickname',
+                MemberCreationExceptionMessage.NICKNAME_BLACKLIST.label.format(
+                    self.payload['nickname']
+                )
+            )
         if not (NICKNAME_MIN_LENGTH <= len(self.payload['nickname']) <= NICKNAME_MAX_LENGTH):
             self.add_error_context(
                 'nickname',
