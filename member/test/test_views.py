@@ -17,7 +17,7 @@ from member.consts import (
     USERNAME_MIN_LENGTH,
     USERNAME_MAX_LENGTH,
 )
-from member.models import Member
+from member.models import Member, Guest
 
 
 class SocialLoginViewTestCase(TestCase):
@@ -600,3 +600,68 @@ class SignUpValidationTestCase(TestCase):
                 PASSWORD_MAX_LENGTH,
             )
         )
+
+
+class GetOrCreateGuestTokenViewTestCase(TestCase):
+    def setUp(self):
+        super(GetOrCreateGuestTokenViewTestCase, self).setUp()
+
+    @patch('member.views.get_jwt_refresh_token')
+    @patch('member.views.get_jwt_guest_token')
+    @patch('member.views.get_request_ip')
+    def test_guest_ip_exists(self,
+                             mock_get_request_ip,
+                             mock_get_jwt_guest_token,
+                             mock_get_jwt_refresh_token):
+        # Given:
+        guest = Guest.objects.first()
+        mock_get_request_ip.return_value = guest.ip
+        mock_get_jwt_guest_token.return_value = 'test_guest_token'
+        mock_get_jwt_refresh_token.return_value = 'test_refresh_token'
+
+        # When: Guest Token Request
+        response = self.client.post(reverse('member:guest_token'))
+
+        # Then:
+        self.assertEqual(response.status_code, 200)
+        self.assertDictEqual(
+            response.data,
+            {
+                'access_token': 'test_guest_token',
+                'refresh_token': 'test_refresh_token',
+            }
+        )
+        mock_get_jwt_guest_token.called_once_with(guest)
+        mock_get_jwt_refresh_token.called_once_with(guest)
+
+    @patch('member.views.get_jwt_refresh_token')
+    @patch('member.views.get_jwt_guest_token')
+    @patch('member.views.get_request_ip')
+    def test_guest_ip_not_exists(self,
+                                 mock_get_request_ip,
+                                 mock_get_jwt_guest_token,
+                                 mock_get_jwt_refresh_token):
+        # Given:
+        self.assertEqual(
+            Guest.objects.filter(ip='111.111.111.111').exists(),
+            False,
+        )
+        mock_get_request_ip.return_value = '111.111.111.111'
+        mock_get_jwt_guest_token.return_value = 'test_guest_token'
+        mock_get_jwt_refresh_token.return_value = 'test_refresh_token'
+
+        # When: Guest Token Request
+        response = self.client.post(reverse('member:guest_token'))
+
+        # Then:
+        self.assertEqual(response.status_code, 200)
+        self.assertDictEqual(
+            response.data,
+            {
+                'access_token': 'test_guest_token',
+                'refresh_token': 'test_refresh_token',
+            }
+        )
+        guest = Guest.objects.get(ip='111.111.111.111')
+        mock_get_jwt_guest_token.called_once_with(guest)
+        mock_get_jwt_refresh_token.called_once_with(guest)

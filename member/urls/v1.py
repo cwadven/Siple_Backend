@@ -1,6 +1,7 @@
 from django.urls import path
 
 from member.views import (
+    GetOrCreateGuestTokenView,
     LoginView,
     RefreshTokenView,
     SignUpEmailTokenSendView,
@@ -16,6 +17,7 @@ urlpatterns = [
     path('login', LoginView.as_view(), name='normal_login'),
     path('social-login', SocialLoginView.as_view(), name='social_login'),
     path('refresh-token', RefreshTokenView.as_view(), name='refresh_token'),
+    path('guest-token', GetOrCreateGuestTokenView.as_view(), name='guest_token'),
 
     path('sign-up-validation', SignUpValidationView.as_view(), name='sign_up_validation'),
     path('sign-up-check', SignUpEmailTokenSendView.as_view(), name='sign_up_check'),

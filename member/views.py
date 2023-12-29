@@ -10,7 +10,7 @@ from common.common_decorators.request_decorators import mandatories
 from common.common_utils import (
     generate_random_string_digits,
     get_jwt_login_token,
-    get_jwt_refresh_token,
+    get_jwt_refresh_token, get_request_ip, get_jwt_guest_token,
 )
 from common.common_utils.cache_utils import (
     generate_dict_value_by_key_to_cache,
@@ -30,9 +30,9 @@ from member.dtos.request_dtos import (
 from member.dtos.response_dtos import (
     NormalLoginResponse,
     RefreshTokenResponse,
-    SocialLoginResponse,
+    SocialLoginResponse, GuestTokenGetOrCreateResponse,
 )
-from member.models import Member
+from member.models import Member, Guest
 from .consts import (
     MemberCreationExceptionMessage,
     MemberProviderEnum,
@@ -209,3 +209,21 @@ class SignUpValidationView(APIView):
         if error_dict:
             return Response(error_dict, 400)
         return Response({'message': 'success'}, 200)
+
+
+class GetOrCreateGuestTokenView(APIView):
+    def post(self, request):
+        ip = get_request_ip(request)
+        guest = Guest.objects.filter(
+            ip=ip,
+        ).last()
+        if not guest:
+            guest = Guest.objects.create(
+                ip=ip,
+                temp_nickname=f'비회원{generate_random_string_digits(8)}'
+            )
+        guest_token_get_or_create_response = GuestTokenGetOrCreateResponse(
+            access_token=get_jwt_guest_token(guest),
+            refresh_token=get_jwt_refresh_token(guest),
+        )
+        return Response(guest_token_get_or_create_response.model_dump(), status=200)

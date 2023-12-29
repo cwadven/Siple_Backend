@@ -15,3 +15,8 @@ class SocialLoginResponse(BaseModel):
 class RefreshTokenResponse(BaseModel):
     access_token: str = Field(...)
     refresh_token: str = Field(...)
+
+
+class GuestTokenGetOrCreateResponse(BaseModel):
+    access_token: str = Field(...)
+    refresh_token: str = Field(...)
