@@ -11,7 +11,7 @@ def forward(apps, schema_editor):
         temp_nickname='관리자',
         ip='000.000.000.000',
         email='admin@admin.com',
-        member=member,
+        member_id=member.id,
     )
 
 
