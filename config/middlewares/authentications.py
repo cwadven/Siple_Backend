@@ -9,6 +9,7 @@ from rest_framework.authentication import (
 )
 from rest_framework_jwt.settings import api_settings
 
+from member.exceptions import BlackMemberException
 
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 
@@ -36,6 +37,8 @@ class DefaultAuthentication(BaseAuthentication):
 
         guest = self.authenticate_credentials(payload)
         request.guest = guest
+        if guest.is_blacklisted:
+            raise BlackMemberException()
         if guest.member:
             request.member = guest.member
             guest.member.raise_if_inaccessible()
