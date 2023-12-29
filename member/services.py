@@ -1,5 +1,6 @@
 import re
 
+from common.models import BlackListWord
 from member.models import Member
 
 
@@ -9,6 +10,22 @@ def check_username_exists(username) -> bool:
 
 def check_nickname_exists(nickname) -> bool:
     return Member.objects.filter(nickname=nickname).exists()
+
+
+def check_nickname_valid(nickname) -> bool:
+    black_list_word_set = set(
+        BlackListWord.objects.filter(
+            black_list_section_id=1,
+        ).values_list(
+            'wording',
+            flat=True,
+        )
+    )
+    for word in black_list_word_set:
+        if word in nickname:
+            return False
+
+    return True
 
 
 def check_email_exists(email) -> bool:

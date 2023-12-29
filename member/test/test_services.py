@@ -1,9 +1,11 @@
 from django.test import TestCase
 
+from common.models import BlackListWord
 from member.models import Member
 from member.services import (
     check_email_exists,
     check_nickname_exists,
+    check_nickname_valid,
     check_only_alphanumeric,
     check_only_korean_english_alphanumeric,
     check_username_exists,
@@ -46,6 +48,21 @@ class MemberCheckMemberInfoTestCase(TestCase):
     def test_check_email_exists_should_return_false_when_username_not_exists(self):
         # Expected:
         self.assertEqual(check_email_exists('test@naver.com'), False)
+
+    def test_check_nickname_valid_when_valid(self):
+        # Given: test 라는 nickname 을 가진 Member 생성
+        # Expected:
+        self.assertEqual(check_nickname_valid('test'), True)
+
+    def test_check_nickname_valid_when_invalid(self):
+        # Given: test 라는 nickname 을 가진 Member 생성
+        BlackListWord.objects.create(
+            black_list_section_id=1,
+            wording='test',
+        )
+
+        # Expected:
+        self.assertEqual(check_nickname_valid('123test'), False)
 
 
 class CheckRegexTestCase(TestCase):
