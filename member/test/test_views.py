@@ -22,15 +22,14 @@ from member.models import Member, Guest
 
 class SocialLoginViewTestCase(TestCase):
     def setUp(self):
-        self.member = Member.objects.all().first()
+        self.member = Member.objects.create_user(username='test', nickname='test')
         self.url = reverse('member:social_login')
 
     @patch('member.views.Member.objects.get_or_create_member_by_token')
     @patch('member.views.Member.raise_if_inaccessible')
-    @patch('member.views.login')
     @patch('member.views.get_jwt_login_token')
     @patch('member.views.get_jwt_refresh_token')
-    def test_social_login(self, mock_get_jwt_refresh_token, mock_get_jwt_login_token, mock_login, mock_raise_if_inaccessible, mock_get_or_create_member_by_token):
+    def test_social_login(self, mock_get_jwt_refresh_token, mock_get_jwt_login_token, mock_raise_if_inaccessible, mock_get_or_create_member_by_token):
         # Given: test data
         data = {
             'provider': 0,
@@ -48,11 +47,14 @@ class SocialLoginViewTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Check the response data for expected keys
-        mock_login.called_once()
         mock_raise_if_inaccessible.called_once()
         self.assertEqual(response.data['access_token'], 'test_access_token')
         self.assertEqual(response.data['refresh_token'], 'test_refresh_token')
         self.assertEqual(response.data['is_created'], True)
+        self.assertEqual(
+            Guest.objects.filter(member=self.member).exists(),
+            True
+        )
 
 
 class LoginViewTestCase(TestCase):
@@ -60,11 +62,10 @@ class LoginViewTestCase(TestCase):
         self.member = Member.objects.all().first()
         self.url = reverse('member:normal_login')
 
-    @patch('member.views.login')
+    @patch('member.views.authenticate')
     @patch('member.views.get_jwt_login_token')
     @patch('member.views.get_jwt_refresh_token')
-    @patch('member.views.authenticate')
-    def test_login_when_success(self, mock_authenticate, mock_get_jwt_refresh_token, mock_get_jwt_login_token, mock_login):
+    def test_login_when_success(self, mock_get_jwt_refresh_token, mock_get_jwt_login_token, mock_authenticate):
         # Given: test data
         data = {
             'username': 'test_username',
@@ -83,7 +84,6 @@ class LoginViewTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Check the response data for expected keys
-        mock_login.called_once()
         self.assertEqual(response.data['access_token'], 'test_access_token')
         self.assertEqual(response.data['refresh_token'], 'test_refresh_token')
 
@@ -439,6 +439,10 @@ class SignUpEmailTokenValidationEndViewTestCase(TestCase):
         self.assertEqual(
             Member.objects.filter(email=mock_get_cache_value_by_key.return_value['email']).exists(),
             True
+        )
+        self.assertEqual(
+            Guest.objects.filter(email=mock_get_cache_value_by_key.return_value['email']).exists(),
+            True,
         )
 
 

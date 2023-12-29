@@ -2,6 +2,7 @@ import jwt
 from django.contrib.auth import (
     authenticate,
 )
+from django.db import transaction
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -77,6 +78,7 @@ class LoginView(APIView):
 
 class SocialLoginView(APIView):
     @mandatories('provider', 'token')
+    @transaction.atomic
     def post(self, request, m):
         social_login_request = SocialLoginRequest(
             token=m['token'],
@@ -86,6 +88,14 @@ class SocialLoginView(APIView):
             social_login_request.token,
             social_login_request.provider,
         )
+        if is_created:
+            if not request.guest:
+                request.guest = Guest(ip=get_request_ip(request))
+            request.guest.temp_nickname = member.nickname
+            request.guest.email = member.email
+            request.guest.member = member
+            request.guest.save()
+
         member.raise_if_inaccessible()
 
         social_login_response = SocialLoginResponse(
@@ -148,6 +158,7 @@ class SignUpEmailTokenSendView(APIView):
 
 class SignUpEmailTokenValidationEndView(APIView):
     @mandatories('email', 'one_time_token')
+    @transaction.atomic
     def post(self, request, m):
         payload = SignUpEmailTokenValidationEndRequest(
             email=m['email'],
@@ -182,7 +193,7 @@ class SignUpEmailTokenValidationEndView(APIView):
         if check_email_exists(value['email']):
             return Response({'message': MemberCreationExceptionMessage.EMAIL_EXISTS.label}, 400)
 
-        Member.objects.create_user(
+        member = Member.objects.create_user(
             username=value['username'],
             nickname=value['nickname'],
             email=value['email'],
@@ -190,6 +201,12 @@ class SignUpEmailTokenValidationEndView(APIView):
             password=value['password2'],
             member_provider_id=MemberProviderEnum.EMAIL.value,
         )
+        if not request.guest:
+            request.guest = Guest(ip=get_request_ip(request))
+        request.guest.temp_nickname = member.nickname
+        request.guest.email = member.email
+        request.guest.member = member
+        request.guest.save()
 
         delete_cache_value_by_key(value['email'])
         delete_cache_value_by_key(SIGNUP_MACRO_VALIDATION_KEY.format(payload.email))
@@ -218,6 +235,7 @@ class GetOrCreateGuestTokenView(APIView):
         ip = get_request_ip(request)
         guest = Guest.objects.filter(
             ip=ip,
+            member__isnull=True,
         ).last()
         if not guest:
             guest = Guest.objects.create(
