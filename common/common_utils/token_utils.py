@@ -2,22 +2,17 @@ from datetime import (
     timedelta,
     datetime,
 )
-from rest_framework_jwt.compat import (
-    get_username,
-)
 from rest_framework_jwt.settings import api_settings
 
 
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 
 
-def jwt_payload_handler(member: 'Member') -> dict:  # noqa
-    username = get_username(member)
+def jwt_payload_handler(guest: 'Guest') -> dict:  # noqa
     payload = {
-        'member_id': member.pk,
-        'email': member.email,
+        'guest_id': guest.pk,
+        'member_id': guest.member_id,
         'exp': datetime.utcnow() + api_settings.JWT_EXPIRATION_DELTA,
-        'username': username,
     }
     return payload
 

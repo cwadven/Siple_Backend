@@ -5,13 +5,14 @@ from django.test import TestCase
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from rest_framework_jwt.settings import api_settings
 
 from common.common_utils.token_utils import (
     get_jwt_login_token,
     get_jwt_refresh_token,
     jwt_payload_handler,
 )
-from member.models import Member
+from member.models import Member, Guest
 
 
 class TestGetJWTLoginToken(TestCase):
@@ -52,20 +53,23 @@ class JWTPayloadHandlerTest(TestCase):
     def setUp(self):
         self.UserModel = get_user_model()
         self.member = Member.objects.all().first()
+        self.guest = Guest.objects.create(
+            temp_nickname='temp_nickname',
+            ip='192.168.0.1',
+            email='email',
+            member=self.member,
+        )
 
     def test_jwt_payload_handler_with_standard_user(self):
         # When:
-        payload = jwt_payload_handler(self.member)
+        payload = jwt_payload_handler(self.guest)
 
         # Then:
-        self.assertEqual(payload['username'], self.member.username)
-        self.assertEqual(payload['email'], self.member.email)
-        self.assertEqual(payload['member_id'], self.member.pk)
-        self.assertIn('exp', payload)
-
-    def test_jwt_payload_handler_with_uuid_user_id(self):
-        # When:
-        payload = jwt_payload_handler(self.member)
-
-        # Then:
-        self.assertEqual(payload['member_id'], self.member.pk)
+        self.assertDictEqual(
+            payload,
+            {
+                'guest_id': self.guest.pk,
+                'member_id': self.member.pk,
+                'exp': datetime.utcnow() + api_settings.JWT_EXPIRATION_DELTA,
+            }
+        )
