@@ -100,6 +100,49 @@ class Order(models.Model):
 
         return order_number
 
+    @classmethod
+    @transaction.atomic
+    def initialize(
+            cls,
+            product: 'Product',  # noqa
+            guest: 'Guest',  # noqa
+            order_phone_number: str,
+            payment_type: str,
+            total_price: int,
+            total_tax_price: int,
+            total_product_price: int,
+            total_paid_price: int,
+            total_tax_paid_price: int,
+            total_product_paid_price: int,
+            total_discounted_price: int,
+            total_product_discounted_price: int,
+            **kwargs
+    ):
+        order = cls.objects.create(
+            guest_id=guest.id,
+            member_id=guest.member_id,
+            order_number=cls.create_order_number(product.order_number_prefix),
+            tid=None,
+            total_price=total_price,
+            total_tax_price=total_tax_price,
+            total_product_price=total_product_price,
+            total_paid_price=total_paid_price,
+            total_tax_paid_price=total_tax_paid_price,
+            total_product_paid_price=total_product_paid_price,
+            total_discounted_price=total_discounted_price,
+            total_product_discounted_price=total_product_discounted_price,
+            status=OrderStatus.READY.value,
+            order_phone_number=order_phone_number,
+            payment_type=payment_type,
+            need_notification_sent=product.need_notification_sent,
+        )
+        # 상태 Log 생성
+        OrderStatusLog.objects.create(
+            order=order,
+            status=OrderStatus.READY.value,
+        )
+        return order
+
     @transaction.atomic
     def approve(self, payment_type: str):
         """

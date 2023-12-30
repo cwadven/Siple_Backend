@@ -16,6 +16,7 @@ from order.models import (
     OrderItemStatusLog,
     OrderStatusLog,
 )
+from product.models import PointProduct
 
 
 def _create_order(
@@ -102,6 +103,47 @@ class OrderMethodTestCase(TestCase):
 
         self.prefix = "XYZ"
         self.create_order_number_function = Order.create_order_number
+
+    def test_initialize(self):
+        # Given: Create Product
+        point_product = PointProduct()
+
+        # When:
+        order = Order.initialize(
+            product=point_product,
+            guest=self.guest,
+            order_phone_number='01012341234',
+            payment_type=PaymentType.KAKAOPAY_CARD.value,
+            total_price=0,
+            total_tax_price=0,
+            total_product_price=0,
+            total_paid_price=0,
+            total_tax_paid_price=0,
+            total_product_paid_price=0,
+            total_discounted_price=0,
+            total_product_discounted_price=0,
+        )
+
+        # Then:
+        self.assertEqual(
+            Order.objects.filter(
+                guest_id=self.guest.id,
+                member_id=self.guest.member_id,
+                order_phone_number='01012341234',
+                payment_type=PaymentType.KAKAOPAY_CARD.value,
+                status=OrderStatus.READY.value,
+            ).exists(),
+            True
+        )
+        # And: Order Status Log 생성
+        self.assertEqual(
+            OrderStatusLog.objects.filter(
+                order_id=order.id,
+                status=OrderStatus.READY.value,
+                request_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+            ).exists(),
+            True
+        )
 
     def test_approve(self):
         # Given:
