@@ -1,4 +1,8 @@
-from django.db import models
+from django.db import (
+    models,
+    transaction,
+)
+from django.utils import timezone
 
 from order.consts import (
     OrderStatus,
@@ -76,6 +80,104 @@ class Order(models.Model):
     class Meta:
         verbose_name = '주문 요약'
         verbose_name_plural = '주문 요약'
+
+    @transaction.atomic
+    def approve(self, payment_type: str):
+        """
+        결제 승인
+        """
+        # 상태 업데이트
+        now = timezone.now()
+        self.status = OrderStatus.SUCCESS.value
+        self.payment_type = payment_type
+        self.succeeded_at = now
+        self.save(update_fields=['status', 'payment_type', 'succeeded_at'])
+        # 상태 Log 생성
+        OrderStatusLog.objects.create(
+            order=self,
+            status=OrderStatus.SUCCESS.value,
+        )
+
+        # Item 상태 업데이트
+        self.items.update(
+            status=OrderStatus.SUCCESS.value,
+            succeeded_at=now,
+        )
+        # Item 상태 Log 생성
+        OrderItemStatusLog.objects.bulk_create(
+            [
+                OrderItemStatusLog(
+                    order_item=item,
+                    status=OrderStatus.SUCCESS.value,
+                    request_at=now,
+                )
+                for item in self.items.all()
+            ]
+        )
+
+    @transaction.atomic
+    def cancel(self):
+        """
+        결제 취소
+        """
+        # 상태 업데이트
+        now = timezone.now()
+        self.status = OrderStatus.CANCEL.value
+        self.canceled_at = now
+        self.save(update_fields=['status', 'canceled_at'])
+        # 상태 Log 생성
+        OrderStatusLog.objects.create(
+            order=self,
+            status=OrderStatus.CANCEL.value,
+        )
+
+        # Item 상태 업데이트
+        self.items.update(
+            status=OrderStatus.CANCEL.value,
+            canceled_at=now,
+        )
+        # Item 상태 Log 생성
+        OrderItemStatusLog.objects.bulk_create(
+            [
+                OrderItemStatusLog(
+                    order_item=item,
+                    status=OrderStatus.CANCEL.value,
+                    request_at=now,
+                )
+                for item in self.items.all()
+            ]
+        )
+
+    @transaction.atomic
+    def fail(self):
+        """
+        결제 실패
+        """
+        now = timezone.now()
+        # 상태 업데이트
+        self.status = OrderStatus.FAIL.value
+        self.save(update_fields=['status'])
+        # 상태 Log 생성
+        OrderStatusLog.objects.create(
+            order=self,
+            status=OrderStatus.FAIL.value,
+        )
+
+        # Item 상태 업데이트
+        self.items.update(
+            status=OrderStatus.FAIL.value,
+        )
+        # Item 상태 Log 생성
+        OrderItemStatusLog.objects.bulk_create(
+            [
+                OrderItemStatusLog(
+                    order_item=item,
+                    status=OrderStatus.FAIL.value,
+                    request_at=now,
+                )
+                for item in self.items.all()
+            ]
+        )
 
 
 class OrderStatusLog(models.Model):
