@@ -33,6 +33,7 @@ THIRD_APPS = [
 PROJECT_APPS = [
     'common',
     'member',
+    'order',
 ]
 
 PROJECT_SETTING_APPS = []
