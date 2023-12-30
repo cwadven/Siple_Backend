@@ -1,3 +1,6 @@
+import random
+
+import string
 from django.db import (
     models,
     transaction,
@@ -80,6 +83,22 @@ class Order(models.Model):
     class Meta:
         verbose_name = '주문 요약'
         verbose_name_plural = '주문 요약'
+
+    @staticmethod
+    def create_order_number(prefix: str):
+        valid_chars = [char for char in string.ascii_uppercase if char != 'O'] + \
+                      [digit for digit in string.digits if digit != '0']
+        while True:
+            order_number = prefix + ''.join(
+                random.choices(
+                    valid_chars,
+                    k=50 - len(prefix)
+                )
+            )
+            if not Order.objects.filter(order_number=order_number).exists():
+                break
+
+        return order_number
 
     @transaction.atomic
     def approve(self, payment_type: str):

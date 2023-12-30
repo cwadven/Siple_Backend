@@ -100,6 +100,9 @@ class OrderMethodTestCase(TestCase):
             status=OrderStatus.READY.value,
         )
 
+        self.prefix = "XYZ"
+        self.create_order_number_function = Order.create_order_number
+
     def test_approve(self):
         # Given:
         # When: approved with KAKAOPAY_CARD
@@ -278,5 +281,23 @@ class OrderMethodTestCase(TestCase):
                 status=OrderStatus.FAIL.value,
                 request_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
             ).exists(),
+            True
+        )
+
+    def test_test_create_order_number_length(self):
+        # When: create order number
+        order_number = self.create_order_number_function(self.prefix)
+        # Then:
+        self.assertEqual(
+            len(order_number),
+            50,
+        )
+
+    def test_create_order_number_prefix(self):
+        # When: create order number
+        order_number = self.create_order_number_function(self.prefix)
+        # Then:
+        self.assertEqual(
+            order_number.startswith(self.prefix),
             True
         )
