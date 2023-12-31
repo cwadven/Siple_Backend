@@ -12,7 +12,10 @@ from common.common_testcase_helpers.testcase_helpers import (
 )
 from member.models import Guest
 from order.consts import OrderStatus
-from product.models import GiveProduct, GiveProductLog
+from product.models import (
+    GiveProduct,
+    GiveProductLog,
+)
 
 
 @freeze_time('2022-01-01')
