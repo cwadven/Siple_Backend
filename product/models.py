@@ -90,7 +90,15 @@ class PointProduct(Product):
         return f'{self.title} - {self.price} - {self.point}'
 
     @transaction.atomic
-    def initialize_order(self, guest: 'Guest', order_phone_number: str, payment_type: str, quantity: int, **kwargs) -> 'Order':  # noqa
+    def initialize_order(
+            self,
+            guest: 'Guest',  # noqa
+            order_phone_number: str,
+            payment_type: str,
+            quantity: int,
+            discount_handler: callable = None,
+            **kwargs
+    ) -> 'Order':  # noqa
         # 추후에는 Cart 라는 것에 옮겨야 할 것 같음
         total_product_price = self.price * quantity
         total_price = total_product_price
@@ -99,7 +107,7 @@ class PointProduct(Product):
         total_discounted_price = total_product_discounted_price + guest_discounted_price
         total_paid_price = total_price - total_discounted_price
 
-        give_total_point = self.point * quantity
+        total_point = self.point * quantity
 
         order = Order.initialize(
             product=self,
@@ -129,8 +137,10 @@ class PointProduct(Product):
             guest_id=guest.id,
             product_pk=self.id,
             product_type=self.product_type,
+            quantity=quantity,
             data={
-                'total_point': give_total_point,
+                'point': self.point,
+                'total_point': total_point,
                 'quantity': quantity,
             },
         )
