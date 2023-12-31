@@ -60,6 +60,7 @@ class Product(models.Model):
         to='product.ProductTag',
         blank=True,
     )
+    ordering = models.PositiveIntegerField(verbose_name='순서', default=0, db_index=True)
     is_deleted = models.BooleanField(verbose_name='삭제 여부', default=False)
     created_at = models.DateTimeField(verbose_name='생성일', auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name='수정일', auto_now=True)
