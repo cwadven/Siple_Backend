@@ -357,7 +357,7 @@ class KakaoPayCancelForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
             status=ProductGivenStatus.READY.value,
         )
         # When:
-        response = self.c.get(reverse('payment:product_cancel', args=[self.order.id]))
+        response = self.client.get(reverse('payment:product_cancel', args=[self.order.id]))
         content = json.loads(response.content)
 
         # Then: 주문 취소 성공
@@ -374,7 +374,23 @@ class KakaoPayCancelForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
         self.login_guest(self.guest)
 
         # When: 없는 주문 id 로 결제 신청
-        response = self.c.get(reverse('payment:product_cancel', args=[0]))
+        response = self.client.get(reverse('payment:product_cancel', args=[0]))
+        content = json.loads(response.content)
+
+        # Then: Order가 없어서 주문 취소 실패
+        self.assertEqual(response.status_code, OrderNotExists.status_code)
+        self.assertEqual(content['message'], OrderNotExists.default_detail)
+
+    def test_kakao_pay_cancel_for_buy_product_api_when_fail_due_not_guests_order(self):
+        # Given:
+        guest = Guest.objects.create(
+            ip='testtest',
+            temp_nickname='비회원test'
+        )
+        self.login_guest(guest)
+
+        # When: 없는 주문 id 로 결제 신청
+        response = self.client.get(reverse('payment:product_cancel', args=[self.order.id]))
         content = json.loads(response.content)
 
         # Then: Order가 없어서 주문 취소 실패
@@ -440,7 +456,7 @@ class KakaoPayFailForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
             status=ProductGivenStatus.READY.value,
         )
         # When:
-        response = self.c.get(reverse('payment:product_fail', args=[self.order.id]))
+        response = self.client.get(reverse('payment:product_fail', args=[self.order.id]))
         content = json.loads(response.content)
 
         # Then: 주문 실패 성공
@@ -457,9 +473,25 @@ class KakaoPayFailForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
         self.login_guest(self.guest)
 
         # When: 없는 주문 id 로 결제 신청
-        response = self.c.get(reverse('payment:product_fail', args=[0]))
+        response = self.client.get(reverse('payment:product_fail', args=[0]))
         content = json.loads(response.content)
 
         # Then: Order가 없어서 주문실패 실패
+        self.assertEqual(response.status_code, OrderNotExists.status_code)
+        self.assertEqual(content['message'], OrderNotExists.default_detail)
+
+    def test_kakao_pay_fail_for_buy_product_api_when_fail_due_not_guests_order(self):
+        # Given:
+        guest = Guest.objects.create(
+            ip='testtest',
+            temp_nickname='비회원test'
+        )
+        self.login_guest(guest)
+
+        # When: 없는 주문 id 로 결제 신청
+        response = self.client.get(reverse('payment:product_fail', args=[self.order.id]))
+        content = json.loads(response.content)
+
+        # Then: Order가 없어서 주문 취소 실패
         self.assertEqual(response.status_code, OrderNotExists.status_code)
         self.assertEqual(content['message'], OrderNotExists.default_detail)

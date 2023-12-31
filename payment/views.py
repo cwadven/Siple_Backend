@@ -115,7 +115,10 @@ class KakaoPayApproveForBuyProductAPIView(APIView):
 class KakaoPayCancelForBuyProductAPIView(APIView):
     def get(self, request, order_id):
         try:
-            order = Order.objects.get(id=order_id)
+            order = Order.objects.get(
+                id=order_id,
+                guest_id=request.guest.id,
+            )
         except Order.DoesNotExist:
             raise OrderNotExists()
 
@@ -137,7 +140,10 @@ class KakaoPayCancelForBuyProductAPIView(APIView):
 class KakaoPayFailForBuyProductAPIView(APIView):
     def get(self, request, order_id):
         try:
-            order = Order.objects.get(id=order_id)
+            order = Order.objects.get(
+                id=order_id,
+                guest_id=request.guest.id,
+            )
         except Order.DoesNotExist:
             raise OrderNotExists()
 
