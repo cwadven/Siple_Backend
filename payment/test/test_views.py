@@ -380,3 +380,86 @@ class KakaoPayCancelForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
         # Then: Order가 없어서 주문 취소 실패
         self.assertEqual(response.status_code, OrderNotExists.status_code)
         self.assertEqual(content['message'], OrderNotExists.default_detail)
+
+
+@freeze_time('2021-01-01')
+class KakaoPayFailForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
+    def setUp(self):
+        super(KakaoPayFailForBuyProductAPIViewTestCase, self).setUp()
+        self.guest = Guest.objects.all().first()
+        self.order = test_case_create_order(
+            guest=self.guest,
+            order_number='F1234512345',
+            tid='test_tid',
+            status=OrderStatus.READY.value,
+            order_phone_number='01012341234',
+            payment_type='',
+            total_paid_price=3000,
+        )
+        self.active_1000_point_product_ordering_1 = PointProduct.objects.create(
+            title='Active Point Product1',
+            price=1000,
+            start_time=timezone.now() - timezone.timedelta(hours=1),
+            end_time=timezone.now() + timezone.timedelta(hours=1),
+            total_quantity=10,
+            left_quantity=10,
+            point=1000,
+            ordering=1,
+            created_guest=self.guest
+        )
+        self.order_item = test_case_create_order_item(
+            order=self.order,
+            product_type=self.active_1000_point_product_ordering_1.product_type,
+            product_id=self.active_1000_point_product_ordering_1.id,
+            item_quantity=3,
+            status=OrderStatus.READY.value,
+            paid_price=self.active_1000_point_product_ordering_1.price * 3,
+        )
+
+    @patch('payment.views.GiveProduct.fail')
+    @patch('payment.views.Order.fail')
+    def test_kakao_pay_fail_for_buy_product_api_when_success(self,
+                                                             mock_order_fail,
+                                                             mock_give_product_fail):
+        # Given:
+        self.login_guest(self.guest)
+        # And: GiveProduct Ready 생성
+        GiveProduct.objects.create(
+            order_item_id=self.order_item.id,
+            guest_id=self.guest.id,
+            product_pk=self.active_1000_point_product_ordering_1.id,
+            product_type=self.active_1000_point_product_ordering_1.product_type,
+            quantity=1,
+            meta_data=json.dumps(
+                {
+                    'point': self.active_1000_point_product_ordering_1.point,
+                    'quantity': 3,
+                    'total_point': self.active_1000_point_product_ordering_1.point * 3,
+                }
+            ),
+            status=ProductGivenStatus.READY.value,
+        )
+        # When:
+        response = self.c.get(reverse('payment:product_fail', args=[self.order.id]))
+        content = json.loads(response.content)
+
+        # Then: 주문 실패 성공
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            content['message'],
+            '결제가 실패되었습니다.'
+        )
+        mock_order_fail.assert_called_once_with()
+        mock_give_product_fail.assert_called_once_with()
+
+    def test_kakao_pay_fail_for_buy_product_api_when_fail_due_order_not_exists(self):
+        # Given:
+        self.login_guest(self.guest)
+
+        # When: 없는 주문 id 로 결제 신청
+        response = self.c.get(reverse('payment:product_fail', args=[0]))
+        content = json.loads(response.content)
+
+        # Then: Order가 없어서 주문실패 실패
+        self.assertEqual(response.status_code, OrderNotExists.status_code)
+        self.assertEqual(content['message'], OrderNotExists.default_detail)
