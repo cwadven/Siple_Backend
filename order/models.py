@@ -276,6 +276,39 @@ class OrderItem(models.Model):
         verbose_name = '주문 상세'
         verbose_name_plural = '주문 상세'
 
+    @classmethod
+    @transaction.atomic
+    def initialize(
+            cls,
+            order_id: int,
+            product_id: int,
+            product_type: str,
+            product_price: int,
+            discounted_price: int,
+            paid_price: int,
+            item_quantity: int,
+    ):
+        """
+        주문 상세 생성
+        """
+        order_item = cls(
+            order_id=order_id,
+            product_id=product_id,
+            product_type=product_type,
+            product_price=product_price,
+            discounted_price=discounted_price,
+            paid_price=paid_price,
+            item_quantity=item_quantity,
+            status=OrderStatus.READY.value,
+        )
+        order_item.save()
+        OrderItemStatusLog.objects.create(
+            order_item=order_item,
+            status=OrderStatus.READY.value,
+        )
+
+        return order_item
+
 
 class OrderItemRefund(models.Model):
     order_item = models.ForeignKey(OrderItem, verbose_name='주문 상세', on_delete=models.CASCADE)

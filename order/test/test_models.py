@@ -343,3 +343,68 @@ class OrderMethodTestCase(TestCase):
             order_number.startswith(self.prefix),
             True
         )
+
+
+@freeze_time('2022-01-01')
+class OrderItemMethodTestCase(TestCase):
+    def setUp(self):
+        self.guest = Guest.objects.first()
+        self.order = _create_order(
+            guest=self.guest,
+            order_number='F1234512345',
+            tid='test_tid',
+            status=OrderStatus.READY.value,
+            order_phone_number='01012341234',
+            payment_type='',
+        )
+        self.order_item1 = _create_order_item(
+            order=self.order,
+            product_type='POINT',
+            product_id=1,
+            item_quantity=1,
+            status=OrderStatus.READY.value,
+        )
+        self.order_item2 = _create_order_item(
+            order=self.order,
+            product_type='POINT',
+            product_id=2,
+            item_quantity=1,
+            status=OrderStatus.READY.value,
+        )
+
+    def test_initialize(self):
+        # Given: Create Product
+
+        # When:
+        order_item = OrderItem.initialize(
+            order_id=self.order.id,
+            product_id=999,
+            product_type='TEST',
+            product_price=0,
+            discounted_price=0,
+            paid_price=0,
+            item_quantity=0,
+        )
+
+        # Then:
+        self.assertEqual(
+            OrderItem.objects.filter(
+                product_id=999,
+                product_type='TEST',
+                product_price=0,
+                discounted_price=0,
+                paid_price=0,
+                item_quantity=0,
+                status=OrderStatus.READY.value,
+            ).exists(),
+            True
+        )
+        # And: OrderItem Status Log 생성
+        self.assertEqual(
+            OrderItemStatusLog.objects.filter(
+                order_item_id=order_item.id,
+                status=OrderStatus.READY.value,
+                request_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+            ).exists(),
+            True
+        )
