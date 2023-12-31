@@ -3,6 +3,8 @@ from pathlib import Path
 
 import logging
 
+import datetime
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 logger = logging.getLogger('django')
@@ -115,6 +117,10 @@ REST_FRAMEWORK = {
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
+
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=7200),  # 2 hours
+}
 
 SITE_ID = 1
 
