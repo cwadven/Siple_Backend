@@ -76,3 +76,32 @@ class PointProductListAPIViewTestCase(TestCase):
                 'bought_count': 0,
             }
         )
+
+    def test_point_product_list_with_pagination(self):
+        # Given:
+        params = {
+            'page': 1,
+            'size': 1,
+        }
+        # When:
+        response = self.client.get(reverse('product:points'), data=params)
+        content = json.loads(response.content)
+
+        # Then: product excepted list
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(content['products']), 1)
+        self.assertDictEqual(
+            content['products'][0],
+            {
+                'product_id': self.active_1000_point_product_ordering_1.id,
+                'title': 'Active Point Product1',
+                'description': None,
+                'is_sold_out': False,
+                'price': 1000,
+                'point': 1000,
+                'product_type': self.active_1000_point_product_ordering_1.product_type,
+                'review_count': 0,
+                'review_rate': 0.0,
+                'bought_count': 0,
+            }
+        )
