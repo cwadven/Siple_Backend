@@ -239,12 +239,12 @@ class GiveProduct(models.Model):
             try:
                 point = PointProduct.objects.get(
                     id=self.product_pk,
-                ).point
+                ).point * self.quantity
             except PointProduct.DoesNotExist:
-                point = json.loads(self.meta_data).get('point', 0)
+                point = json.loads(self.meta_data).get('total_point', 0)
             give_point(
                 guest_id=self.guest_id,
-                point=point * self.quantity,
+                point=point,
                 reason='포인트 지급',
             )
 

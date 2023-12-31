@@ -203,7 +203,11 @@ class GiveProductMethodTestCase(TestCase):
     def test_give_when_point_product_not_exists(self, mock_give_point):
         # Given:
         quantity = 10
-        meta_data = {'point': 10000}
+        meta_data = {
+            'point': 1000,
+            'quantity': quantity,
+            'total_point': 1000 * 10,
+        }
         # And: PointProduct 가 없음
         give_product_ready_status = GiveProduct.ready(
             order_item_id=self.order_item1.id,
