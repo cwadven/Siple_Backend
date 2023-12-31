@@ -99,7 +99,7 @@ class PointProduct(Product):
         total_discounted_price = total_product_discounted_price + guest_discounted_price
         total_paid_price = total_price - total_discounted_price
 
-        # total_point = self.point * quantity
+        give_total_point = self.point * quantity
 
         order = Order.initialize(
             product=self,
@@ -115,7 +115,7 @@ class PointProduct(Product):
             total_discounted_price=total_discounted_price,
             total_product_discounted_price=total_product_discounted_price,
         )
-        OrderItem.initialize(
+        order_item = OrderItem.initialize(
             order_id=order.id,
             product_id=self.id,
             product_type=self.product_type,
@@ -124,12 +124,16 @@ class PointProduct(Product):
             paid_price=total_paid_price,
             item_quantity=quantity,
         )
-
-        # GiveProduct.ready(
-        #     order_id=order.id,
-        #     user_id=user_id,
-        #     point=total_point,
-        # )
+        GiveProduct.ready(
+            order_item_id=order_item.id,
+            guest_id=guest.id,
+            product_pk=self.id,
+            product_type=self.product_type,
+            data={
+                'total_point': give_total_point,
+                'quantity': quantity,
+            },
+        )
         return order
 
 
@@ -138,6 +142,9 @@ class GiveProduct(models.Model):
     guest_id = models.PositiveBigIntegerField(verbose_name='Guest pk', db_index=True, null=True)
     product_pk = models.PositiveBigIntegerField(verbose_name='상품 pk', db_index=True)
     product_type = models.CharField(verbose_name='상품 타입', max_length=20)
+    quantity = models.PositiveIntegerField(
+        verbose_name='수량',
+    )
     meta_data = models.TextField(verbose_name='메타 데이터', null=True)  # Meta data for logging
     status = models.CharField(
         verbose_name='지급 상태',
