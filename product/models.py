@@ -73,7 +73,15 @@ class Product(models.Model):
     def __str__(self):
         return f'{self.title} - {self.price}'
 
-    def initialize_order(self, guest: 'Guest', order_phone_number: str, payment_type: str, quantity: int, **kwargs) -> 'Order':  # noqa
+    def initialize_order(
+            self,
+            guest: 'Guest',  # noqa
+            order_phone_number: str,
+            payment_type: str,
+            quantity: int,
+            discount_handler: callable = None,
+            **kwargs
+    ) -> 'Order':  # noqa
         return
 
 
