@@ -3,21 +3,21 @@ from unittest.mock import patch, MagicMock, PropertyMock
 
 from payment.helpers.kakaopay_helpers import (
     KakaoPay,
-    KakaoPayPointProductHandler,
+    KakaoPayProductHandler,
 )
 
 
-class KakaoPayPointProductHandlerTestCase(TestCase):
+class KakaoPayProductHandlerTestCase(TestCase):
     def setUp(self):
         pass
 
-    @patch('payment.helpers.kakaopay_helpers.KakaoPayPointProductHandler.approval_url', new_callable=PropertyMock)
-    @patch('payment.helpers.kakaopay_helpers.KakaoPayPointProductHandler.cancel_url', new_callable=PropertyMock)
-    @patch('payment.helpers.kakaopay_helpers.KakaoPayPointProductHandler.fail_url', new_callable=PropertyMock)
+    @patch('payment.helpers.kakaopay_helpers.KakaoPayProductHandler.approval_url', new_callable=PropertyMock)
+    @patch('payment.helpers.kakaopay_helpers.KakaoPayProductHandler.cancel_url', new_callable=PropertyMock)
+    @patch('payment.helpers.kakaopay_helpers.KakaoPayProductHandler.fail_url', new_callable=PropertyMock)
     def test_kakao_pay_point_handler(self, mock_fail_url, mock_cancel_url, mock_approval_url):
         # Given: kakao pay point handler 객체 생성
         order_id = 1
-        kakao_pay_point_handler = KakaoPayPointProductHandler(order_id=order_id)
+        kakao_pay_point_handler = KakaoPayProductHandler(order_id=order_id)
         # And: mock_approval_url
         mock_fail_url.return_value = f'http://localhost:9000/v1/payment/point/fail/{order_id}'
         mock_cancel_url.return_value = f'http://localhost:9000/v1/payment/point/cancel/{order_id}'
@@ -40,7 +40,7 @@ class KakaoPayPointProductHandlerTestCase(TestCase):
 
 class KakaoPayTestCase(TestCase):
     def setUp(self):
-        self.kakao_pay_handler = KakaoPayPointProductHandler(order_id=1)
+        self.kakao_pay_handler = KakaoPayProductHandler(order_id=1)
 
     @patch('payment.helpers.kakaopay_helpers.requests.post')
     def test_ready_to_pay(self, mock_kakao_pay_ready):

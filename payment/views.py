@@ -11,7 +11,7 @@ from payment.dtos.response_dtos import KakaoPayReadyForBuyProductResponse
 from payment.exceptions import UnavailablePayHandler
 from payment.helpers.kakaopay_helpers import (
     KakaoPay,
-    KakaoPayPointProductHandler,
+    KakaoPayProductHandler,
 )
 from product.exceptions import ProductNotExists
 from product.models import (
@@ -48,7 +48,7 @@ class KakaoPayReadyForBuyProductAPIView(APIView):
             quantity=kakao_pay_ready_for_buy_product_request.quantity,
         )
         kakao_pay = KakaoPay(
-            KakaoPayPointProductHandler(order_id=order.id)
+            KakaoPayProductHandler(order_id=order.id)
         )
         ready_to_pay = kakao_pay.ready_to_pay(
             order_id=str(order.id),
@@ -81,7 +81,7 @@ class KakaoPayApproveForBuyProductAPIView(APIView):
             raise OrderNotExists()
 
         kakao_pay = KakaoPay(
-            KakaoPayPointProductHandler(order_id=order.id)
+            KakaoPayProductHandler(order_id=order.id)
         )
         response = kakao_pay.approve_payment(
             tid=order.tid,
