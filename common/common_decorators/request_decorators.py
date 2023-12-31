@@ -3,6 +3,8 @@ from types import FunctionType
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
 from functools import wraps
+
+from rest_framework.exceptions import APIException
 from rest_framework.request import Request
 
 from common.common_exceptions.exceptions import MissingMandatoryParameterException, CodeInvalidateException
@@ -86,6 +88,36 @@ def optionals(*keys):
             for attr_name, attr_value in cls_or_func.__dict__.items():
                 if callable(attr_value):
                     setattr(cls_or_func, attr_name, _optionals(attr_value))
+            return cls_or_func
+
+    return decorator
+
+
+def pagination(default_size=10):
+    def _paging(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Here we assume that the first argument is the request
+            request = next((x for x in args if isinstance(x, (WSGIRequest, HttpRequest, Request))), None)
+            if request is None:
+                raise CodeInvalidateException()
+            try:
+                page = int(request.GET.get('page', 1)) - 1
+                size = int(request.GET.get('size', default_size))
+                start_row = page * size
+                end_row = (page + 1) * size
+            except APIException as e:
+                raise APIException(e)
+            return func(start_row=start_row, end_row=end_row, *args, **kwargs)
+        return wrapper
+
+    def decorator(cls_or_func):
+        if isinstance(cls_or_func, FunctionType):
+            return _paging(cls_or_func)
+        else:
+            for attr_name, attr_value in cls_or_func.__dict__.items():
+                if callable(attr_value):
+                    setattr(cls_or_func, attr_name, _paging(attr_value))
             return cls_or_func
 
     return decorator
