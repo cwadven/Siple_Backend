@@ -1,7 +1,12 @@
+from common.common_utils import get_jwt_guest_token
 from member.models import Guest
 from order.models import (
     Order,
     OrderItem,
+)
+from django.test import (
+    Client,
+    TestCase,
 )
 
 
@@ -58,3 +63,16 @@ def test_case_create_order_item(
         item_quantity=item_quantity,
         status=status,
     )
+
+
+class GuestTokenMixin(TestCase):
+    # 모킹할 메서드 생성
+    def setUp(self):
+        super(GuestTokenMixin, self).setUp()
+        self.c = Client()
+
+    def login_guest(self, guest=None):
+        if guest is None:
+            guest = Guest.objects.all().first()
+
+        self.client.defaults['HTTP_AUTHORIZATION'] = f'jwt {get_jwt_guest_token(guest)}'

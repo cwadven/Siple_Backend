@@ -42,7 +42,7 @@ class KakaoPay:
             'partner_order_id': order_id,
             'partner_user_id': guest_id,
             'item_name': product_name,
-            'quantity': quantity,
+            'quantity': '1',
             'total_amount': total_amount,
             'tax_free_amount': tax_free_amount,
             'approval_url': self.handler.approval_url,
