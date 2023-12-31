@@ -45,7 +45,7 @@ pip install -r requirements.txt
 # Define .env file
 fab2 generate-env
 
-----------------------------------------
+
 -----------------1----------------------
 - Input SECRET_KEY:
 ----------------------------------------
@@ -54,6 +54,7 @@ You can generate it here: https://djecrety.ir/
 
 "SECRET_KEY" Example: "django-insecure-......test..."
 ----------------------------------------
+
 ----------------2-----------------------
 - Input KAKAO_API_KEY:
 - Input KAKAO_SECRET_KEY:
@@ -66,19 +67,34 @@ https://nulls.co.kr/bones-skins/482
 "KAKAO_API_KEY" Example: "4df48d962f....."
 "KAKAO_SECRET_KEY" Example: "sdfaefse....."
 ----------------------------------------
+
 ---------------3------------------------
 - Input NAVER_API_KEY:
 - Input NAVER_SECRET_KEY:
 ----------------------------------------
 You can get it here: https://developers.naver.com/main/
+"NAVER_API_KEY" Example: "4df48d962f....."
+"NAVER_SECRET_KEY" Example: "sdfaefse....."
+----------------------------------------
 
+----------------4-----------------------
+- Input KAKAO_PAY_API_KEY:
+- Input KAKAO_PAY_CID:
+----------------------------------------
+For Kakao Pay, you need to get a separate key.
+"KAKAO_PAY_API_KEY" Example: "897a....."
+"KAKAO_PAY_CID" Example: "TC0ONETIME"
+----------------------------------------
+
+---------------5------------------------
 [ More Explain ]
 https://nulls.co.kr/bones-skins/483
 
 "NAVER_API_KEY" Example: "jg5wTSCNqh....."
 "NAVER_SECRET_KEY" Example: "zzZAXHt....."
 ----------------------------------------
-----------------4-----------------------
+
+----------------6-----------------------
 - Input GOOGLE_CLIENT_ID:
 - Input GOOGLE_SECRET_KEY:
 - Input GOOGLE_REDIRECT_URL:
@@ -89,7 +105,8 @@ You can get it here: https://console.cloud.google.com/apis/credentials
 "GOOGLE_SECRET_KEY" Example: "GOCSPX-i....."
 "GOOGLE_REDIRECT_URL" Example: "http://127.0.0.1:8000/account/login"
 ----------------------------------------
-----------------5-----------------------
+
+----------------7-----------------------
 - Input CHANNEL_HOST:
 - Input CHANNEL_PORT:
 ----------------------------------------
@@ -98,7 +115,8 @@ Channels uses Redis as a channel layer.
 "CHANNEL_HOST" Example: 127.0.0.1
 "CHANNEL_PORT" Example: 6379
 ----------------------------------------
-----------------6-----------------------
+
+----------------8-----------------------
 - Input CELERY_BROKER_URL:
 - Input result_backend:
 ----------------------------------------
@@ -107,7 +125,9 @@ Need to install Redis: https://redis.io/
 
 "CELERY_BROKER_URL" Example: redis://localhost:6379/2
 "result_backend" Example: redis://localhost:6379/2
-----------------7-----------------------
+----------------------------------------
+
+----------------9-----------------------
 - Input CACHEOPS_REDIS_HOST:
 - Input CACHEOPS_REDIS_PORT:
 - Input CACHEOPS_REDIS_DB:
@@ -119,14 +139,16 @@ Cacheops uses Redis as a cache.
 "CACHEOPS_REDIS_DB" Example: 10
 (redis db number)
 ----------------------------------------
-----------------8-----------------------
+
+----------------10-----------------------
 - Input CACHES_LOCATION:
 ----------------------------------------
 Cache uses location.
 
 "CACHES_LOCATION" Example: redis://localhost:6379/1
 ----------------------------------------
------------------9----------------------
+
+-----------------11----------------------
 - Input DB_ENGINE:
 - Input DB_NAME:
 - Input DB_USER:
@@ -145,7 +167,8 @@ Database settings.
 "DB_PORT" Example: 5432
 "DB_TEST_NAME" Example: nully_test
 ----------------------------------------
-------------------10---------------------
+
+------------------12---------------------
 - Input EMAIL_HOST_USER:
 - Input EMAIL_HOST_PASSWORD:
 ----------------------------------------
@@ -155,7 +178,8 @@ Default Gmail if you want to use other email services, you need to change the se
 "EMAIL_HOST_USER" Example: nully@gmail.com
 "EMAIL_HOST_PASSWORD" Example: 1234
 ----------------------------------------
------------------11---------------------
+
+-----------------13---------------------
 - Input AWS_IAM_ACCESS_KEY:
 - Input AWS_IAM_SECRET_ACCESS_KEY:
 - Input AWS_S3_BUCKET_NAME:
@@ -167,7 +191,6 @@ AWS settings.
 "AWS_IAM_SECRET_ACCESS_KEY" Example: AKIAYXZ223G...
 "AWS_S3_BUCKET_NAME" Example: nully
 "AWS_SQS_URL" Example: https://sqs.ap-northeast-2.amazonaws.com/1234/nully
-----------------------------------------
 ----------------------------------------
 
 # Define settings file
