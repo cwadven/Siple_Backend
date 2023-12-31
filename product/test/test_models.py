@@ -196,7 +196,7 @@ class GiveProductMethodTestCase(TestCase):
         mock_give_point.assert_called_once_with(
             guest_id=self.guest.id,
             point=point_1000_product.point * quantity,
-            description='포인트 지급',
+            reason='포인트 지급',
         )
 
     @patch('product.models.give_point')
@@ -238,7 +238,7 @@ class GiveProductMethodTestCase(TestCase):
         mock_give_point.assert_called_once_with(
             guest_id=self.guest.id,
             point=meta_data['point'] * quantity,
-            description='포인트 지급',
+            reason='포인트 지급',
         )
 
 
