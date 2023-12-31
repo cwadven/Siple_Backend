@@ -152,6 +152,7 @@ class GiveProduct(models.Model):
         verbose_name_plural = '상품 지급'
 
     @classmethod
+    @transaction.atomic
     def ready(
             cls,
             order_item_id: int,
@@ -160,7 +161,8 @@ class GiveProduct(models.Model):
             product_type: str,
             data: dict,  # Meta data for logging
     ) -> 'GiveProduct':
-        return cls.objects.create(
+        # Save Log
+        give_product = cls.objects.create(
             order_item_id=order_item_id,
             guest_id=guest_id,
             product_pk=product_pk,
@@ -168,6 +170,11 @@ class GiveProduct(models.Model):
             meta_data=json.dumps(data),
             status=ProductGivenStatus.READY.value,
         )
+        GiveProductLog.objects.create(
+            give_product=give_product,
+            status=ProductGivenStatus.READY.value,
+        )
+        return give_product
 
     @transaction.atomic
     def cancel(self) -> None:
