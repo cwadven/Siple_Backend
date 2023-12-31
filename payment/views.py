@@ -50,10 +50,12 @@ class KakaoPayReadyForBuyProductAPIView(APIView):
         kakao_pay = KakaoPay(
             KakaoPayProductHandler(order_id=order.id)
         )
+        if kakao_pay_ready_for_buy_product_request.quantity > 1:
+            product_name = product.title + f' ({kakao_pay_ready_for_buy_product_request.quantity}개)'
         ready_to_pay = kakao_pay.ready_to_pay(
             order_id=str(order.id),
             guest_id=str(request.guest.id),
-            product_name=product.title,
+            product_name=product_name,
             quantity='1',
             total_amount=str(order.total_paid_price),
             tax_free_amount=str(0),

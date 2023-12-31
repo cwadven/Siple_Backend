@@ -166,7 +166,7 @@ class KakaoPayReadyForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
         mock_kakaopay_ready_to_pay.assert_called_once_with(
             order_id=f'{self.order.id}',
             guest_id=f'{self.guest.id}',
-            product_name=f'{self.active_1000_point_product_ordering_1.title}',
+            product_name=f'{self.active_1000_point_product_ordering_1.title} (3개)',
             quantity='1',
             total_amount=f'{self.active_1000_point_product_ordering_1.price * 3}',
             tax_free_amount='0',
