@@ -28,9 +28,9 @@ def use_point(guest_id: int, point: int, description: str) -> GuestPoint:
     )
 
 
-def give_point(guest_id: int, point: int, description: str) -> GuestPoint:
+def give_point(guest_id: int, point: int, reason: str) -> GuestPoint:
     return GuestPoint.objects.create(
         guest_id=guest_id,
         point=point,
-        reason=description,
+        reason=reason,
     )

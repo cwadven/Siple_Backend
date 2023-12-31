@@ -50,11 +50,14 @@ class GiveProductMethodTestCase(TestCase):
 
     def test_ready(self):
         # Given:
+        quantity = 10
+
         # When:
         give_product_ready_status = GiveProduct.ready(
             order_item_id=self.order_item1.id,
             guest_id=self.guest.id,
             product_pk=999,
+            quantity=quantity,
             product_type='TEST',
             data={'point': 10000},
         )
@@ -83,10 +86,12 @@ class GiveProductMethodTestCase(TestCase):
 
     def test_cancel(self):
         # Given:
+        quantity = 10
         give_product_ready_status = GiveProduct.ready(
             order_item_id=self.order_item1.id,
             guest_id=self.guest.id,
             product_pk=999,
+            quantity=quantity,
             product_type='TEST',
             data={'point': 10000},
         )
@@ -115,10 +120,12 @@ class GiveProductMethodTestCase(TestCase):
 
     def test_fail(self):
         # Given:
+        quantity = 10
         give_product_ready_status = GiveProduct.ready(
             order_item_id=self.order_item1.id,
             guest_id=self.guest.id,
             product_pk=999,
+            quantity=quantity,
             product_type='TEST',
             data={'point': 10000},
         )
@@ -145,13 +152,23 @@ class GiveProductMethodTestCase(TestCase):
             True
         )
 
-    def test_give(self):
+    @patch('product.models.give_point')
+    def test_give_when_point_product_exists(self, mock_give_point):
         # Given:
+        point_1000_product = PointProduct.objects.create(
+            title='포인트 1000',
+            price=1000,
+            point=1000,
+            created_guest=self.guest,
+        )
+        quantity = 10
+
         give_product_ready_status = GiveProduct.ready(
             order_item_id=self.order_item1.id,
             guest_id=self.guest.id,
-            product_pk=999,
-            product_type='TEST',
+            quantity=quantity,
+            product_pk=point_1000_product.id,
+            product_type=point_1000_product.product_type,
             data={'point': 10000},
         )
 
@@ -175,6 +192,53 @@ class GiveProductMethodTestCase(TestCase):
                 created_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
             ).exists(),
             True
+        )
+        mock_give_point.assert_called_once_with(
+            guest_id=self.guest.id,
+            point=point_1000_product.point * quantity,
+            description='포인트 지급',
+        )
+
+    @patch('product.models.give_point')
+    def test_give_when_point_product_not_exists(self, mock_give_point):
+        # Given:
+        quantity = 10
+        meta_data = {'point': 10000}
+        # And: PointProduct 가 없음
+        give_product_ready_status = GiveProduct.ready(
+            order_item_id=self.order_item1.id,
+            guest_id=self.guest.id,
+            quantity=quantity,
+            product_pk=0,
+            product_type=PointProduct.product_type,
+            data=meta_data,
+        )
+
+        # When:
+        give_product_ready_status.give()
+
+        # Then:
+        self.assertEqual(
+            GiveProduct.objects.filter(
+                id=give_product_ready_status.id,
+                status=OrderStatus.SUCCESS.value,
+                created_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+            ).exists(),
+            True
+        )
+        # And: Log 생성
+        self.assertEqual(
+            GiveProductLog.objects.filter(
+                give_product_id=give_product_ready_status.id,
+                status=OrderStatus.SUCCESS.value,
+                created_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+            ).exists(),
+            True
+        )
+        mock_give_point.assert_called_once_with(
+            guest_id=self.guest.id,
+            point=meta_data['point'] * quantity,
+            description='포인트 지급',
         )
 
 

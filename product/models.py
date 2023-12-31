@@ -9,6 +9,7 @@ from order.models import (
     Order,
     OrderItem,
 )
+from point.services import give_point
 from product.consts import ProductGivenStatus
 from product.managers import ProductQuerySet
 
@@ -173,6 +174,7 @@ class GiveProduct(models.Model):
     def ready(
             cls,
             order_item_id: int,
+            quantity: int,
             guest_id: int,
             product_pk: int,
             product_type: str,
@@ -184,6 +186,7 @@ class GiveProduct(models.Model):
             guest_id=guest_id,
             product_pk=product_pk,
             product_type=product_type,
+            quantity=quantity,
             meta_data=json.dumps(data),
             status=ProductGivenStatus.READY.value,
         )
@@ -222,6 +225,19 @@ class GiveProduct(models.Model):
             give_product=self,
             status=ProductGivenStatus.SUCCESS.value,
         )
+
+        if self.product_type == PointProduct.product_type:
+            try:
+                point = PointProduct.objects.get(
+                    id=self.product_pk,
+                ).point
+            except PointProduct.DoesNotExist:
+                point = json.loads(self.meta_data).get('point', 0)
+            give_point(
+                guest_id=self.guest_id,
+                point=point * self.quantity,
+                reason='포인트 지급',
+            )
 
 
 class GiveProductLog(models.Model):
