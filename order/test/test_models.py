@@ -275,13 +275,13 @@ class OrderMethodTestCase(TestCase):
             True
         )
 
-    def test_test_create_order_number_length(self):
+    def test_create_order_number_length(self):
         # When: create order number
         order_number = self.create_order_number_function(self.prefix)
         # Then:
         self.assertEqual(
             len(order_number),
-            50,
+            17,
         )
 
     def test_create_order_number_prefix(self):

@@ -92,7 +92,7 @@ class Order(models.Model):
             order_number = prefix + ''.join(
                 random.choices(
                     valid_chars,
-                    k=50 - len(prefix)
+                    k=17 - len(prefix)
                 )
             )
             if not Order.objects.filter(order_number=order_number).exists():
