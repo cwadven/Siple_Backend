@@ -186,6 +186,8 @@ class KakaoPayHandler(ABC):
 class KakaoPayProductHandler(KakaoPayHandler):
     def __init__(self, order_id: int):
         # 프론트엔드 개발자가 결제 성공/실패/취소 시 이동할 url을 결정하면 그 url을 넣어줘야 함
+        # 혹은 프론트엔드 개발자가 결제 성공/실패/취소 시 이동할 url을 결정하지 않았다면
+        # 결제 성공/실패/취소 시 이동할 html 을 따로 만들어서 url 결정해줘야 함
         self.approval_url = settings.BASE_DOMAIN + reverse('payment:product_approve', args=[order_id])
         self.cancel_url = settings.BASE_DOMAIN + reverse('payment:product_cancel', args=[order_id])
         self.fail_url = settings.BASE_DOMAIN + reverse('payment:product_fail', args=[order_id])
