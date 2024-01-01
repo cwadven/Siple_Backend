@@ -185,6 +185,6 @@ class KakaoPayHandler(ABC):
 
 class KakaoPayProductHandler(KakaoPayHandler):
     def __init__(self, order_id: int):
-        self.approval_url = reverse('payment:product_approve', args=[order_id])
-        self.cancel_url = reverse('payment:product_cancel', args=[order_id])
-        self.fail_url = reverse('payment:product_fail', args=[order_id])
+        self.approval_url = settings.BASE_DOMAIN + reverse('payment:product_approve', args=[order_id])
+        self.cancel_url = settings.BASE_DOMAIN + reverse('payment:product_cancel', args=[order_id])
+        self.fail_url = settings.BASE_DOMAIN + reverse('payment:product_fail', args=[order_id])
