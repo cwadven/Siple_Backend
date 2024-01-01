@@ -333,11 +333,13 @@ class KakaoPayCancelForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
             paid_price=self.active_1000_point_product_ordering_1.price * 3,
         )
 
+    @patch('payment.views.KakaoPay.cancel_payment')
     @patch('payment.views.GiveProduct.cancel')
     @patch('payment.views.Order.cancel')
     def test_kakao_pay_cancel_for_buy_product_api_when_success(self,
                                                                mock_order_cancel,
-                                                               mock_give_product_cancel):
+                                                               mock_give_product_cancel,
+                                                               mock_cancel_payment):
         # Given:
         self.login_guest(self.guest)
         # And: GiveProduct Ready 생성
@@ -356,8 +358,56 @@ class KakaoPayCancelForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
             ),
             status=ProductGivenStatus.READY.value,
         )
+        # And:
+        mock_cancel_payment.return_value = {
+            "aid": "A5922f8a3ad74821a2cf",
+            "tid": "T591a8da3ad748219fdf",
+            "cid": "TC0ONETIME",
+            "status": "CANCEL_PAYMENT",
+            "partner_order_id": "6",
+            "partner_user_id": "4",
+            "payment_method_type": "MONEY",
+            "item_name": "G-point 1000",
+            "quantity": 10,
+            "amount": {
+                "total": 10000,
+                "tax_free": 0,
+                "vat": 909,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "approved_cancel_amount": {
+                "total": 10000,
+                "tax_free": 0,
+                "vat": 909,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "canceled_amount": {
+                "total": 10000,
+                "tax_free": 0,
+                "vat": 909,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "cancel_available_amount": {
+                "total": 0,
+                "tax_free": 0,
+                "vat": 0,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "created_at": "2024-01-01T02:46:03",
+            "approved_at": "2024-01-01T02:46:34",
+            "canceled_at": "2024-01-01T12:20:42",
+            "payload": "테스"
+        }
         # When:
-        response = self.client.get(reverse('payment:product_cancel', args=[self.order.id]))
+        response = self.client.post(reverse('payment:product_cancel', args=[self.order.id]))
         content = json.loads(response.content)
 
         # Then: 주문 취소 성공
@@ -368,13 +418,19 @@ class KakaoPayCancelForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
         )
         mock_order_cancel.assert_called_once_with()
         mock_give_product_cancel.assert_called_once_with()
+        mock_cancel_payment.assert_called_once_with(
+            tid=self.order.tid,
+            cancel_price=self.order.total_paid_price,
+            cancel_tax_free_price=self.order.total_tax_paid_price,
+            payload=json.dumps({'cancel_reason': '결제 취소'}),
+        )
 
     def test_kakao_pay_cancel_for_buy_product_api_when_fail_due_order_not_exists(self):
         # Given:
         self.login_guest(self.guest)
 
         # When: 없는 주문 id 로 결제 신청
-        response = self.client.get(reverse('payment:product_cancel', args=[0]))
+        response = self.client.post(reverse('payment:product_cancel', args=[0]))
         content = json.loads(response.content)
 
         # Then: Order가 없어서 주문 취소 실패
@@ -390,7 +446,7 @@ class KakaoPayCancelForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
         self.login_guest(guest)
 
         # When: 없는 주문 id 로 결제 신청
-        response = self.client.get(reverse('payment:product_cancel', args=[self.order.id]))
+        response = self.client.post(reverse('payment:product_cancel', args=[self.order.id]))
         content = json.loads(response.content)
 
         # Then: Order가 없어서 주문 취소 실패
@@ -456,7 +512,7 @@ class KakaoPayFailForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
             status=ProductGivenStatus.READY.value,
         )
         # When:
-        response = self.client.get(reverse('payment:product_fail', args=[self.order.id]))
+        response = self.client.post(reverse('payment:product_fail', args=[self.order.id]))
         content = json.loads(response.content)
 
         # Then: 주문 실패 성공
@@ -473,7 +529,7 @@ class KakaoPayFailForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
         self.login_guest(self.guest)
 
         # When: 없는 주문 id 로 결제 신청
-        response = self.client.get(reverse('payment:product_fail', args=[0]))
+        response = self.client.post(reverse('payment:product_fail', args=[0]))
         content = json.loads(response.content)
 
         # Then: Order가 없어서 주문실패 실패
@@ -489,7 +545,7 @@ class KakaoPayFailForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
         self.login_guest(guest)
 
         # When: 없는 주문 id 로 결제 신청
-        response = self.client.get(reverse('payment:product_fail', args=[self.order.id]))
+        response = self.client.post(reverse('payment:product_fail', args=[self.order.id]))
         content = json.loads(response.content)
 
         # Then: Order가 없어서 주문 취소 실패

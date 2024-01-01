@@ -1,8 +1,13 @@
+import json
+
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from common.common_decorators.request_decorators import mandatories
+from common.common_decorators.request_decorators import (
+    mandatories,
+    optionals,
+)
 from order.consts import PaymentType
 from order.exceptions import OrderNotExists
 from order.models import Order, OrderItem
@@ -113,7 +118,8 @@ class KakaoPayApproveForBuyProductAPIView(APIView):
 
 
 class KakaoPayCancelForBuyProductAPIView(APIView):
-    def get(self, request, order_id):
+    @optionals({'reason': '결제 취소'})
+    def post(self, request, order_id, o):
         try:
             order = Order.objects.get(
                 id=order_id,
@@ -134,11 +140,20 @@ class KakaoPayCancelForBuyProductAPIView(APIView):
             for give_product in give_products:
                 give_product.cancel()
 
+        kakao_pay = KakaoPay(
+            KakaoPayProductHandler(order_id=order.id)
+        )
+        kakao_pay.cancel_payment(
+            tid=order.tid,
+            cancel_price=order.total_paid_price,
+            cancel_tax_free_price=order.total_tax_paid_price,
+            payload=json.dumps({'cancel_reason': o['reason']}),
+        )
         return Response({'message': '결제가 취소되었습니다.'}, status=200)
 
 
 class KakaoPayFailForBuyProductAPIView(APIView):
-    def get(self, request, order_id):
+    def post(self, request, order_id):
         try:
             order = Order.objects.get(
                 id=order_id,
