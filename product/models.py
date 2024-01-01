@@ -9,7 +9,11 @@ from order.models import (
     Order,
     OrderItem,
 )
-from point.services import give_point
+from point.exceptions import NotEnoughGuestPointsForCancelOrder
+from point.services import (
+    get_guest_available_total_point,
+    give_point,
+)
 from product.consts import ProductGivenStatus
 from product.managers import ProductQuerySet
 
@@ -207,6 +211,7 @@ class GiveProduct(models.Model):
 
     @transaction.atomic
     def cancel(self) -> None:
+        before_status = self.status
         self.status = ProductGivenStatus.CANCEL.value
         self.save(update_fields=['status', 'updated_at'])
         # Save Log
@@ -214,6 +219,19 @@ class GiveProduct(models.Model):
             give_product=self,
             status=ProductGivenStatus.CANCEL.value,
         )
+
+        if not before_status == ProductGivenStatus.SUCCESS.value:
+            return
+
+        if self.product_type == PointProduct.product_type:
+            point = json.loads(self.meta_data).get('total_point', 0)
+            if get_guest_available_total_point(self.guest_id) < point:
+                raise NotEnoughGuestPointsForCancelOrder()
+            give_point(
+                guest_id=self.guest_id,
+                point=point * -1,
+                reason='결제 취소로 포인트 회수',
+            )
 
     @transaction.atomic
     def fail(self) -> None:

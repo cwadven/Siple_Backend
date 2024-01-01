@@ -15,6 +15,8 @@ from common.common_testcase_helpers.testcase_helpers import (
 )
 from member.models import Guest
 from order.consts import OrderStatus
+from point.exceptions import NotEnoughGuestPointsForCancelOrder
+from product.consts import ProductGivenStatus
 from product.models import (
     GiveProduct,
     GiveProductLog, PointProduct,
@@ -116,6 +118,109 @@ class GiveProductMethodTestCase(TestCase):
                 created_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
             ).exists(),
             True
+        )
+
+    def test_cancel_when_product_is_point_should_raise_error_when_point_is_not_enough(self):
+        # Given:
+        point_1000_product = PointProduct.objects.create(
+            title='포인트 1000',
+            price=1000,
+            point=1000,
+            created_guest=self.guest,
+        )
+        quantity = 10
+        give_product_ready_status = GiveProduct.ready(
+            order_item_id=self.order_item1.id,
+            guest_id=self.guest.id,
+            product_pk=point_1000_product.id,
+            quantity=quantity,
+            product_type=point_1000_product.product_type,
+            data={
+                'point': point_1000_product.point,
+                'total_point': point_1000_product.point * quantity,
+            },
+        )
+        # And: Make as success
+        give_product_ready_status.status = ProductGivenStatus.SUCCESS.value
+        give_product_ready_status.save()
+
+        # When: raise
+        with self.assertRaises(NotEnoughGuestPointsForCancelOrder):
+            give_product_ready_status.cancel()
+
+        # Then:
+        self.assertEqual(
+            GiveProduct.objects.filter(
+                id=give_product_ready_status.id,
+                status=OrderStatus.CANCEL.value,
+                created_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+            ).exists(),
+            False
+        )
+        # And: 에러로 Log 생성 불가
+        self.assertEqual(
+            GiveProductLog.objects.filter(
+                give_product_id=give_product_ready_status.id,
+                status=OrderStatus.CANCEL.value,
+                created_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+            ).exists(),
+            False
+        )
+
+    @patch('product.models.give_point')
+    @patch('product.models.get_guest_available_total_point')
+    def test_cancel_when_product_is_point_success(self,
+                                                  mock_get_guest_available_total_point,
+                                                  mock_give_point):
+        # Given:
+        point_1000_product = PointProduct.objects.create(
+            title='포인트 1000',
+            price=1000,
+            point=1000,
+            created_guest=self.guest,
+        )
+        quantity = 10
+        give_product_ready_status = GiveProduct.ready(
+            order_item_id=self.order_item1.id,
+            guest_id=self.guest.id,
+            product_pk=point_1000_product.id,
+            quantity=quantity,
+            product_type=point_1000_product.product_type,
+            data={
+                'point': point_1000_product.point,
+                'total_point': point_1000_product.point * quantity,
+            },
+        )
+        mock_get_guest_available_total_point.return_value = point_1000_product.point * quantity
+        # And: Set as success
+        give_product_ready_status.status = ProductGivenStatus.SUCCESS.value
+        give_product_ready_status.save()
+
+        # When:
+        give_product_ready_status.cancel()
+
+        # Then:
+        self.assertEqual(
+            GiveProduct.objects.filter(
+                id=give_product_ready_status.id,
+                status=OrderStatus.CANCEL.value,
+                created_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+            ).exists(),
+            True
+        )
+        # And: 에러로 Log 생성 불가
+        self.assertEqual(
+            GiveProductLog.objects.filter(
+                give_product_id=give_product_ready_status.id,
+                status=OrderStatus.CANCEL.value,
+                created_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+            ).exists(),
+            True
+        )
+        mock_give_point.assert_called_once_with(
+            guest_id=self.guest.id,
+            point=json.loads(give_product_ready_status.meta_data)['total_point'] * -1,
+            reason='결제 취소로 포인트 회수',
         )
 
     def test_fail(self):
