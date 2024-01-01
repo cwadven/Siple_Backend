@@ -11,3 +11,27 @@ class UnavailablePayHandler(APIException):
         return {
             'message': cls.default_detail,
         }
+
+
+class KakaoPaySuccessError(APIException):
+    status_code = 400
+    default_detail = '카카오페이 결제에 실패하였습니다.'
+    default_code = 'kakao-pay-success-failed'
+
+    @classmethod
+    def to_message(cls):
+        return {
+            'message': cls.default_detail,
+        }
+
+
+class KakaoPayCancelError(APIException):
+    status_code = 400
+    default_detail = '카카오페이 결제 취소에 실패하였습니다.'
+    default_code = 'kakao-pay-cancel-failed'
+
+    @classmethod
+    def to_message(cls):
+        return {
+            'message': cls.default_detail,
+        }

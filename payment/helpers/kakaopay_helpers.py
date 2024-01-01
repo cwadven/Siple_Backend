@@ -3,12 +3,19 @@ from abc import ABC
 from django.conf import settings
 from typing import Optional
 
+from django.urls import reverse
+
+from payment.exceptions import (
+    KakaoPaySuccessError,
+)
+
 
 class KakaoPay:
     def __init__(self, handler: 'KakaoPayHandler') -> None:
         self.kakao_pay_api_key = settings.KAKAO_PAY_API_KEY
         self.kakao_pay_ready_url = 'https://kapi.kakao.com/v1/payment/ready'
         self.kakao_pay_approve_url = 'https://kapi.kakao.com/v1/payment/approve'
+        self.kakao_pay_cancel_url = 'https://kapi.kakao.com/v1/payment/cancel'
         self.headers = {
             'Authorization': 'KakaoAK ' + self.kakao_pay_api_key,
             'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
@@ -54,6 +61,8 @@ class KakaoPay:
 
     def approve_payment(self, tid: str, pg_token: str, order_id: str, guest_id: str) -> dict:
         """
+        https://developers.kakao.com/docs/latest/ko/kakaopay/single-payment
+
         아래와 같은 형태로 return
         {
             "aid": "A469b85a306d7b2dc395",
@@ -85,7 +94,14 @@ class KakaoPay:
             'pg_token': pg_token,
         }
         res = requests.post(self.kakao_pay_approve_url, headers=self.headers, params=params)
-        return res.json()
+        response = res.json()
+        if res.status_code == 400:
+            extras = response.get('extras')
+            if extras:
+                raise KakaoPaySuccessError(extras['method_result_message'])
+        if res.status_code != 200:
+            raise KakaoPaySuccessError()
+        return response
 
 
 class KakaoPayHandler(ABC):
@@ -96,6 +112,6 @@ class KakaoPayHandler(ABC):
 
 class KakaoPayProductHandler(KakaoPayHandler):
     def __init__(self, order_id: int):
-        self.approval_url = f'http://127.0.0.1:8000/v1/payment/product/approve/kakao/{order_id}'
-        self.cancel_url = f'http://127.0.0.1:8000/v1/payment/product/cancel/kakao/{order_id}'
-        self.fail_url = f'http://127.0.0.1:8000/v1/payment/product/fail/kakao/{order_id}'
+        self.approval_url = reverse('payment:product_approve', args=[order_id])
+        self.cancel_url = reverse('payment:product_cancel', args=[order_id])
+        self.fail_url = reverse('payment:product_fail', args=[order_id])

@@ -1,6 +1,7 @@
 from django.test import TestCase
 from unittest.mock import patch, MagicMock, PropertyMock
 
+from payment.exceptions import KakaoPaySuccessError
 from payment.helpers.kakaopay_helpers import (
     KakaoPay,
     KakaoPayProductHandler,
@@ -81,7 +82,7 @@ class KakaoPayTestCase(TestCase):
         self.assertEqual(response['created_at'], '2023-05-21T15:20:55')
 
     @patch('payment.helpers.kakaopay_helpers.requests.post')
-    def test_approve_payment(self, mock_kakao_pay_ready):
+    def test_approve_payment_when_success(self, mock_kakao_pay_ready):
         # Given: kakao pay 객체 생성
         kakao_pay = KakaoPay(self.kakao_pay_handler)
         # And: 결제 준비에 필요한 정보
@@ -91,6 +92,8 @@ class KakaoPayTestCase(TestCase):
         tid = 'test_tid'
         # And: requests.post의 반환값(즉, Response 객체)를 모킹합니다.
         mock_response = MagicMock()
+        # And: status code 200
+        mock_response.status_code = 200
         mock_response.json.return_value = {
             'aid': 'A469b85a306d7b2dc395',
             'tid': 'T469b847306d7b2dc394',
@@ -139,3 +142,61 @@ class KakaoPayTestCase(TestCase):
             'created_at': '2023-05-21T15:20:55',
             'approved_at': '2023-05-21T15:25:31'
         })
+
+    @patch('payment.helpers.kakaopay_helpers.requests.post')
+    def test_approve_payment_when_fail_and_400_extra_message_exists(self, mock_kakao_pay_ready):
+        # Given: kakao pay 객체 생성
+        kakao_pay = KakaoPay(self.kakao_pay_handler)
+        # And: 결제 준비에 필요한 정보
+        order_id = 'test_order_id'
+        guest_id = 'test_guest_id'
+        pg_token = 'test_pg_token'
+        tid = 'test_tid'
+        # And: requests.post의 반환값(즉, Response 객체)를 모킹합니다.
+        mock_response = MagicMock()
+        # And: status code 400
+        mock_response.status_code = 400
+        mock_response.json.return_value = {
+            'code': -780,
+            'msg': 'approval failure!',
+            'extras': {
+                'method_result_code': 'USER_LOCKED',
+                'method_result_message': '진행중인 거래가 있습니다. 잠시 후 다시 시도해 주세요.'
+            }
+        }
+        mock_kakao_pay_ready.return_value = mock_response
+
+        # When: 결제 실패
+        with self.assertRaises(KakaoPaySuccessError) as e:
+            kakao_pay.approve_payment(tid, pg_token, order_id, guest_id)
+
+        self.assertEqual(e.exception.detail, '진행중인 거래가 있습니다. 잠시 후 다시 시도해 주세요.')
+
+    @patch('payment.helpers.kakaopay_helpers.requests.post')
+    def test_approve_payment_when_fail_and_not_200(self, mock_kakao_pay_ready):
+        # Given: kakao pay 객체 생성
+        kakao_pay = KakaoPay(self.kakao_pay_handler)
+        # And: 결제 준비에 필요한 정보
+        order_id = 'test_order_id'
+        guest_id = 'test_guest_id'
+        pg_token = 'test_pg_token'
+        tid = 'test_tid'
+        # And: requests.post의 반환값(즉, Response 객체)를 모킹합니다.
+        mock_response = MagicMock()
+        # And: status code 499
+        mock_response.status_code = 499
+        mock_response.json.return_value = {
+            'code': -780,
+            'msg': 'approval failure!',
+            'extras': {
+                'method_result_code': 'USER_LOCKED',
+                'method_result_message': '진행중인 거래가 있습니다. 잠시 후 다시 시도해 주세요.'
+            }
+        }
+        mock_kakao_pay_ready.return_value = mock_response
+
+        # When: 결제 실패
+        with self.assertRaises(KakaoPaySuccessError) as e:
+            kakao_pay.approve_payment(tid, pg_token, order_id, guest_id)
+
+        self.assertEqual(e.exception.detail, '카카오페이 결제에 실패하였습니다.')
