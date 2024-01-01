@@ -8,8 +8,8 @@ from common.common_decorators.request_decorators import (
     mandatories,
     optionals,
 )
-from order.consts import PaymentType
-from order.exceptions import OrderNotExists
+from order.consts import PaymentType, OrderStatus
+from order.exceptions import OrderNotExists, OrderAlreadyCanceled, OrderStatusUnavailableBehavior
 from order.models import Order, OrderItem
 from payment.dtos.request_dtos import KakaoPayReadyForBuyProductRequest
 from payment.dtos.response_dtos import KakaoPayReadyForBuyProductResponse
@@ -127,6 +127,11 @@ class KakaoPayCancelForBuyProductAPIView(APIView):
             )
         except Order.DoesNotExist:
             raise OrderNotExists()
+
+        if order.status == OrderStatus.CANCEL.value:
+            raise OrderAlreadyCanceled()
+        elif order.status not in (OrderStatus.SUCCESS.value, OrderStatus.READY.value):
+            raise OrderStatusUnavailableBehavior()
 
         with transaction.atomic():
             order.cancel()

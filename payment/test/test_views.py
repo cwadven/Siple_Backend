@@ -13,7 +13,7 @@ from common.common_testcase_helpers.testcase_helpers import (
 )
 from member.models import Guest
 from order.consts import OrderStatus
-from order.exceptions import OrderNotExists
+from order.exceptions import OrderNotExists, OrderAlreadyCanceled, OrderStatusUnavailableBehavior
 from product.consts import ProductGivenStatus
 from product.models import PointProduct, GiveProduct
 
@@ -436,6 +436,34 @@ class KakaoPayCancelForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
         # Then: Order가 없어서 주문 취소 실패
         self.assertEqual(response.status_code, OrderNotExists.status_code)
         self.assertEqual(content['message'], OrderNotExists.default_detail)
+
+    def test_kakao_pay_cancel_for_buy_product_api_when_fail_when_already_canceled(self):
+        # Given: 이미 취소함
+        self.login_guest(self.guest)
+        self.order.status = OrderStatus.CANCEL.value
+        self.order.save()
+
+        # When: 없는 주문 id 로 결제 신청
+        response = self.client.post(reverse('payment:product_cancel', args=[self.order.id]))
+        content = json.loads(response.content)
+
+        # Then: Order가 없어서 주문 취소 실패
+        self.assertEqual(response.status_code, OrderAlreadyCanceled.status_code)
+        self.assertEqual(content['message'], OrderAlreadyCanceled.default_detail)
+
+    def test_kakao_pay_cancel_for_buy_product_api_when_fail_when_invalid_status(self):
+        # Given: Fail 상태
+        self.login_guest(self.guest)
+        self.order.status = OrderStatus.FAIL.value
+        self.order.save()
+
+        # When: 없는 주문 id 로 결제 신청
+        response = self.client.post(reverse('payment:product_cancel', args=[self.order.id]))
+        content = json.loads(response.content)
+
+        # Then: Order가 없어서 주문 취소 실패
+        self.assertEqual(response.status_code, OrderStatusUnavailableBehavior.status_code)
+        self.assertEqual(content['message'], OrderStatusUnavailableBehavior.default_detail)
 
     def test_kakao_pay_cancel_for_buy_product_api_when_fail_due_not_guests_order(self):
         # Given:
