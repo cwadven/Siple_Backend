@@ -1,7 +1,7 @@
 from django.test import TestCase
 from unittest.mock import patch, MagicMock, PropertyMock
 
-from payment.exceptions import KakaoPaySuccessError
+from payment.exceptions import KakaoPaySuccessError, KakaoPayCancelError
 from payment.helpers.kakaopay_helpers import (
     KakaoPay,
     KakaoPayProductHandler,
@@ -39,7 +39,7 @@ class KakaoPayProductHandlerTestCase(TestCase):
         )
 
 
-class KakaoPayTestCase(TestCase):
+class KakaoPayMethodTestCase(TestCase):
     def setUp(self):
         self.kakao_pay_handler = KakaoPayProductHandler(order_id=1)
 
@@ -200,3 +200,140 @@ class KakaoPayTestCase(TestCase):
             kakao_pay.approve_payment(tid, pg_token, order_id, guest_id)
 
         self.assertEqual(e.exception.detail, '카카오페이 결제에 실패하였습니다.')
+
+    @patch('payment.helpers.kakaopay_helpers.requests.post')
+    def test_cancel_payment(self,
+                            mock_request):
+        # Given: kakao pay 객체 생성
+        kakao_pay = KakaoPay(self.kakao_pay_handler)
+        # And: requests.post의 반환값(즉, Response 객체)를 모킹합니다.
+        mock_response = MagicMock()
+        # And: status code 200
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "aid": "A5678901234567890123",
+            "tid": "T1234567890123456789",
+            "cid": "TC0ONETIME",
+            "status": "CANCEL_PAYMENT",
+            "partner_order_id": "partner_order_id",
+            "partner_user_id": "partner_user_id",
+            "payment_method_type": "MONEY",
+            "item_name": "초코파이",
+            "quantity": 1,
+            "amount": {
+                "total": 2200,
+                "tax_free": 0,
+                "vat": 200,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "approved_cancel_amount": {
+                "total": 2200,
+                "tax_free": 0,
+                "vat": 200,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "canceled_amount": {
+                "total": 2200,
+                "tax_free": 0,
+                "vat": 200,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "cancel_available_amount": {
+                "total": 0,
+                "tax_free": 0,
+                "vat": 0,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "created_at": "2016-11-15T21:18:22",
+            "approved_at": "2016-11-15T21:20:48",
+            "canceled_at": "2016-11-15T21:28:28"
+        }
+        mock_request.return_value = mock_response
+
+        # When: 결제 취소
+        response = kakao_pay.cancel_payment(
+            tid='T1234567890123456789',
+            cancel_price=2200,
+            cancel_tax_free_price=0,
+            payload='초코파이',
+        )
+
+        # Then: 성공
+        self.assertDictEqual(
+            response,
+            mock_response.json.return_value
+        )
+
+    @patch('payment.helpers.kakaopay_helpers.requests.post')
+    def test_cancel_payment_failed_400_with_extra_message(self,
+                                                          mock_request):
+        # Given: kakao pay 객체 생성
+        kakao_pay = KakaoPay(self.kakao_pay_handler)
+        # And: requests.post의 반환값(즉, Response 객체)를 모킹합니다.
+        mock_response = MagicMock()
+        # And: status code 400
+        mock_response.status_code = 400
+        mock_response.json.return_value = {
+            "code": -781,
+            "msg": "cancel failure!",
+            "extras": {
+                "method_result_code": "6666",
+                "method_result_message": "원거래없음"
+            }
+        }
+        mock_request.return_value = mock_response
+
+        # When: 결제 취소
+        with self.assertRaises(KakaoPayCancelError) as e:
+            kakao_pay.cancel_payment(
+                tid='T1234567890123456789',
+                cancel_price=2200,
+                cancel_tax_free_price=0,
+                payload='초코파이',
+            )
+        # Then: 실패
+        self.assertEqual(
+            e.exception.detail,
+            '원거래없음'
+        )
+
+    @patch('payment.helpers.kakaopay_helpers.requests.post')
+    def test_cancel_payment_failed_not_400_with_extra_message(self,
+                                                              mock_request):
+        # Given: kakao pay 객체 생성
+        kakao_pay = KakaoPay(self.kakao_pay_handler)
+        # And: requests.post의 반환값(즉, Response 객체)를 모킹합니다.
+        mock_response = MagicMock()
+        # And: status code 499
+        mock_response.status_code = 499
+        mock_response.json.return_value = {
+            "code": -781,
+            "msg": "cancel failure!",
+            "extras": {
+                "method_result_code": "6666",
+                "method_result_message": "원거래없음"
+            }
+        }
+        mock_request.return_value = mock_response
+
+        # When: 결제 취소
+        with self.assertRaises(KakaoPayCancelError) as e:
+            kakao_pay.cancel_payment(
+                tid='T1234567890123456789',
+                cancel_price=2200,
+                cancel_tax_free_price=0,
+                payload='초코파이',
+            )
+        # Then: 실패
+        self.assertEqual(
+            e.exception.detail,
+            '카카오페이 결제 취소에 실패하였습니다.'
+        )

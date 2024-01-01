@@ -6,6 +6,7 @@ from typing import Optional
 from django.urls import reverse
 
 from payment.exceptions import (
+    KakaoPayCancelError,
     KakaoPaySuccessError,
 )
 
@@ -102,6 +103,78 @@ class KakaoPay:
         if res.status_code != 200:
             raise KakaoPaySuccessError()
         return response
+
+    def cancel_payment(self, tid: str, cancel_price: int, cancel_tax_free_price: int, payload: str) -> dict:
+        """
+        https://developers.kakao.com/docs/latest/ko/kakaopay/cancellation
+
+        payload는 200 글자 넘으면 안됨
+
+        아래와 같은 형태로 return
+        {
+            "aid": "A5922f8a3ad74821a2cf",
+            "tid": "T591a8da3ad748219fdf",
+            "cid": "TC0ONETIME",
+            "status": "CANCEL_PAYMENT",
+            "partner_order_id": "6",
+            "partner_user_id": "4",
+            "payment_method_type": "MONEY",
+            "item_name": "G-point 1000",
+            "quantity": 10,
+            "amount": {
+                "total": 10000,
+                "tax_free": 0,
+                "vat": 909,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "approved_cancel_amount": {
+                "total": 10000,
+                "tax_free": 0,
+                "vat": 909,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "canceled_amount": {
+                "total": 10000,
+                "tax_free": 0,
+                "vat": 909,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "cancel_available_amount": {
+                "total": 0,
+                "tax_free": 0,
+                "vat": 0,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "created_at": "2024-01-01T02:46:03",
+            "approved_at": "2024-01-01T02:46:34",
+            "canceled_at": "2024-01-01T12:20:42",
+            "payload": "테스"
+        }
+        """
+        params = {
+            'cid': settings.KAKAO_PAY_CID,
+            'tid': tid,
+            'cancel_amount': cancel_price,
+            'cancel_tax_free_amount': cancel_tax_free_price,
+            'payload': payload,
+        }
+        res = requests.post(self.kakao_pay_cancel_url, headers=self.headers, params=params)
+        response = res.json()
+        if res.status_code == 400:
+            extras = response.get('extras')
+            if extras:
+                raise KakaoPayCancelError(extras['method_result_message'])
+        if res.status_code != 200:
+            raise KakaoPayCancelError()
+        return res.json()
 
 
 class KakaoPayHandler(ABC):
