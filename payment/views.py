@@ -8,7 +8,7 @@ from common.common_decorators.request_decorators import (
     mandatories,
     optionals,
 )
-from order.consts import PaymentType, OrderStatus
+from order.consts import OrderStatus
 from order.exceptions import OrderNotExists, OrderAlreadyCanceled, OrderStatusUnavailableBehavior
 from order.models import Order, OrderItem
 from payment.dtos.request_dtos import KakaoPayReadyForBuyProductRequest
@@ -18,6 +18,7 @@ from payment.helpers.kakaopay_helpers import (
     KakaoPay,
     KakaoPayProductHandler,
 )
+from payment.services import kakao_pay_approve_give_product_success
 from product.exceptions import ProductNotExists
 from product.models import (
     PointProduct,
@@ -82,38 +83,7 @@ class KakaoPayReadyForBuyProductAPIView(APIView):
 class KakaoPayApproveForBuyProductAPIView(APIView):
     def get(self, request, order_id):
         pg_token = request.GET.get('pg_token')
-
-        try:
-            order = Order.objects.get(id=order_id)
-        except Order.DoesNotExist:
-            raise OrderNotExists()
-
-        kakao_pay = KakaoPay(
-            KakaoPayProductHandler(order_id=order.id)
-        )
-        response = kakao_pay.approve_payment(
-            tid=order.tid,
-            pg_token=pg_token,
-            order_id=order.id,
-            guest_id=order.guest_id,
-        )
-
-        with transaction.atomic():
-            if response['payment_method_type'] == 'MONEY':
-                order.approve(PaymentType.KAKAOPAY_MONEY.value)
-            else:
-                order.approve(PaymentType.KAKAOPAY_CARD.value)
-
-            order_items = OrderItem.objects.filter(
-                order_id=order.id
-            ).values_list(
-                'id',
-                flat=True,
-            )
-            give_products = GiveProduct.objects.filter(order_item_id__in=order_items)
-            for give_product in give_products:
-                give_product.give()
-
+        kakao_pay_approve_give_product_success(order_id, pg_token)
         return Response({'message': '결제가 완료되었습니다.'}, status=200)
 
 
