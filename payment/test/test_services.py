@@ -63,8 +63,8 @@ class KakaoPayApproveGiveProductSuccessTestCase(TestCase):
             paid_price=self.active_1000_point_product_ordering_1.price * 3,
         )
 
-    @patch('payment.views.GiveProduct.give')
-    @patch('payment.views.KakaoPay.approve_payment')
+    @patch('payment.services.GiveProduct.give')
+    @patch('payment.services.KakaoPay.approve_payment')
     def test_kakao_pay_approve_give_product_success_when_success(self,
                                                                  mock_approve_payment,
                                                                  mock_give_product_give):
@@ -164,9 +164,9 @@ class KakaoPayApproveGiveProductCancelTestCase(TestCase):
             paid_price=self.active_1000_point_product_ordering_1.price * 3,
         )
 
-    @patch('payment.views.KakaoPay.cancel_payment')
-    @patch('payment.views.GiveProduct.cancel')
-    @patch('payment.views.Order.cancel')
+    @patch('payment.services.KakaoPay.cancel_payment')
+    @patch('payment.services.GiveProduct.cancel')
+    @patch('payment.services.Order.cancel')
     def kakao_pay_approve_give_product_cancel_when_success(self,
                                                            mock_order_cancel,
                                                            mock_give_product_cancel,
@@ -318,8 +318,8 @@ class KakaoPayApproveGiveProductFailTestCase(GuestTokenMixin, TestCase):
             paid_price=self.active_1000_point_product_ordering_1.price * 3,
         )
 
-    @patch('payment.views.GiveProduct.fail')
-    @patch('payment.views.Order.fail')
+    @patch('payment.services.GiveProduct.fail')
+    @patch('payment.services.Order.fail')
     def test_kakao_pay_fail_for_buy_product_api_when_success(self,
                                                              mock_order_fail,
                                                              mock_give_product_fail):
