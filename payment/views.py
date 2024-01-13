@@ -1,5 +1,3 @@
-import json
-
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -8,8 +6,7 @@ from common.common_decorators.request_decorators import (
     mandatories,
     optionals,
 )
-from order.consts import OrderStatus
-from order.exceptions import OrderNotExists, OrderAlreadyCanceled, OrderStatusUnavailableBehavior
+from order.exceptions import OrderNotExists
 from order.models import Order, OrderItem
 from payment.dtos.request_dtos import KakaoPayReadyForBuyProductRequest
 from payment.dtos.response_dtos import KakaoPayReadyForBuyProductResponse
@@ -18,7 +15,10 @@ from payment.helpers.kakaopay_helpers import (
     KakaoPay,
     KakaoPayProductHandler,
 )
-from payment.services import kakao_pay_approve_give_product_success
+from payment.services import (
+    kakao_pay_approve_give_product_success,
+    kakao_pay_approve_give_product_cancel,
+)
 from product.exceptions import ProductNotExists
 from product.models import (
     PointProduct,
@@ -90,40 +90,7 @@ class KakaoPayApproveForBuyProductAPIView(APIView):
 class KakaoPayCancelForBuyProductAPIView(APIView):
     @optionals({'reason': '결제 취소'})
     def post(self, request, order_id, o):
-        try:
-            order = Order.objects.get(
-                id=order_id,
-                guest_id=request.guest.id,
-            )
-        except Order.DoesNotExist:
-            raise OrderNotExists()
-
-        if order.status == OrderStatus.CANCEL.value:
-            raise OrderAlreadyCanceled()
-        elif order.status not in (OrderStatus.SUCCESS.value, OrderStatus.READY.value):
-            raise OrderStatusUnavailableBehavior()
-
-        with transaction.atomic():
-            order.cancel()
-            order_items = OrderItem.objects.filter(
-                order_id=order.id
-            ).values_list(
-                'id',
-                flat=True,
-            )
-            give_products = GiveProduct.objects.filter(order_item_id__in=order_items)
-            for give_product in give_products:
-                give_product.cancel()
-
-        kakao_pay = KakaoPay(
-            KakaoPayProductHandler(order_id=order.id)
-        )
-        kakao_pay.cancel_payment(
-            tid=order.tid,
-            cancel_price=order.total_paid_price,
-            cancel_tax_free_price=order.total_tax_paid_price,
-            payload=json.dumps({'cancel_reason': o['reason']}),
-        )
+        kakao_pay_approve_give_product_cancel(order_id, request.guest.id, o['reason'])
         return Response({'message': '결제가 취소되었습니다.'}, status=200)
 
 

@@ -6,15 +6,26 @@ from django.utils import timezone
 from freezegun import freeze_time
 
 from common.common_testcase_helpers.testcase_helpers import (
+    GuestTokenMixin,
     test_case_create_order,
     test_case_create_order_item,
 )
 from member.models import Guest
 from order.consts import OrderStatus
-from order.exceptions import OrderNotExists
-from payment.services import kakao_pay_approve_give_product_success
+from order.exceptions import (
+    OrderAlreadyCanceled,
+    OrderNotExists,
+    OrderStatusUnavailableBehavior,
+)
+from payment.services import (
+    kakao_pay_approve_give_product_cancel,
+    kakao_pay_approve_give_product_success,
+)
 from product.consts import ProductGivenStatus
-from product.models import PointProduct, GiveProduct
+from product.models import (
+    GiveProduct,
+    PointProduct,
+)
 
 
 @freeze_time('2021-01-01')
@@ -116,3 +127,165 @@ class KakaoPayApproveGiveProductSuccessTestCase(TestCase):
         # Expected:
         with self.assertRaises(OrderNotExists):
             kakao_pay_approve_give_product_success(0, pg_token)
+
+
+@freeze_time('2021-01-01')
+class KakaoPayApproveGiveProductCancelTestCase(GuestTokenMixin, TestCase):
+    def setUp(self):
+        super(KakaoPayApproveGiveProductCancelTestCase, self).setUp()
+        self.guest = Guest.objects.all().first()
+        self.order = test_case_create_order(
+            guest=self.guest,
+            order_number='F1234512345',
+            tid='test_tid',
+            status=OrderStatus.READY.value,
+            order_phone_number='01012341234',
+            payment_type='',
+            total_paid_price=3000,
+        )
+        self.active_1000_point_product_ordering_1 = PointProduct.objects.create(
+            title='Active Point Product1',
+            price=1000,
+            start_time=timezone.now() - timezone.timedelta(hours=1),
+            end_time=timezone.now() + timezone.timedelta(hours=1),
+            total_quantity=10,
+            left_quantity=10,
+            point=1000,
+            ordering=1,
+            created_guest=self.guest
+        )
+        self.order_item = test_case_create_order_item(
+            order=self.order,
+            product_type=self.active_1000_point_product_ordering_1.product_type,
+            product_id=self.active_1000_point_product_ordering_1.id,
+            item_quantity=3,
+            status=OrderStatus.READY.value,
+            paid_price=self.active_1000_point_product_ordering_1.price * 3,
+        )
+
+    @patch('payment.views.KakaoPay.cancel_payment')
+    @patch('payment.views.GiveProduct.cancel')
+    @patch('payment.views.Order.cancel')
+    def kakao_pay_approve_give_product_cancel_when_success(self,
+                                                           mock_order_cancel,
+                                                           mock_give_product_cancel,
+                                                           mock_cancel_payment):
+        # Given:
+        self.login_guest(self.guest)
+
+        # And: GiveProduct Ready 생성
+        GiveProduct.objects.create(
+            order_item_id=self.order_item.id,
+            guest_id=self.guest.id,
+            product_pk=self.active_1000_point_product_ordering_1.id,
+            product_type=self.active_1000_point_product_ordering_1.product_type,
+            quantity=1,
+            meta_data=json.dumps(
+                {
+                    'point': self.active_1000_point_product_ordering_1.point,
+                    'quantity': 3,
+                    'total_point': self.active_1000_point_product_ordering_1.point * 3,
+                }
+            ),
+            status=ProductGivenStatus.READY.value,
+        )
+        # And:
+        mock_cancel_payment.return_value = {
+            "aid": "A5922f8a3ad74821a2cf",
+            "tid": "T591a8da3ad748219fdf",
+            "cid": "TC0ONETIME",
+            "status": "CANCEL_PAYMENT",
+            "partner_order_id": "6",
+            "partner_user_id": "4",
+            "payment_method_type": "MONEY",
+            "item_name": "G-point 1000",
+            "quantity": 10,
+            "amount": {
+                "total": 10000,
+                "tax_free": 0,
+                "vat": 909,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "approved_cancel_amount": {
+                "total": 10000,
+                "tax_free": 0,
+                "vat": 909,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "canceled_amount": {
+                "total": 10000,
+                "tax_free": 0,
+                "vat": 909,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "cancel_available_amount": {
+                "total": 0,
+                "tax_free": 0,
+                "vat": 0,
+                "point": 0,
+                "discount": 0,
+                "green_deposit": 0
+            },
+            "created_at": "2024-01-01T02:46:03",
+            "approved_at": "2024-01-01T02:46:34",
+            "canceled_at": "2024-01-01T12:20:42",
+            "payload": "테스"
+        }
+        # When:
+        kakao_pay_approve_give_product_cancel(self.order.id, self.guest.id, '결제 취소')
+
+        # Then: 주문 취소 성공
+        mock_order_cancel.assert_called_once_with()
+        mock_give_product_cancel.assert_called_once_with()
+        mock_cancel_payment.assert_called_once_with(
+            tid=self.order.tid,
+            cancel_price=self.order.total_paid_price,
+            cancel_tax_free_price=self.order.total_tax_paid_price,
+            payload=json.dumps({'cancel_reason': '결제 취소'}),
+        )
+
+    def test_kakao_pay_approve_give_product_cancel_when_fail_due_order_not_exists(self):
+        # Given:
+        self.login_guest(self.guest)
+
+        # Expected: 없는 주문 id 로 결제 신청
+        with self.assertRaises(OrderNotExists):
+            kakao_pay_approve_give_product_cancel(0, self.guest.id, '결제 취소')
+
+    def test_kakao_pay_approve_give_product_cancel_when_fail_when_already_canceled(self):
+        # Given: 이미 취소함
+        self.login_guest(self.guest)
+        self.order.status = OrderStatus.CANCEL.value
+        self.order.save()
+
+        # Expected: 이미 취소
+        with self.assertRaises(OrderAlreadyCanceled):
+            kakao_pay_approve_give_product_cancel(self.order.id, self.guest.id, '결제 취소')
+
+    def test_kakao_pay_approve_give_product_cancel_when_fail_when_invalid_status(self):
+        # Given: Fail 상태
+        self.login_guest(self.guest)
+        self.order.status = OrderStatus.FAIL.value
+        self.order.save()
+
+        # Expecte: 주문 상태가 유효하지 않은 Status 이라서 취소 불가
+        with self.assertRaises(OrderStatusUnavailableBehavior):
+            kakao_pay_approve_give_product_cancel(self.order.id, self.guest.id, '결제 취소')
+
+    def test_kakao_pay_approve_give_product_cancel_when_fail_due_not_guests_order(self):
+        # Given:
+        guest = Guest.objects.create(
+            ip='testtest',
+            temp_nickname='비회원test'
+        )
+        self.login_guest(guest)
+
+        # When: guest 가 아닌 다른 사람의 주문 취소
+        with self.assertRaises(OrderNotExists):
+            kakao_pay_approve_give_product_cancel(self.order.id, guest.id, '결제 취소')

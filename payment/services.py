@@ -1,7 +1,15 @@
+import json
 from django.db import transaction
 
-from order.consts import PaymentType
-from order.exceptions import OrderNotExists
+from order.consts import (
+    PaymentType,
+    OrderStatus,
+)
+from order.exceptions import (
+    OrderAlreadyCanceled,
+    OrderNotExists,
+    OrderStatusUnavailableBehavior,
+)
 from order.models import (
     Order,
     OrderItem,
@@ -44,3 +52,40 @@ def kakao_pay_approve_give_product_success(order_id: int, pg_token: str) -> None
         give_products = GiveProduct.objects.filter(order_item_id__in=order_items)
         for give_product in give_products:
             give_product.give()
+
+
+def kakao_pay_approve_give_product_cancel(order_id: int, guest_id: int, cancel_reason: str) -> None:
+    try:
+        order = Order.objects.get(
+            id=order_id,
+            guest_id=guest_id,
+        )
+    except Order.DoesNotExist:
+        raise OrderNotExists()
+
+    if order.status == OrderStatus.CANCEL.value:
+        raise OrderAlreadyCanceled()
+    elif order.status not in (OrderStatus.SUCCESS.value, OrderStatus.READY.value):
+        raise OrderStatusUnavailableBehavior()
+
+    with transaction.atomic():
+        order.cancel()
+        order_items = OrderItem.objects.filter(
+            order_id=order.id
+        ).values_list(
+            'id',
+            flat=True,
+        )
+        give_products = GiveProduct.objects.filter(order_item_id__in=order_items)
+        for give_product in give_products:
+            give_product.cancel()
+
+    kakao_pay = KakaoPay(
+        KakaoPayProductHandler(order_id=order.id)
+    )
+    kakao_pay.cancel_payment(
+        tid=order.tid,
+        cancel_price=order.total_paid_price,
+        cancel_tax_free_price=order.total_tax_paid_price,
+        payload=json.dumps({'cancel_reason': cancel_reason}),
+    )
