@@ -89,3 +89,25 @@ def kakao_pay_approve_give_product_cancel(order_id: int, guest_id: int, cancel_r
         cancel_tax_free_price=order.total_tax_paid_price,
         payload=json.dumps({'cancel_reason': cancel_reason}),
     )
+
+
+def kakao_pay_approve_give_product_fail(order_id: int, guest_id: int) -> None:
+    try:
+        order = Order.objects.get(
+            id=order_id,
+            guest_id=guest_id,
+        )
+    except Order.DoesNotExist:
+        raise OrderNotExists()
+
+    with transaction.atomic():
+        order.fail()
+        order_items = OrderItem.objects.filter(
+            order_id=order.id
+        ).values_list(
+            'id',
+            flat=True,
+        )
+        give_products = GiveProduct.objects.filter(order_item_id__in=order_items)
+        for give_product in give_products:
+            give_product.fail()

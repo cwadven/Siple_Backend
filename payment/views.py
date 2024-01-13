@@ -1,4 +1,3 @@
-from django.db import transaction
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -6,8 +5,6 @@ from common.common_decorators.request_decorators import (
     mandatories,
     optionals,
 )
-from order.exceptions import OrderNotExists
-from order.models import Order, OrderItem
 from payment.dtos.request_dtos import KakaoPayReadyForBuyProductRequest
 from payment.dtos.response_dtos import KakaoPayReadyForBuyProductResponse
 from payment.exceptions import UnavailablePayHandler
@@ -16,13 +13,13 @@ from payment.helpers.kakaopay_helpers import (
     KakaoPayProductHandler,
 )
 from payment.services import (
-    kakao_pay_approve_give_product_success,
     kakao_pay_approve_give_product_cancel,
+    kakao_pay_approve_give_product_fail,
+    kakao_pay_approve_give_product_success,
 )
 from product.exceptions import ProductNotExists
 from product.models import (
     PointProduct,
-    GiveProduct,
 )
 
 
@@ -96,24 +93,5 @@ class KakaoPayCancelForBuyProductAPIView(APIView):
 
 class KakaoPayFailForBuyProductAPIView(APIView):
     def post(self, request, order_id):
-        try:
-            order = Order.objects.get(
-                id=order_id,
-                guest_id=request.guest.id,
-            )
-        except Order.DoesNotExist:
-            raise OrderNotExists()
-
-        with transaction.atomic():
-            order.fail()
-            order_items = OrderItem.objects.filter(
-                order_id=order.id
-            ).values_list(
-                'id',
-                flat=True,
-            )
-            give_products = GiveProduct.objects.filter(order_item_id__in=order_items)
-            for give_product in give_products:
-                give_product.fail()
-
+        kakao_pay_approve_give_product_fail(order_id, request.guest.id)
         return Response({'message': '결제가 실패되었습니다.'}, status=200)
