@@ -1,3 +1,5 @@
+from django.shortcuts import render
+from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -95,3 +97,32 @@ class KakaoPayFailForBuyProductAPIView(APIView):
     def post(self, request, order_id):
         kakao_pay_approve_give_product_fail(order_id, request.guest.id)
         return Response({'message': '결제가 실패되었습니다.'}, status=200)
+
+
+def approve_give_product_success_by_template(request, order_id):
+    pg_token = request.GET.get('pg_token')
+    try:
+        kakao_pay_approve_give_product_success(order_id, pg_token)
+    except APIException:
+        return render(request, 'payment/pay_abused/not_found.html')
+
+    return render(request, 'payment/pay_success/success.html')
+
+
+@optionals({'reason': '결제 취소'})
+def approve_give_product_cancel_by_template(request, order_id, o):
+    try:
+        kakao_pay_approve_give_product_cancel(order_id, request.guest.id, o['reason'])
+    except APIException:
+        return render(request, 'payment/pay_abused/not_found.html')
+
+    return render(request, 'payment/pay_cancel/cancel.html')
+
+
+def approve_give_product_fail_by_template(request, order_id):
+    try:
+        kakao_pay_approve_give_product_fail(order_id, request.guest.id)
+    except APIException:
+        return render(request, 'payment/pay_abused/not_found.html')
+
+    return render(request, 'payment/pay_fail/fail.html')
