@@ -8,6 +8,7 @@ from rest_framework.authentication import (
     BaseAuthentication,
     get_authorization_header,
 )
+from rest_framework.exceptions import APIException
 from rest_framework_jwt.settings import api_settings
 
 from member.exceptions import BlackMemberException
@@ -92,4 +93,7 @@ class DefaultAuthentication(BaseAuthentication):
 
 class JWTAuthenticationMiddleware(AuthenticationMiddleware):
     def process_request(self, request):
-        DefaultAuthentication().authenticate(request)
+        try:
+            DefaultAuthentication().authenticate(request)
+        except APIException:
+            pass
