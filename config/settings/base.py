@@ -62,6 +62,7 @@ THIRD_MIDDLEWARE = [
 
 CUSTOM_MIDDLEWARE = [
     'config.middlewares.custom_middlewares.RequestUserToMemberMiddleware',
+    'config.middlewares.authentications.JWTAuthenticationMiddleware',
 ]
 
 MIDDLEWARE = DJANGO_MIDDLEWARE + THIRD_MIDDLEWARE + CUSTOM_MIDDLEWARE

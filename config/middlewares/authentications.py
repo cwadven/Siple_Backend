@@ -1,5 +1,6 @@
 import jwt
 from django.apps import apps
+from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext as _
 from rest_framework import exceptions
@@ -87,3 +88,8 @@ class DefaultAuthentication(BaseAuthentication):
             raise exceptions.AuthenticationFailed(msg)
 
         return guest
+
+
+class JWTAuthenticationMiddleware(AuthenticationMiddleware):
+    def process_request(self, request):
+        DefaultAuthentication().authenticate(request)
