@@ -94,7 +94,7 @@ class Product(models.Model):
                 product_pk=self.id,
                 product_type=self.product_type,
                 is_deleted=False,
-            ).order_by('created_at')
+            ).order_by('sequence')
         )
 
 

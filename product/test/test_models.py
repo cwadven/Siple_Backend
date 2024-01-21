@@ -1,14 +1,12 @@
 from datetime import datetime
-
 import json
 from unittest.mock import (
     patch,
 )
+
 from django.utils import timezone
 from freezegun import freeze_time
-
 from django.test import TestCase
-
 from common.common_testcase_helpers.testcase_helpers import (
     test_case_create_order,
     test_case_create_order_item,
@@ -16,10 +14,15 @@ from common.common_testcase_helpers.testcase_helpers import (
 from member.models import Guest
 from order.consts import OrderStatus
 from point.exceptions import NotEnoughGuestPointsForCancelOrder
-from product.consts import ProductGivenStatus
+from product.consts import (
+    ProductGivenStatus,
+    ProductType,
+)
 from product.models import (
     GiveProduct,
-    GiveProductLog, PointProduct,
+    GiveProductLog,
+    PointProduct,
+    ProductImage,
 )
 
 
@@ -435,4 +438,51 @@ class PointProductMethodTestCase(TestCase):
                 'total_point': self.point_1000_product.point * quantity,
                 'quantity': quantity,
             },
+        )
+
+
+class ProductMethodTestCase(TestCase):
+    def setUp(self):
+        self.guest = Guest.objects.first()
+        self.point_1000_product = PointProduct.objects.create(
+            title='포인트 1000',
+            price=1000,
+            point=1000,
+            created_guest=self.guest,
+        )
+        self.point_1000_product_image1 = ProductImage.objects.create(
+            product_pk=self.point_1000_product.id,
+            product_type=ProductType.POINT.value,
+            sequence=1,
+            created_guest=self.guest,
+            image_url='image1',
+        )
+        self.point_1000_product_image2 = ProductImage.objects.create(
+            product_pk=self.point_1000_product.id,
+            product_type=ProductType.POINT.value,
+            sequence=2,
+            created_guest=self.guest,
+            image_url='image2',
+        )
+        self.point_1000_product_deleted_image1 = ProductImage.objects.create(
+            product_pk=self.point_1000_product.id,
+            product_type=ProductType.POINT.value,
+            sequence=1,
+            created_guest=self.guest,
+            image_url='deleted_image1',
+            is_deleted=True,
+        )
+
+    def test_get_product_images(self):
+        # Given:
+        # When:
+        product_images = self.point_1000_product.get_product_images()
+
+        # Then: Deleted should be excluded and sorted by sequence
+        self.assertEqual(
+            product_images,
+            [
+                self.point_1000_product_image1,
+                self.point_1000_product_image2,
+            ]
         )
