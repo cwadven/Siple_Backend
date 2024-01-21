@@ -75,7 +75,7 @@ class Order(models.Model):
     payment_type = models.CharField(verbose_name='결제 수단', max_length=20, db_index=True, choices=PaymentType.choices(), null=True)
     need_notification_sent = models.BooleanField(verbose_name='고객 알림 전송 필요 여부', default=False)
     is_notification_sent = models.BooleanField(verbose_name='고객 알림 전송 여부', default=False)
-    is_once_refunded = models.BooleanField(verbose_name='한번이라도 했는지 여부', default=False)
+    is_once_refunded = models.BooleanField(verbose_name='한번이라도 환불 했는지 여부', default=False)
     canceled_at = models.DateTimeField(verbose_name='주문 취소 시간', null=True, blank=True, db_index=True)
     succeeded_at = models.DateTimeField(verbose_name='결제 성공 시간', null=True, blank=True, db_index=True)
     refunded_at = models.DateTimeField(verbose_name='환불 시간', null=True, blank=True, db_index=True)

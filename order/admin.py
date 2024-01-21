@@ -10,6 +10,17 @@ from order.models import (
 )
 
 
+class OrderItemInline(admin.StackedInline):
+    model = OrderItem
+    extra = 0
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 class OrderAdmin(admin.ModelAdmin):
     list_display = [
         'id',
@@ -23,6 +34,13 @@ class OrderAdmin(admin.ModelAdmin):
         'refunded_at',
         'request_at',
     ]
+    inlines = [OrderItemInline]
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 class OrderStatusLogAdmin(admin.ModelAdmin):
