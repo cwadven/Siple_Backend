@@ -7,9 +7,18 @@ from common.common_decorators.request_decorators import (
     mandatories,
     optionals,
 )
+from payment.consts import (
+    PAY_ABUSED_HTML_TEMPLATE,
+    PAY_CANCEL_HTML_TEMPLATE,
+    PAY_FAIL_HTML_TEMPLATE,
+    PAY_SUCCESS_HTML_TEMPLATE,
+)
 from payment.dtos.request_dtos import KakaoPayReadyForBuyProductRequest
 from payment.dtos.response_dtos import KakaoPayReadyForBuyProductResponse
-from payment.exceptions import UnavailablePayHandler
+from payment.exceptions import (
+    KakaoPayCancelError,
+    UnavailablePayHandler,
+)
 from payment.helpers.kakaopay_helpers import (
     KakaoPay,
     KakaoPayProductHandler,
@@ -104,25 +113,26 @@ def approve_give_product_success_by_template(request, order_id):
     try:
         kakao_pay_approve_give_product_success(order_id, pg_token)
     except APIException:
-        return render(request, 'payment/pay_abused/not_found.html')
+        return render(request, PAY_ABUSED_HTML_TEMPLATE)
 
-    return render(request, 'payment/pay_success/success.html')
+    return render(request, PAY_SUCCESS_HTML_TEMPLATE)
 
 
 @optionals({'reason': '결제 취소'})
 def approve_give_product_cancel_by_template(request, order_token, o):
     try:
         kakao_pay_approve_give_product_cancel(order_token, o['reason'])
+    except KakaoPayCancelError:
+        return render(request, PAY_CANCEL_HTML_TEMPLATE)
     except APIException:
-        return render(request, 'payment/pay_abused/not_found.html')
-
-    return render(request, 'payment/pay_cancel/cancel.html')
+        return render(request, PAY_ABUSED_HTML_TEMPLATE)
+    return render(request, PAY_CANCEL_HTML_TEMPLATE)
 
 
 def approve_give_product_fail_by_template(request, order_token):
     try:
         kakao_pay_approve_give_product_fail(order_token)
     except APIException:
-        return render(request, 'payment/pay_abused/not_found.html')
+        return render(request, PAY_ABUSED_HTML_TEMPLATE)
 
-    return render(request, 'payment/pay_fail/fail.html')
+    return render(request, PAY_FAIL_HTML_TEMPLATE)

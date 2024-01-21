@@ -14,7 +14,12 @@ from common.common_testcase_helpers.testcase_helpers import (
 from common.common_utils.encrpt_utils import encrypt_integer
 from member.models import Guest
 from order.consts import OrderStatus
-from order.exceptions import OrderNotExists, OrderAlreadyCanceled, OrderStatusUnavailableBehavior
+from order.exceptions import (
+    OrderAlreadyCanceled,
+    OrderNotExists,
+    OrderStatusUnavailableBehavior,
+)
+from payment.exceptions import KakaoPayCancelError
 from product.consts import ProductGivenStatus
 from product.models import PointProduct, GiveProduct
 
@@ -837,6 +842,21 @@ class ApproveGiveProductCancelByTemplateTestCase(GuestTokenMixin, TestCase):
 
         # Then: 유효하지 않은 주문 status 로 요청 취소 실패
         self.assertTemplateUsed(response, 'payment/pay_abused/not_found.html')
+
+    @patch('payment.services.kakao_pay_approve_give_product_cancel')
+    def test_kakao_pay_cancel_for_buy_product_template_when_unexpected_response_from_kakao(self, mock_kakao_pay_approve_give_product_cancel):
+        # Given:
+        self.login_guest(self.guest)
+        # And: token 생성
+        token = encrypt_integer(self.order.id)
+        # And: 모킹 - KakaoPayCancelError
+        mock_kakao_pay_approve_give_product_cancel.side_effect = KakaoPayCancelError
+
+        # When:
+        response = self.client.post(reverse('payment:product_cancel_template', args=[token]))
+
+        # Then: cancel html 사용
+        self.assertTemplateUsed(response, 'payment/pay_cancel/cancel.html')
 
 
 @freeze_time('2021-01-01')
