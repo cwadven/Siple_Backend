@@ -4,7 +4,6 @@ from django.db import (
     models,
     transaction,
 )
-
 from order.models import (
     Order,
     OrderItem,
@@ -14,7 +13,7 @@ from point.services import (
     get_guest_available_total_point,
     give_point,
 )
-from product.consts import ProductGivenStatus
+from product.consts import ProductGivenStatus, ProductType
 from product.managers import ProductQuerySet
 
 
@@ -90,7 +89,7 @@ class Product(models.Model):
 
 
 class PointProduct(Product):
-    product_type = 'POINT'
+    product_type = ProductType.POINT.value
     order_number_prefix = 'P1'
     need_notification_sent = False
 
@@ -165,7 +164,7 @@ class GiveProduct(models.Model):
     order_item_id = models.PositiveBigIntegerField(verbose_name='주문 Item pk', db_index=True, null=True)
     guest_id = models.PositiveBigIntegerField(verbose_name='Guest pk', db_index=True, null=True)
     product_pk = models.PositiveBigIntegerField(verbose_name='상품 pk', db_index=True)
-    product_type = models.CharField(verbose_name='상품 타입', max_length=20)
+    product_type = models.CharField(verbose_name='상품 타입', max_length=20, choices=ProductType.choices())
     quantity = models.PositiveIntegerField(
         verbose_name='수량',
     )
@@ -287,7 +286,7 @@ class GiveProductLog(models.Model):
 
 class ProductImage(models.Model):
     product_pk = models.PositiveBigIntegerField(verbose_name='상품 pk', db_index=True)
-    product_type = models.CharField(verbose_name='상품 타입', max_length=20)
+    product_type = models.CharField(verbose_name='상품 타입', max_length=20, choices=ProductType.choices())
     created_guest = models.ForeignKey(
         verbose_name='Guest',
         to='member.Guest',

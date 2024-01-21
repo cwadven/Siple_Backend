@@ -6,3 +6,7 @@ class ProductGivenStatus(StrValueLabel):
     SUCCESS = ('SUCCESS', '지급 완료')
     FAIL = ('FAIL', '지급 실패')
     CANCEL = ('CANCEL', '지급 취소')
+
+
+class ProductType(StrValueLabel):
+    POINT = ('POINT', '포인트')
