@@ -94,8 +94,8 @@ class KakaoPayCancelForBuyProductAPIView(APIView):
 
 
 class KakaoPayFailForBuyProductAPIView(APIView):
-    def post(self, request, order_id):
-        kakao_pay_approve_give_product_fail(order_id, request.guest.id)
+    def post(self, request, order_token):
+        kakao_pay_approve_give_product_fail(order_token)
         return Response({'message': '결제가 실패되었습니다.'}, status=200)
 
 
@@ -119,9 +119,9 @@ def approve_give_product_cancel_by_template(request, order_token, o):
     return render(request, 'payment/pay_cancel/cancel.html')
 
 
-def approve_give_product_fail_by_template(request, order_id):
+def approve_give_product_fail_by_template(request, order_token):
     try:
-        kakao_pay_approve_give_product_fail(order_id, request.guest.id)
+        kakao_pay_approve_give_product_fail(order_token)
     except APIException:
         return render(request, 'payment/pay_abused/not_found.html')
 
