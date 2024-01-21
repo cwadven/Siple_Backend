@@ -186,7 +186,7 @@ class KakaoPayHandler(ABC):
 
 class KakaoPayProductHandler(KakaoPayHandler):
     def __init__(self, order_id: int):
-        # API 통신으로 결제를 원하는 경우 settings.BASE_DOMAIN 와 reverse 에서 쓰고 있는 내용 수정 필요.
+        # API 통신으로 결제를 원하는 경우 settings.KAKAO_PAY_BASE_DOMAIN 와 reverse 에서 쓰고 있는 내용 수정 필요.
         # settings.BASE_DOMAIN 은 Frontend 주소로
         # reverse 는
         # product_approve
