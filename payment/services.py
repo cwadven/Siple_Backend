@@ -1,6 +1,7 @@
 import json
 from django.db import transaction
 
+from common.common_utils.encrpt_utils import decrypt_integer
 from order.consts import (
     PaymentType,
     OrderStatus,
@@ -54,11 +55,11 @@ def kakao_pay_approve_give_product_success(order_id: int, pg_token: str) -> None
             give_product.give()
 
 
-def kakao_pay_approve_give_product_cancel(order_id: int, guest_id: int, cancel_reason: str) -> None:
+def kakao_pay_approve_give_product_cancel(order_id_token: str, cancel_reason: str) -> None:
+    order_id = decrypt_integer(order_id_token)
     try:
         order = Order.objects.get(
             id=order_id,
-            guest_id=guest_id,
         )
     except Order.DoesNotExist:
         raise OrderNotExists()

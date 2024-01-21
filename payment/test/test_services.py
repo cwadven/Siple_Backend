@@ -10,6 +10,7 @@ from common.common_testcase_helpers.testcase_helpers import (
     test_case_create_order,
     test_case_create_order_item,
 )
+from common.common_utils.encrpt_utils import encrypt_integer
 from member.models import Guest
 from order.consts import OrderStatus
 from order.exceptions import (
@@ -167,10 +168,10 @@ class KakaoPayApproveGiveProductCancelTestCase(TestCase):
     @patch('payment.services.KakaoPay.cancel_payment')
     @patch('payment.services.GiveProduct.cancel')
     @patch('payment.services.Order.cancel')
-    def kakao_pay_approve_give_product_cancel_when_success(self,
-                                                           mock_order_cancel,
-                                                           mock_give_product_cancel,
-                                                           mock_cancel_payment):
+    def test_kakao_pay_approve_give_product_cancel_when_success(self,
+                                                                mock_order_cancel,
+                                                                mock_give_product_cancel,
+                                                                mock_cancel_payment):
         # Given:
         # And: GiveProduct Ready 생성
         GiveProduct.objects.create(
@@ -236,8 +237,11 @@ class KakaoPayApproveGiveProductCancelTestCase(TestCase):
             "canceled_at": "2024-01-01T12:20:42",
             "payload": "테스"
         }
+        # And: 주문 id 암호화
+        token = encrypt_integer(self.order.id)
+
         # When:
-        kakao_pay_approve_give_product_cancel(self.order.id, self.guest.id, '결제 취소')
+        kakao_pay_approve_give_product_cancel(token, '결제 취소')
 
         # Then: 주문 취소 성공
         mock_order_cancel.assert_called_once_with()
@@ -250,38 +254,34 @@ class KakaoPayApproveGiveProductCancelTestCase(TestCase):
         )
 
     def test_kakao_pay_approve_give_product_cancel_when_fail_due_order_not_exists(self):
-        # Given:
+        # Given: 주문 id 암호화
+        token = encrypt_integer(0)
+
         # Expected: 없는 주문 id 로 결제 신청
         with self.assertRaises(OrderNotExists):
-            kakao_pay_approve_give_product_cancel(0, self.guest.id, '결제 취소')
+            kakao_pay_approve_give_product_cancel(token, '결제 취소')
 
     def test_kakao_pay_approve_give_product_cancel_when_fail_when_already_canceled(self):
         # Given: 이미 취소함
         self.order.status = OrderStatus.CANCEL.value
         self.order.save()
+        # And: 주문 id 암호화
+        token = encrypt_integer(self.order.id)
 
         # Expected: 이미 취소
         with self.assertRaises(OrderAlreadyCanceled):
-            kakao_pay_approve_give_product_cancel(self.order.id, self.guest.id, '결제 취소')
+            kakao_pay_approve_give_product_cancel(token, '결제 취소')
 
     def test_kakao_pay_approve_give_product_cancel_when_fail_when_invalid_status(self):
         # Given: Fail 상태
         self.order.status = OrderStatus.FAIL.value
         self.order.save()
+        # And: 주문 id 암호화
+        token = encrypt_integer(self.order.id)
 
         # Expected: 주문 상태가 유효하지 않은 Status 이라서 취소 불가
         with self.assertRaises(OrderStatusUnavailableBehavior):
-            kakao_pay_approve_give_product_cancel(self.order.id, self.guest.id, '결제 취소')
-
-    def test_kakao_pay_approve_give_product_cancel_when_fail_due_not_guests_order(self):
-        # Given:
-        guest = Guest.objects.create(
-            ip='testtest',
-            temp_nickname='비회원test'
-        )
-        # Expected: guest 가 아닌 다른 사람의 주문 취소
-        with self.assertRaises(OrderNotExists):
-            kakao_pay_approve_give_product_cancel(self.order.id, guest.id, '결제 취소')
+            kakao_pay_approve_give_product_cancel(token, '결제 취소')
 
 
 @freeze_time('2021-01-01')
