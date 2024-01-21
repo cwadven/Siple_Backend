@@ -211,4 +211,4 @@ LOGGING = {
     }
 }
 
-BASE_DOMAIN = 'http://127.0.0.1:8000'
+KAKAO_PAY_BASE_DOMAIN = 'http://127.0.0.1:8000'
