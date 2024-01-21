@@ -11,6 +11,7 @@ from common.common_testcase_helpers.testcase_helpers import (
     test_case_create_order,
     test_case_create_order_item,
 )
+from common.common_utils.encrpt_utils import encrypt_integer
 from member.models import Guest
 from order.consts import OrderStatus
 from order.exceptions import OrderNotExists, OrderAlreadyCanceled, OrderStatusUnavailableBehavior
@@ -406,8 +407,11 @@ class KakaoPayCancelForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
             "canceled_at": "2024-01-01T12:20:42",
             "payload": "테스"
         }
+        # And: token 생성
+        token = encrypt_integer(self.order.id)
+
         # When:
-        response = self.client.post(reverse('payment:product_cancel', args=[self.order.id]))
+        response = self.client.post(reverse('payment:product_cancel', args=[token]))
         content = json.loads(response.content)
 
         # Then: 주문 취소 성공
@@ -428,9 +432,11 @@ class KakaoPayCancelForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
     def test_kakao_pay_cancel_for_buy_product_api_when_fail_due_order_not_exists(self):
         # Given:
         self.login_guest(self.guest)
+        # And: token 생성
+        token = encrypt_integer(0)
 
         # When: 없는 주문 id 로 결제 신청
-        response = self.client.post(reverse('payment:product_cancel', args=[0]))
+        response = self.client.post(reverse('payment:product_cancel', args=[token]))
         content = json.loads(response.content)
 
         # Then: Order가 없어서 주문 취소 실패
@@ -442,9 +448,11 @@ class KakaoPayCancelForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
         self.login_guest(self.guest)
         self.order.status = OrderStatus.CANCEL.value
         self.order.save()
+        # And: token 생성
+        token = encrypt_integer(self.order.id)
 
         # When: 이미 취소 상태
-        response = self.client.post(reverse('payment:product_cancel', args=[self.order.id]))
+        response = self.client.post(reverse('payment:product_cancel', args=[token]))
         content = json.loads(response.content)
 
         # Then: 이미 취소 상태로 주문 취소 실패
@@ -456,30 +464,16 @@ class KakaoPayCancelForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
         self.login_guest(self.guest)
         self.order.status = OrderStatus.FAIL.value
         self.order.save()
+        # And: token 생성
+        token = encrypt_integer(self.order.id)
 
         # When: 유효하지 않은 status
-        response = self.client.post(reverse('payment:product_cancel', args=[self.order.id]))
+        response = self.client.post(reverse('payment:product_cancel', args=[token]))
         content = json.loads(response.content)
 
         # Then: 유효하지 않은 status로 주문 취소 실패
         self.assertEqual(response.status_code, OrderStatusUnavailableBehavior.status_code)
         self.assertEqual(content['message'], OrderStatusUnavailableBehavior.default_detail)
-
-    def test_kakao_pay_cancel_for_buy_product_api_when_fail_due_not_guests_order(self):
-        # Given:
-        guest = Guest.objects.create(
-            ip='testtest',
-            temp_nickname='비회원test'
-        )
-        self.login_guest(guest)
-
-        # When: guest 가 유효하지 않음
-        response = self.client.post(reverse('payment:product_cancel', args=[self.order.id]))
-        content = json.loads(response.content)
-
-        # Then: guest 가 유효하지 않음
-        self.assertEqual(response.status_code, OrderNotExists.status_code)
-        self.assertEqual(content['message'], OrderNotExists.default_detail)
 
 
 @freeze_time('2021-01-01')
@@ -798,8 +792,11 @@ class ApproveGiveProductCancelByTemplateTestCase(GuestTokenMixin, TestCase):
             "canceled_at": "2024-01-01T12:20:42",
             "payload": "테스"
         }
+        # And: token 생성
+        token = encrypt_integer(self.order.id)
+
         # When:
-        response = self.client.post(reverse('payment:product_cancel_template', args=[self.order.id]))
+        response = self.client.post(reverse('payment:product_cancel_template', args=[token]))
 
         # Then: 주문 취소 성공
         self.assertTemplateUsed(response, 'payment/pay_cancel/cancel.html')
@@ -815,9 +812,11 @@ class ApproveGiveProductCancelByTemplateTestCase(GuestTokenMixin, TestCase):
     def test_kakao_pay_cancel_for_buy_product_template_when_fail_due_order_not_exists(self):
         # Given:
         self.login_guest(self.guest)
+        # And: token 생성
+        token = encrypt_integer(0)
 
         # When: 없는 주문 id 로 결제 신청
-        response = self.client.post(reverse('payment:product_cancel_template', args=[0]))
+        response = self.client.post(reverse('payment:product_cancel_template', args=[token]))
 
         # Then: Order가 없어서 주문 취소 실패
         self.assertTemplateUsed(response, 'payment/pay_abused/not_found.html')
@@ -827,9 +826,11 @@ class ApproveGiveProductCancelByTemplateTestCase(GuestTokenMixin, TestCase):
         self.login_guest(self.guest)
         self.order.status = OrderStatus.CANCEL.value
         self.order.save()
+        # And: token 생성
+        token = encrypt_integer(self.order.id)
 
         # When: 이미 Canceled 된 주문
-        response = self.client.post(reverse('payment:product_cancel_template', args=[self.order.id]))
+        response = self.client.post(reverse('payment:product_cancel_template', args=[token]))
 
         # Then: 이미 Canceled 된 주문으로 fail
         self.assertTemplateUsed(response, 'payment/pay_abused/not_found.html')
@@ -839,25 +840,13 @@ class ApproveGiveProductCancelByTemplateTestCase(GuestTokenMixin, TestCase):
         self.login_guest(self.guest)
         self.order.status = OrderStatus.FAIL.value
         self.order.save()
+        # And: token 생성
+        token = encrypt_integer(self.order.id)
 
         # When: 유효하지 않은 주문 status 로 요청
-        response = self.client.post(reverse('payment:product_cancel_template', args=[self.order.id]))
+        response = self.client.post(reverse('payment:product_cancel_template', args=[token]))
 
         # Then: 유효하지 않은 주문 status 로 요청 취소 실패
-        self.assertTemplateUsed(response, 'payment/pay_abused/not_found.html')
-
-    def test_kakao_pay_cancel_for_buy_product_template_when_fail_due_not_guests_order(self):
-        # Given:
-        guest = Guest.objects.create(
-            ip='testtest',
-            temp_nickname='비회원test'
-        )
-        self.login_guest(guest)
-
-        # When: guest 없음
-        response = self.client.post(reverse('payment:product_cancel_template', args=[self.order.id]))
-
-        # Then: guest 없음
         self.assertTemplateUsed(response, 'payment/pay_abused/not_found.html')
 
 

@@ -88,8 +88,8 @@ class KakaoPayApproveForBuyProductAPIView(APIView):
 
 class KakaoPayCancelForBuyProductAPIView(APIView):
     @optionals({'reason': '결제 취소'})
-    def post(self, request, order_id, o):
-        kakao_pay_approve_give_product_cancel(order_id, request.guest.id, o['reason'])
+    def post(self, request, order_token, o):
+        kakao_pay_approve_give_product_cancel(order_token, o['reason'])
         return Response({'message': '결제가 취소되었습니다.'}, status=200)
 
 
@@ -110,9 +110,9 @@ def approve_give_product_success_by_template(request, order_id):
 
 
 @optionals({'reason': '결제 취소'})
-def approve_give_product_cancel_by_template(request, order_id, o):
+def approve_give_product_cancel_by_template(request, order_token, o):
     try:
-        kakao_pay_approve_give_product_cancel(order_id, request.guest.id, o['reason'])
+        kakao_pay_approve_give_product_cancel(order_token, o['reason'])
     except APIException:
         return render(request, 'payment/pay_abused/not_found.html')
 
