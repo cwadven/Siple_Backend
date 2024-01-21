@@ -94,7 +94,7 @@ class Product(models.Model):
                 product_pk=self.id,
                 product_type=self.product_type,
                 is_deleted=False,
-            ).order_by('sequence')
+            ).order_by('ordering')
         )
 
 
@@ -302,7 +302,7 @@ class ProductImage(models.Model):
         to='member.Guest',
         on_delete=models.DO_NOTHING,
     )
-    sequence = models.PositiveIntegerField(verbose_name='순서', default=0, db_index=True)
+    ordering = models.PositiveIntegerField(verbose_name='순서', default=0, db_index=True)
     image_url = models.TextField(verbose_name='이미지')
     is_deleted = models.BooleanField(verbose_name='삭제 여부', default=False)
     created_at = models.DateTimeField(verbose_name='생성일', auto_now_add=True)
