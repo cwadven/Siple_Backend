@@ -153,9 +153,12 @@ class OrderMethodTestCase(TestCase):
             True
         )
 
-    def test_cancel(self):
+    def test_cancel_when_order_was_ready_should_status_cancel(self):
         # Given: approved with KAKAOPAY_CARD
         self.order.approve(PaymentType.KAKAOPAY_CARD.value)
+        # And: Order READY 변경
+        self.order.status = OrderStatus.READY.value
+        self.order.save()
 
         # When: cancel
         self.order.cancel()
@@ -167,6 +170,7 @@ class OrderMethodTestCase(TestCase):
                 status=OrderStatus.CANCEL.value,
                 payment_type=PaymentType.KAKAOPAY_CARD.value,
                 succeeded_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+                canceled_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
             ).exists(),
             True
         )
@@ -185,6 +189,7 @@ class OrderMethodTestCase(TestCase):
                 id=self.order_item1.id,
                 status=OrderStatus.CANCEL.value,
                 succeeded_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+                canceled_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
             ).exists(),
             True
         )
@@ -193,6 +198,7 @@ class OrderMethodTestCase(TestCase):
                 id=self.order_item2.id,
                 status=OrderStatus.CANCEL.value,
                 succeeded_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+                canceled_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
             ).exists(),
             True
         )
@@ -209,6 +215,76 @@ class OrderMethodTestCase(TestCase):
             OrderItemStatusLog.objects.filter(
                 order_item_id=self.order_item2.id,
                 status=OrderStatus.CANCEL.value,
+                request_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+            ).exists(),
+            True
+        )
+
+    def test_cancel_when_order_was_success_should_change_refund_case(self):
+        # Given: approved with KAKAOPAY_CARD
+        self.order.approve(PaymentType.KAKAOPAY_CARD.value)
+
+        # When: cancel
+        self.order.cancel()
+
+        # Then: Order REFUND 변경
+        self.assertEqual(
+            Order.objects.filter(
+                id=self.order.id,
+                status=OrderStatus.REFUND.value,
+                payment_type=PaymentType.KAKAOPAY_CARD.value,
+                succeeded_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+                total_refunded_price=self.order.total_paid_price,
+                is_once_refunded=True,
+                refunded_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+            ).exists(),
+            True
+        )
+        # And: Order Status Log 생성
+        self.assertEqual(
+            OrderStatusLog.objects.filter(
+                order_id=self.order.id,
+                status=OrderStatus.REFUND.value,
+                request_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+            ).exists(),
+            True
+        )
+        # And: OrderItem CANCEL 변경
+        self.assertEqual(
+            OrderItem.objects.filter(
+                id=self.order_item1.id,
+                status=OrderStatus.REFUND.value,
+                succeeded_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+                refunded_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+                refunded_price=self.order_item1.paid_price,
+                total_refunded_quantity=self.order_item1.item_quantity,
+            ).exists(),
+            True
+        )
+        self.assertEqual(
+            OrderItem.objects.filter(
+                id=self.order_item2.id,
+                status=OrderStatus.REFUND.value,
+                succeeded_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+                refunded_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+                refunded_price=self.order_item2.paid_price,
+                total_refunded_quantity=self.order_item2.item_quantity,
+            ).exists(),
+            True
+        )
+        # And: OrderItem Status Log 생성
+        self.assertEqual(
+            OrderItemStatusLog.objects.filter(
+                order_item_id=self.order_item1.id,
+                status=OrderStatus.REFUND.value,
+                request_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+            ).exists(),
+            True
+        )
+        self.assertEqual(
+            OrderItemStatusLog.objects.filter(
+                order_item_id=self.order_item2.id,
+                status=OrderStatus.REFUND.value,
                 request_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
             ).exists(),
             True

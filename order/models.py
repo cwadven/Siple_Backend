@@ -5,6 +5,7 @@ from django.db import (
     models,
     transaction,
 )
+from django.db.models import F
 from django.utils import timezone
 
 from order.consts import (
@@ -180,30 +181,56 @@ class Order(models.Model):
     @transaction.atomic
     def cancel(self):
         """
-        결제 취소
+        결제 취소 및 환불
+
+        결제 취소 중 환불 같은 경우는 결제가 성공이 된 경우에만 일어날 수 있습니다.
         """
         # 상태 업데이트
         now = timezone.now()
-        self.status = OrderStatus.CANCEL.value
-        self.canceled_at = now
-        self.save(update_fields=['status', 'canceled_at'])
-        # 상태 Log 생성
+        update_fields = ['status']
+
+        if self.status == OrderStatus.SUCCESS.value:
+            self.status = OrderStatus.REFUND.value
+            self.refunded_at = now
+            self.total_refunded_price = self.total_paid_price
+            self.is_once_refunded = True
+            update_fields.extend(
+                [
+                    'refunded_at',
+                    'total_refunded_price',
+                    'is_once_refunded',
+                ]
+            )
+        else:
+            self.status = OrderStatus.CANCEL.value
+            self.canceled_at = now
+            update_fields.append('canceled_at')
+        self.save(update_fields=update_fields)
+
         OrderStatusLog.objects.create(
             order=self,
-            status=OrderStatus.CANCEL.value,
+            status=self.status,
         )
 
         # Item 상태 업데이트
-        self.items.update(
-            status=OrderStatus.CANCEL.value,
-            canceled_at=now,
-        )
+        if self.status == OrderStatus.REFUND.value:
+            self.items.update(
+                status=self.status,
+                refunded_at=now,
+                refunded_price=F('paid_price'),
+                total_refunded_quantity=F('item_quantity'),
+            )
+        else:
+            self.items.update(
+                status=self.status,
+                canceled_at=now,
+            )
         # Item 상태 Log 생성
         OrderItemStatusLog.objects.bulk_create(
             [
                 OrderItemStatusLog(
                     order_item=item,
-                    status=OrderStatus.CANCEL.value,
+                    status=self.status,
                     request_at=now,
                 )
                 for item in self.items.all()
