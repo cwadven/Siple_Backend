@@ -51,6 +51,12 @@ class OrderStatusLogAdmin(admin.ModelAdmin):
         'request_at',
     ]
 
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 class OrderItemAdmin(admin.ModelAdmin):
     list_display = [
@@ -67,6 +73,12 @@ class OrderItemAdmin(admin.ModelAdmin):
         'refunded_at',
     ]
 
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 class OrderItemRefundAdmin(admin.ModelAdmin):
     list_display = [
@@ -78,6 +90,12 @@ class OrderItemRefundAdmin(admin.ModelAdmin):
         'request_at',
     ]
 
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 class OrderItemStatusLogAdmin(admin.ModelAdmin):
     list_display = [
@@ -86,6 +104,12 @@ class OrderItemStatusLogAdmin(admin.ModelAdmin):
         'status',
         'request_at',
     ]
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 class OrderItemDiscountAdmin(admin.ModelAdmin):
@@ -96,6 +120,12 @@ class OrderItemDiscountAdmin(admin.ModelAdmin):
         'discount_type',
         'discounted_price',
     ]
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 admin.site.register(Order, OrderAdmin)
