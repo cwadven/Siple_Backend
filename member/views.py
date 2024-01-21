@@ -47,9 +47,8 @@ from member.services import (
     check_nickname_exists,
     check_username_exists,
 )
-
-from .tasks import send_one_time_token_email
-from .validators.sign_up_validators import SignUpPayloadValidator
+from member.tasks import send_one_time_token_email
+from member.validators.sign_up_validators import SignUpPayloadValidator
 
 
 class LoginView(APIView):
