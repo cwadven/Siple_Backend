@@ -5,6 +5,7 @@ from typing import Optional
 
 from django.urls import reverse
 
+from common.common_utils.encrpt_utils import encrypt_integer
 from payment.exceptions import (
     KakaoPayCancelError,
     KakaoPaySuccessError,
@@ -189,6 +190,7 @@ class KakaoPayProductHandler(KakaoPayHandler):
         # 혹은 프론트엔드 개발자가 결제 성공/실패/취소 시 이동할 url을 결정하지 않았다면
         # 결제 성공/실패/취소 시 이동할 html 을 따로 만들어서 url 결정해줘야 함
         # order_id 를 Token 으로 바꾸는 방식 취해야함 그래야 guest_id 없이 내가 원하는 것을 할 수 있음 (보안 적으로 위함)
+        order_id_token = encrypt_integer(order_id)
         self.approval_url = settings.BASE_DOMAIN + reverse('payment:product_approve_template', args=[order_id])
-        self.cancel_url = settings.BASE_DOMAIN + reverse('payment:product_cancel_template', args=[order_id])
-        self.fail_url = settings.BASE_DOMAIN + reverse('payment:product_fail_template', args=[order_id])
+        self.cancel_url = settings.BASE_DOMAIN + reverse('payment:product_cancel_template', args=[order_id_token])
+        self.fail_url = settings.BASE_DOMAIN + reverse('payment:product_fail_template', args=[order_id_token])

@@ -1,8 +1,17 @@
+import hashlib
+
+import base64
 from cryptography.fernet import Fernet
 from django.conf import settings
 
 
-fernet = Fernet(settings.SECRET_KEY)
+fernet = Fernet(
+    base64.urlsafe_b64encode(
+        hashlib.sha256(
+            settings.SECRET_KEY.encode()
+        ).digest()
+    )
+)
 
 
 def encrypt_integer(integer: int) -> str:

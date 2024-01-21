@@ -12,17 +12,20 @@ class KakaoPayProductHandlerTestCase(TestCase):
     def setUp(self):
         pass
 
+    @patch('payment.helpers.kakaopay_helpers.encrypt_integer')
     @patch('payment.helpers.kakaopay_helpers.KakaoPayProductHandler.approval_url', new_callable=PropertyMock)
     @patch('payment.helpers.kakaopay_helpers.KakaoPayProductHandler.cancel_url', new_callable=PropertyMock)
     @patch('payment.helpers.kakaopay_helpers.KakaoPayProductHandler.fail_url', new_callable=PropertyMock)
-    def test_kakao_pay_point_handler(self, mock_fail_url, mock_cancel_url, mock_approval_url):
+    def test_kakao_pay_point_handler(self, mock_fail_url, mock_cancel_url, mock_approval_url, mock_encrypt_integer):
         # Given: kakao pay point handler 객체 생성
         order_id = 1
         kakao_pay_point_handler = KakaoPayProductHandler(order_id=order_id)
-        # And: mock_approval_url
-        mock_fail_url.return_value = f'http://localhost:9000/v1/payment/point/fail/{order_id}'
-        mock_cancel_url.return_value = f'http://localhost:9000/v1/payment/point/cancel/{order_id}'
+        # And: encrypt_integer
+        mock_encrypt_integer.return_value = 'order_token'
+        # And: mock urls
         mock_approval_url.return_value = f'http://localhost:9000/v1/payment/point/approve/{order_id}'
+        mock_fail_url.return_value = f'http://localhost:9000/v1/payment/point/fail/{mock_encrypt_integer.return_value}'
+        mock_cancel_url.return_value = f'http://localhost:9000/v1/payment/point/cancel/{mock_encrypt_integer.return_value}'
 
         # Expected:
         self.assertEqual(
@@ -31,11 +34,11 @@ class KakaoPayProductHandlerTestCase(TestCase):
         )
         self.assertEqual(
             kakao_pay_point_handler.cancel_url,
-            f'http://localhost:9000/v1/payment/point/cancel/{order_id}'
+            f'http://localhost:9000/v1/payment/point/cancel/{mock_encrypt_integer.return_value}'
         )
         self.assertEqual(
             kakao_pay_point_handler.fail_url,
-            f'http://localhost:9000/v1/payment/point/fail/{order_id}'
+            f'http://localhost:9000/v1/payment/point/fail/{mock_encrypt_integer.return_value}'
         )
 
 
