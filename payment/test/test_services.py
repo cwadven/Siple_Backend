@@ -1,4 +1,6 @@
 import json
+
+from cryptography.fernet import InvalidToken
 from django.test import TestCase
 from unittest.mock import patch
 
@@ -283,6 +285,15 @@ class KakaoPayApproveGiveProductCancelTestCase(TestCase):
         with self.assertRaises(OrderStatusUnavailableBehavior):
             kakao_pay_approve_give_product_cancel(token, '결제 취소')
 
+    @patch('payment.services.decrypt_integer')
+    def test_kakao_pay_approve_give_product_cancel_when_fail_when_invalid_token(self, mock_decrypt_integer):
+        # Given: Invalid token
+        mock_decrypt_integer.side_effect = InvalidToken
+
+        # Expected: Token 이 유효하지 않아서 주문 취소 불가
+        with self.assertRaises(OrderNotExists):
+            kakao_pay_approve_give_product_cancel('invalid_token', '결제 취소')
+
 
 @freeze_time('2021-01-01')
 class KakaoPayApproveGiveProductFailTestCase(GuestTokenMixin, TestCase):
@@ -320,9 +331,9 @@ class KakaoPayApproveGiveProductFailTestCase(GuestTokenMixin, TestCase):
 
     @patch('payment.services.GiveProduct.fail')
     @patch('payment.services.Order.fail')
-    def test_kakao_pay_fail_for_buy_product_api_when_success(self,
-                                                             mock_order_fail,
-                                                             mock_give_product_fail):
+    def test_kakao_pay_fail_for_buy_product_when_success(self,
+                                                         mock_order_fail,
+                                                         mock_give_product_fail):
         # Given:
         self.login_guest(self.guest)
         # And: GiveProduct Ready 생성
@@ -351,10 +362,19 @@ class KakaoPayApproveGiveProductFailTestCase(GuestTokenMixin, TestCase):
         mock_order_fail.assert_called_once_with()
         mock_give_product_fail.assert_called_once_with()
 
-    def test_kakao_pay_fail_for_buy_product_api_when_fail_due_order_not_exists(self):
+    def test_kakao_pay_fail_for_buy_product_when_fail_due_order_not_exists(self):
         # Given: 주문 id 암호화
         token = encrypt_integer(0)
 
         # Expected: 없는 주문 id 로 결제 신청
         with self.assertRaises(OrderNotExists):
             kakao_pay_approve_give_product_fail(token)
+
+    @patch('payment.services.decrypt_integer')
+    def test_kakao_pay_fail_for_buy_product_when_invalid_token(self, mock_decrypt_integer):
+        # Given: Invalid token
+        mock_decrypt_integer.side_effect = InvalidToken
+
+        # Expected: Token 이 유효하지 않아서 주문 실패 불가
+        with self.assertRaises(OrderNotExists):
+            kakao_pay_approve_give_product_fail('invalid_token')

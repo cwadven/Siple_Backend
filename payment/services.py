@@ -1,4 +1,6 @@
 import json
+
+from cryptography.fernet import InvalidToken
 from django.db import transaction
 
 from common.common_utils.encrpt_utils import decrypt_integer
@@ -56,7 +58,10 @@ def kakao_pay_approve_give_product_success(order_id: int, pg_token: str) -> None
 
 
 def kakao_pay_approve_give_product_cancel(order_id_token: str, cancel_reason: str) -> None:
-    order_id = decrypt_integer(order_id_token)
+    try:
+        order_id = decrypt_integer(order_id_token)
+    except InvalidToken:
+        raise OrderNotExists()
     try:
         order = Order.objects.get(
             id=order_id,
@@ -93,7 +98,10 @@ def kakao_pay_approve_give_product_cancel(order_id_token: str, cancel_reason: st
 
 
 def kakao_pay_approve_give_product_fail(order_id_token: str) -> None:
-    order_id = decrypt_integer(order_id_token)
+    try:
+        order_id = decrypt_integer(order_id_token)
+    except InvalidToken:
+        raise OrderNotExists()
     try:
         order = Order.objects.get(
             id=order_id,
