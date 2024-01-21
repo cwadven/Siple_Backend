@@ -85,6 +85,9 @@ class Order(models.Model):
         verbose_name = '주문 요약'
         verbose_name_plural = '주문 요약'
 
+    def __str__(self):
+        return f'사용자 주문 요약 / {self.order_number}'
+
     @staticmethod
     def create_order_number(prefix: str):
         valid_chars = [char for char in string.ascii_uppercase if char != 'O'] + \
@@ -312,6 +315,9 @@ class OrderItem(models.Model):
     class Meta:
         verbose_name = '주문 상세'
         verbose_name_plural = '주문 상세'
+
+    def __str__(self):
+        return f'사용자 주문 상세 상품 / {self.product_id}'
 
     @classmethod
     @transaction.atomic
