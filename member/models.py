@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-
 from member.consts import MemberStatusExceptionTypeSelector
 from member.managers import MemberManager
 
@@ -63,3 +62,6 @@ class Guest(models.Model):
     class Meta:
         verbose_name = '비회원'
         verbose_name_plural = '비회원'
+
+    def __str__(self):
+        return self.temp_nickname
