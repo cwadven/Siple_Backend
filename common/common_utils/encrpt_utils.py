@@ -17,7 +17,7 @@ fernet = Fernet(
 def encrypt_integer(integer: int) -> str:
     integer_bytes = str(integer).encode()
     encrypted = fernet.encrypt(integer_bytes)
-    return str(encrypted)
+    return encrypted.decode()
 
 
 def decrypt_integer(encrypted: str) -> int:
