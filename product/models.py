@@ -1,4 +1,5 @@
 import json
+from typing import List
 
 from django.db import (
     models,
@@ -85,7 +86,16 @@ class Product(models.Model):
             discount_handler: callable = None,
             **kwargs
     ) -> 'Order':  # noqa
-        return
+        raise NotImplementedError()
+
+    def get_product_images(self) -> List['ProductImage']:
+        return list(
+            ProductImage.objects.filter(
+                product_pk=self.id,
+                product_type=self.product_type,
+                is_deleted=False,
+            ).order_by('created_at')
+        )
 
 
 class PointProduct(Product):
@@ -292,6 +302,7 @@ class ProductImage(models.Model):
         to='member.Guest',
         on_delete=models.DO_NOTHING,
     )
+    sequence = models.PositiveIntegerField(verbose_name='순서', default=0, db_index=True)
     image_url = models.TextField(verbose_name='이미지')
     is_deleted = models.BooleanField(verbose_name='삭제 여부', default=False)
     created_at = models.DateTimeField(verbose_name='생성일', auto_now_add=True)
