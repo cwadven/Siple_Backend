@@ -18,7 +18,7 @@ from order.models import (
     Order,
     OrderItem,
     OrderItemStatusLog,
-    OrderStatusLog,
+    OrderStatusLog, OrderItemRefund,
 )
 from product.models import PointProduct
 
@@ -249,7 +249,7 @@ class OrderMethodTestCase(TestCase):
             ).exists(),
             True
         )
-        # And: OrderItem CANCEL 변경
+        # And: OrderItem REFUND 변경
         self.assertEqual(
             OrderItem.objects.filter(
                 id=self.order_item1.id,
@@ -269,6 +269,25 @@ class OrderMethodTestCase(TestCase):
                 refunded_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
                 refunded_price=self.order_item2.paid_price,
                 total_refunded_quantity=self.order_item2.item_quantity,
+            ).exists(),
+            True
+        )
+        # And: OrderItemRefund 생성
+        self.assertEqual(
+            OrderItemRefund.objects.filter(
+                order_item_id=self.order_item1.id,
+                refunded_price=self.order_item1.paid_price,
+                refunded_quantity=self.order_item1.item_quantity,
+                request_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
+            ).exists(),
+            True
+        )
+        self.assertEqual(
+            OrderItemRefund.objects.filter(
+                order_item_id=self.order_item2.id,
+                refunded_price=self.order_item2.paid_price,
+                refunded_quantity=self.order_item2.item_quantity,
+                request_at=datetime(2022, 1, 1).replace(tzinfo=timezone.utc),
             ).exists(),
             True
         )

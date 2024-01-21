@@ -220,6 +220,16 @@ class Order(models.Model):
                 refunded_price=F('paid_price'),
                 total_refunded_quantity=F('item_quantity'),
             )
+            OrderItemRefund.objects.bulk_create(
+                [
+                    OrderItemRefund(
+                        order_item=item,
+                        refunded_price=item.paid_price,
+                        refunded_quantity=item.item_quantity,
+                    )
+                    for item in self.items.all()
+                ]
+            )
         else:
             self.items.update(
                 status=self.status,
