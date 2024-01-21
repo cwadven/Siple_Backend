@@ -3,10 +3,8 @@ from django.contrib.auth import (
     authenticate,
 )
 from django.db import transaction
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
 from common.common_decorators.request_decorators import mandatories
 from common.common_utils import (
     generate_random_string_digits,
@@ -36,7 +34,7 @@ from member.dtos.response_dtos import (
     SocialLoginResponse, GuestTokenGetOrCreateResponse,
 )
 from member.models import Member, Guest
-from .consts import (
+from member.consts import (
     MemberCreationExceptionMessage,
     MemberProviderEnum,
     MemberTypeEnum,
@@ -44,7 +42,7 @@ from .consts import (
     SIGNUP_MACRO_COUNT,
     SIGNUP_MACRO_VALIDATION_KEY,
 )
-from .services import (
+from member.services import (
     check_email_exists,
     check_nickname_exists,
     check_username_exists,
