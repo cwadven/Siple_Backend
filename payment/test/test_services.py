@@ -341,25 +341,20 @@ class KakaoPayApproveGiveProductFailTestCase(GuestTokenMixin, TestCase):
             ),
             status=ProductGivenStatus.READY.value,
         )
+        # And: 주문 id 암호화
+        token = encrypt_integer(self.order.id)
+
         # When:
-        kakao_pay_approve_give_product_fail(self.order.id, self.guest.id)
+        kakao_pay_approve_give_product_fail(token)
 
         # Then: 주문 실패 성공
         mock_order_fail.assert_called_once_with()
         mock_give_product_fail.assert_called_once_with()
 
     def test_kakao_pay_fail_for_buy_product_api_when_fail_due_order_not_exists(self):
-        # Given:
+        # Given: 주문 id 암호화
+        token = encrypt_integer(0)
+
         # Expected: 없는 주문 id 로 결제 신청
         with self.assertRaises(OrderNotExists):
-            kakao_pay_approve_give_product_fail(0, self.guest.id)
-
-    def test_kakao_pay_fail_for_buy_product_api_when_fail_due_not_guests_order(self):
-        # Given:
-        guest = Guest.objects.create(
-            ip='testtest',
-            temp_nickname='비회원test'
-        )
-        # Expected: 없는 Guest 로 주문 실패 처리
-        with self.assertRaises(OrderNotExists):
-            kakao_pay_approve_give_product_fail(self.order.id, guest.id)
+            kakao_pay_approve_give_product_fail(token)

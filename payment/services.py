@@ -92,11 +92,11 @@ def kakao_pay_approve_give_product_cancel(order_id_token: str, cancel_reason: st
     )
 
 
-def kakao_pay_approve_give_product_fail(order_id: int, guest_id: int) -> None:
+def kakao_pay_approve_give_product_fail(order_id_token: str) -> None:
+    order_id = decrypt_integer(order_id_token)
     try:
         order = Order.objects.get(
             id=order_id,
-            guest_id=guest_id,
         )
     except Order.DoesNotExist:
         raise OrderNotExists()
