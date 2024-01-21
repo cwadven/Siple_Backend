@@ -186,11 +186,13 @@ class KakaoPayHandler(ABC):
 
 class KakaoPayProductHandler(KakaoPayHandler):
     def __init__(self, order_id: int):
-        # 프론트엔드 개발자가 결제 성공/실패/취소 시 이동할 url을 결정하면 그 url을 넣어줘야 함
-        # 혹은 프론트엔드 개발자가 결제 성공/실패/취소 시 이동할 url을 결정하지 않았다면
-        # 결제 성공/실패/취소 시 이동할 html 을 따로 만들어서 url 결정해줘야 함
-        # order_id 를 Token 으로 바꾸는 방식 취해야함 그래야 guest_id 없이 내가 원하는 것을 할 수 있음 (보안 적으로 위함)
+        # API 통신으로 결제를 원하는 경우 settings.BASE_DOMAIN 와 reverse 에서 쓰고 있는 내용 수정 필요.
+        # settings.BASE_DOMAIN 은 Frontend 주소로
+        # reverse 는
+        # product_approve
+        # product_cancel
+        # product_fail
         order_id_token = encrypt_integer(order_id)
-        self.approval_url = settings.BASE_DOMAIN + reverse('payment:product_approve_template', args=[order_id])
-        self.cancel_url = settings.BASE_DOMAIN + reverse('payment:product_cancel_template', args=[order_id_token])
-        self.fail_url = settings.BASE_DOMAIN + reverse('payment:product_fail_template', args=[order_id_token])
+        self.approval_url = settings.KAKAO_PAY_BASE_DOMAIN + reverse('payment:product_approve_template', args=[order_id])
+        self.cancel_url = settings.KAKAO_PAY_BASE_DOMAIN + reverse('payment:product_cancel_template', args=[order_id_token])
+        self.fail_url = settings.KAKAO_PAY_BASE_DOMAIN + reverse('payment:product_fail_template', args=[order_id_token])
