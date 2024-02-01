@@ -4,7 +4,6 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
-
 from member.models import Guest
 from product.models import PointProduct
 

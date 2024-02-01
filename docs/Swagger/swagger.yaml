@@ -379,6 +379,72 @@ paths:
                   value:
                     message: "{}회 이상 인증번호를 틀리셨습니다. 현 이메일은 {}시간 동안 인증할 수 없습니다."
 
+  /v1/product/point:
+    get:
+      tags:
+        - Product
+      summary: List points products with pagination
+      description: Retrieve a paginated list of points products.
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: integer
+            default: 1
+          description: Page number of the product listing.
+        - in: query
+          name: size
+          required: true
+          schema:
+            type: integer
+            default: 20
+          description: Number of products per page.
+      responses:
+        '200':
+          description: A list of points products
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        product_id:
+                          type: integer
+                          example: 1
+                        product_type:
+                          type: string
+                          example: "POINT"
+                        title:
+                          type: string
+                          example: "G-point 1000"
+                        description:
+                          type: string
+                          example: "G-point 1000"
+                        price:
+                          type: integer
+                          example: 1000
+                        point:
+                          type: integer
+                          example: 1000
+                        is_sold_out:
+                          type: boolean
+                          example: false
+                        bought_count:
+                          type: integer
+                          example: 0
+                        review_count:
+                          type: integer
+                          example: 0
+                        review_rate:
+                          type: number
+                          format: float
+                          example: 0.0
+
 components:
   schemas:
     UsernameSignUpErrors:
