@@ -1,11 +1,10 @@
 from unittest.mock import patch
 
-from django.test import TestCase
-
 from common.common_utils.string_utils import (
     generate_random_string_digits,
     get_filtered_by_startswith_text_and_convert_to_standards,
 )
+from django.test import TestCase
 
 
 @patch("common.common_utils.string_utils.random.choice")

@@ -1,5 +1,6 @@
-from django.db import migrations
 from datetime import datetime
+
+from django.db import migrations
 
 
 def forward(apps, schema_editor):

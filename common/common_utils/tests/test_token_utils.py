@@ -1,11 +1,5 @@
 from datetime import datetime
-
-from django.contrib.auth import get_user_model
-from django.test import TestCase
 from unittest.mock import patch
-
-from freezegun import freeze_time
-from rest_framework_jwt.settings import api_settings
 
 from common.common_utils.token_utils import (
     get_jwt_guest_token,
@@ -13,7 +7,11 @@ from common.common_utils.token_utils import (
     get_jwt_refresh_token,
     jwt_payload_handler,
 )
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+from freezegun import freeze_time
 from member.models import Guest
+from rest_framework_jwt.settings import api_settings
 
 
 class TestGetJWTLoginToken(TestCase):

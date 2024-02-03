@@ -1,7 +1,7 @@
-from django.test import TestCase
 from unittest.mock import Mock
 
 from common.common_utils.request_utils import get_request_ip
+from django.test import TestCase
 
 
 class TestGetRequestIP(TestCase):

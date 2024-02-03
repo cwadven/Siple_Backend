@@ -3,6 +3,7 @@ from django.apps import apps
 from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext as _
+from member.exceptions import BlackMemberException
 from rest_framework import exceptions
 from rest_framework.authentication import (
     BaseAuthentication,
@@ -10,8 +11,6 @@ from rest_framework.authentication import (
 )
 from rest_framework.exceptions import APIException
 from rest_framework_jwt.settings import api_settings
-
-from member.exceptions import BlackMemberException
 
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 

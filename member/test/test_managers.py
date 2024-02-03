@@ -1,10 +1,9 @@
 from unittest.mock import patch
 
 from django.test import TestCase
-
 from member.consts import (
-    MemberTypeEnum,
     MemberStatusEnum,
+    MemberTypeEnum,
 )
 from member.models import Member
 

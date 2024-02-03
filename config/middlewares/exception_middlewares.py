@@ -1,7 +1,6 @@
-from rest_framework.views import exception_handler
-from rest_framework import exceptions
-
 from config.settings.base import logger
+from rest_framework import exceptions
+from rest_framework.views import exception_handler
 
 
 def custom_exception_handler(exc, context):

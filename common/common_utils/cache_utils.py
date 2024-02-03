@@ -1,7 +1,6 @@
 from typing import Any
 
 from django.core.cache import cache
-
 from member.consts import SIGNUP_MACRO_EXPIRE_SECONDS
 
 

@@ -1,13 +1,14 @@
+from functools import wraps
 from types import FunctionType
 
+from common.common_exceptions.exceptions import (
+    CodeInvalidateException,
+    MissingMandatoryParameterException,
+)
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
-from functools import wraps
-
 from rest_framework.exceptions import APIException
 from rest_framework.request import Request
-
-from common.common_exceptions.exceptions import MissingMandatoryParameterException, CodeInvalidateException
 
 
 def mandatories(*keys):

@@ -1,6 +1,5 @@
-from django.test import TestCase
-
 from common.models import BlackListWord
+from django.test import TestCase
 from member.models import Member
 from member.services import (
     check_email_exists,

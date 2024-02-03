@@ -1,8 +1,8 @@
-from django.contrib import admin
 from common.models import (
-    BlackListWord,
     BlackListSection,
+    BlackListWord,
 )
+from django.contrib import admin
 
 
 class BlackListSectionAdmin(admin.ModelAdmin):

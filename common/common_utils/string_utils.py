@@ -1,9 +1,8 @@
 import random
-
 import string
 from typing import (
-    Sequence,
     List,
+    Sequence,
     Union,
 )
 

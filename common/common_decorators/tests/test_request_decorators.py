@@ -1,6 +1,3 @@
-from django.http import HttpRequest
-from django.test import TestCase
-
 from common.common_decorators.request_decorators import (
     mandatories,
     optionals,
@@ -9,6 +6,8 @@ from common.common_exceptions.exceptions import (
     CodeInvalidateException,
     MissingMandatoryParameterException,
 )
+from django.http import HttpRequest
+from django.test import TestCase
 
 
 @mandatories('param1', 'param2')

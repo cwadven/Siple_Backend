@@ -1,17 +1,16 @@
-from botocore.exceptions import NoCredentialsError
-from django.test import TestCase
+import json
 from unittest.mock import (
     Mock,
     patch,
 )
-import json
 
-from django.conf import settings
-
+from botocore.exceptions import NoCredentialsError
 from common.common_utils.aws_sqs_utils import (
     create_sqs_event,
     get_sqs_messages,
 )
+from django.conf import settings
+from django.test import TestCase
 
 
 class TestCreateSQSEvent(TestCase):

@@ -1,10 +1,10 @@
-from django.test import TestCase
 from unittest.mock import (
     Mock,
     patch,
 )
 
 from common.common_utils.slack_utils import notify_slack_simple_text
+from django.test import TestCase
 
 
 class TestNotifySlackSimpleText(TestCase):

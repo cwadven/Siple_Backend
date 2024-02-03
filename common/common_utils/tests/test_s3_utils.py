@@ -1,18 +1,17 @@
-import requests
 import unittest
 from unittest.mock import (
     Mock,
     patch,
 )
 
-from django.test import TestCase
-from django.conf import settings
-
+import requests
 from botocore.exceptions import NoCredentialsError
 from common.common_utils.s3_utils import (
     generate_presigned_url_info,
     upload_file_to_presigned_url,
 )
+from django.conf import settings
+from django.test import TestCase
 
 
 class TestGeneratePresignedURLInfo(TestCase):

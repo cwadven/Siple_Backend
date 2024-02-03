@@ -1,10 +1,9 @@
-from django.contrib.auth.models import UserManager
-
 from common.common_utils import generate_random_string_digits
+from django.contrib.auth.models import UserManager
 from member.consts import (
-    SocialLoginModuleSelector,
     MemberStatusEnum,
     MemberTypeEnum,
+    SocialLoginModuleSelector,
 )
 from member.utils.social_utils import SocialLoginHandler
 

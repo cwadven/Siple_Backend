@@ -1,10 +1,9 @@
-import boto3
 import uuid
 
+import boto3
 import requests
 from botocore.config import Config
 from botocore.exceptions import ClientError
-
 from django.conf import settings
 
 
