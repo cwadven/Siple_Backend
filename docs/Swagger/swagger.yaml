@@ -78,7 +78,8 @@ paths:
               properties:
                 provider:
                   type: integer
-                  example: 3
+                  enum: [2, 3, 4]  # 2: KAKAO, 3: NAVER, 4: GOOGLE
+                  example: 2
                 token:
                   type: string
                   example: "gyYwO9GsLD30O1T7Sg"
