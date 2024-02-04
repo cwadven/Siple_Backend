@@ -1,5 +1,4 @@
 from django.test import TestCase
-
 from member.models import Guest
 from product.dtos.model_dtos import PointProductItem
 from product.models import PointProduct

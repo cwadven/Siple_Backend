@@ -1,17 +1,20 @@
+import json
+from datetime import datetime
 from unittest.mock import (
     Mock,
     patch,
 )
 
-from datetime import datetime
-
-import json
 from django.conf import settings
 from django.test import TestCase
-
 from member.exceptions import LoginFailedException, SocialLoginTokenErrorException
-from member.utils.social_utils import SocialLoginModule, KakaoSocialLoginModule, NaverSocialLoginModule, \
-    GoogleSocialLoginModule, SocialLoginHandler
+from member.utils.social_utils import (
+    GoogleSocialLoginModule,
+    KakaoSocialLoginModule,
+    NaverSocialLoginModule,
+    SocialLoginHandler,
+    SocialLoginModule,
+)
 
 
 # Given: Create a mock class that inherits from SocialLoginModule

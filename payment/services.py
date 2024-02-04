@@ -1,12 +1,11 @@
 import json
 
+from common.common_utils.encrpt_utils import decrypt_integer
 from cryptography.fernet import InvalidToken
 from django.db import transaction
-
-from common.common_utils.encrpt_utils import decrypt_integer
 from order.consts import (
-    PaymentType,
     OrderStatus,
+    PaymentType,
 )
 from order.exceptions import (
     OrderAlreadyCanceled,

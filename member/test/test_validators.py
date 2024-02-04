@@ -1,6 +1,6 @@
-from django.test import TestCase
 from unittest.mock import patch
 
+from django.test import TestCase
 from member.consts import (
     MemberCreationExceptionMessage,
     NICKNAME_MAX_LENGTH,

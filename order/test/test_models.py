@@ -1,14 +1,12 @@
 from datetime import datetime
 
-from django.utils import timezone
-from freezegun import freeze_time
-
-from django.test import TestCase
-
 from common.common_testcase_helpers.testcase_helpers import (
     test_case_create_order,
     test_case_create_order_item,
 )
+from django.test import TestCase
+from django.utils import timezone
+from freezegun import freeze_time
 from member.models import Guest
 from order.consts import (
     OrderStatus,
@@ -17,8 +15,9 @@ from order.consts import (
 from order.models import (
     Order,
     OrderItem,
+    OrderItemRefund,
     OrderItemStatusLog,
-    OrderStatusLog, OrderItemRefund,
+    OrderStatusLog,
 )
 from product.models import PointProduct
 

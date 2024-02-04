@@ -1,6 +1,5 @@
 from django.test import TestCase
 from django.utils import timezone
-
 from member.models import Guest
 from product.models import PointProduct
 

@@ -1,10 +1,4 @@
 import jwt
-from django.contrib.auth import (
-    authenticate,
-)
-from django.db import transaction
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from common.common_decorators.request_decorators import mandatories
 from common.common_utils import (
     generate_random_string_digits,
@@ -14,26 +8,16 @@ from common.common_utils import (
     get_request_ip,
 )
 from common.common_utils.cache_utils import (
+    delete_cache_value_by_key,
     generate_dict_value_by_key_to_cache,
     get_cache_value_by_key,
     increase_cache_int_value_by_key,
-    delete_cache_value_by_key,
 )
 from config.middlewares.authentications import jwt_decode_handler
-from member.dtos.request_dtos import (
-    NormalLoginRequest,
-    RefreshTokenRequest,
-    SocialLoginRequest,
-    SignUpEmailTokenSendRequest,
-    SignUpEmailTokenValidationEndRequest,
-    SignUpValidationRequest,
+from django.contrib.auth import (
+    authenticate,
 )
-from member.dtos.response_dtos import (
-    NormalLoginResponse,
-    RefreshTokenResponse,
-    SocialLoginResponse, GuestTokenGetOrCreateResponse,
-)
-from member.models import Member, Guest
+from django.db import transaction
 from member.consts import (
     MemberCreationExceptionMessage,
     MemberProviderEnum,
@@ -42,6 +26,24 @@ from member.consts import (
     SIGNUP_MACRO_COUNT,
     SIGNUP_MACRO_VALIDATION_KEY,
 )
+from member.dtos.request_dtos import (
+    NormalLoginRequest,
+    RefreshTokenRequest,
+    SignUpEmailTokenSendRequest,
+    SignUpEmailTokenValidationEndRequest,
+    SignUpValidationRequest,
+    SocialLoginRequest,
+)
+from member.dtos.response_dtos import (
+    GuestTokenGetOrCreateResponse,
+    NormalLoginResponse,
+    RefreshTokenResponse,
+    SocialLoginResponse,
+)
+from member.models import (
+    Guest,
+    Member,
+)
 from member.services import (
     check_email_exists,
     check_nickname_exists,
@@ -49,6 +51,8 @@ from member.services import (
 )
 from member.tasks import send_one_time_token_email
 from member.validators.sign_up_validators import SignUpPayloadValidator
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 
 class LoginView(APIView):

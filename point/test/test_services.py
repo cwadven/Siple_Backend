@@ -1,5 +1,4 @@
 from django.test import TestCase
-
 from member.models import Guest
 from point.exceptions import NotEnoughGuestPoints
 from point.models import GuestPoint

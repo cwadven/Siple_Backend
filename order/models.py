@@ -1,17 +1,16 @@
 import random
-
 import string
+
 from django.db import (
     models,
     transaction,
 )
 from django.db.models import F
 from django.utils import timezone
-
 from order.consts import (
     OrderStatus,
-    ProductType,
     PaymentType,
+    ProductType,
 )
 
 
