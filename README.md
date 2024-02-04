@@ -231,6 +231,14 @@ run: |
 sudo /etc/init.d/celeryd restart
 ```
 
+### Docker
+
+Need to set 
+- `DOCKER_PASSWORD`
+- `DOCKER_USERNAME`
+- `REPOSITORY_NAME`
+in `Secrets` of your repository.
+
 ### Testing
 
 .github/workflows/test.yml
