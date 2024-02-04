@@ -445,6 +445,217 @@ paths:
                           format: float
                           example: 0.0
 
+  /v1/payment/product/buy/kakao:
+    post:
+      tags:
+        - Kakao Payment
+      summary: Purchase a product using Kakao Pay
+      description: Initiates a product purchase transaction using Kakao Pay.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - product_id
+                - product_type
+                - quantity
+                - payment_type
+                - order_phone_number
+              properties:
+                product_id:
+                  type: integer
+                  example: 1
+                product_type:
+                  type: string
+                  enum: [POINT]
+                  example: "POINT"
+                quantity:
+                  type: integer
+                  example: 10
+                payment_type:
+                  type: string
+                  enum: [KAKAO]
+                  example: "KAKAO"
+                order_phone_number:
+                  type: string
+                  example: "01074686889"
+      responses:
+        '200':
+          description: Purchase initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tid:
+                    type: string
+                    example: "T5bef4ed1c025b0f886f"
+                  next_redirect_app_url:
+                    type: string
+                    example: "https://online-pay.kakao.com/mockup/v1/1061874fa483485aeaf2f25cc35faf7651fafc55fb5aedccbc5a3b38f2639146/aInfo"
+                  next_redirect_mobile_url:
+                    type: string
+                    example: "https://online-pay.kakao.com/mockup/v1/1061874fa483485aeaf2f25cc35faf7651fafc55fb5aedccbc5a3b38f2639146/mInfo"
+                  next_redirect_pc_url:
+                    type: string
+                    example: "https://online-pay.kakao.com/mockup/v1/1061874fa483485aeaf2f25cc35faf7651fafc55fb5aedccbc5a3b38f2639146/info"
+        '400':
+          description: Error due to invalid input or token format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                invalid_token_format:
+                  value:
+                    message: "잘못된 토큰 형식입니다."
+                invalid_input:
+                  value:
+                    message: "입력값을 다시 확인해주세요."
+
+  /v1/payment/product/approve/kakao/{order_id}:
+    get:
+      tags:
+        - Kakao Payment
+      summary: Approve Kakao Pay payment
+      description: Finalizes the payment process for an order using Kakao Pay.
+      parameters:
+        - in: path
+          name: order_id
+          required: true
+          schema:
+            type: string
+          description: The order ID to be approved.
+        - in: query
+          name: pg_token
+          required: true
+          schema:
+            type: string
+          description: The pg_token obtained from Kakao Pay.
+      responses:
+        '200':
+          description: Payment approved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "결제가 완료되었습니다."
+        '400':
+          description: Error due to invalid order or payment failure
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                non_existent_order:
+                  value:
+                    message: "존재하지 않는 주문입니다"
+                payment_failure:
+                  value:
+                    message: "카카오페이 결제에 실패하였습니다."
+
+  /v1/payment/product/cancel/kakao/{order_token}:
+    post:
+      tags:
+        - Kakao Payment
+      summary: Cancel Kakao Pay payment
+      description: Cancels a payment process for an order using Kakao Pay.
+      parameters:
+        - in: path
+          name: order_token
+          required: true
+          schema:
+            type: string
+          description: The order token of the payment to be canceled.
+      responses:
+        '200':
+          description: Payment canceled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "결제가 취소되었습니다."
+        '400':
+          description: Error due to invalid input or other issues
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                invalid_input:
+                  value:
+                    message: "입력값을 다시 확인해주세요."
+                non_existent_order:
+                  value:
+                    message: "존재하지 않는 주문입니다."
+                already_cancelled:
+                  value:
+                    message: "이미 취소된 주문입니다."
+                invalid_order_state:
+                  value:
+                    message: "주문의 상태가 유효하지 않습니다."
+                kakao_pay_cancellation_failure:
+                  value:
+                    message: "카카오페이 결제 취소에 실패하였습니다."
+
+  /v1/payment/product/fail/kakao/{order_token}:
+    post:
+      tags:
+        - Kakao Payment
+      summary: Simulate Kakao Pay payment failure
+      description: Marks a payment process as failed for an order using Kakao Pay.
+      parameters:
+        - in: path
+          name: order_token
+          required: true
+          schema:
+            type: string
+          description: The order token of the payment to mark as failed.
+      responses:
+        '200':
+          description: Payment marked as failed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "결제가 실패되었습니다."
+        '400':
+          description: Error due to invalid input or non-existent order
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                invalid_input:
+                  value:
+                    message: "입력값을 다시 확인해주세요."
+                non_existent_order:
+                  value:
+                    message: "존재하지 않는 주문입니다."
+
 components:
   schemas:
     UsernameSignUpErrors:
