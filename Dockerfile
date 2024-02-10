@@ -1,7 +1,7 @@
 # Dockerfile
 
-# Python 3.11 이미지 사용
-FROM python:3.11
+# Example: Force building for AMD64 architecture
+FROM --platform=linux/amd64 python:3.11
 
 # 작업 디렉토리 설정
 WORKDIR /app
