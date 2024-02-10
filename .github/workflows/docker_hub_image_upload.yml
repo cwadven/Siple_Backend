@@ -21,8 +21,4 @@ jobs:
 
     - name: Docker Image Build
       run: |
-        docker buildx build --platform linux/arm64 -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPOSITORY_NAME }}:latest .
-
-    - name: Docker Image Push
-      run: |
-        docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPOSITORY_NAME }}:latest
+        docker buildx build --platform linux/arm64 -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPOSITORY_NAME }}:latest . --push
