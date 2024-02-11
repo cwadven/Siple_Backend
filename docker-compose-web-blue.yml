@@ -2,7 +2,7 @@
 
 version: '3.8'
 services:
-  web:
+  web_blue:
     build:
       context: .
       dockerfile: Dockerfile-web
@@ -17,7 +17,7 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.production
 
-  cron:
+  cron_blue:
     build:
       context: .
       dockerfile: Dockerfile-web
@@ -33,7 +33,7 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.production
 
-  nginx:
+  nginx_blue:
     build:
       context: .
       dockerfile: Dockerfile-nginx-blue
@@ -46,7 +46,7 @@ services:
     depends_on:
       - web
 
-  celery:
+  celery_blue:
     build:
       context: .
       dockerfile: Dockerfile-web
@@ -57,7 +57,7 @@ services:
       - DJANGO_SETTINGS_MODULE=config.settings.production
       - CELERY_BROKER_URL=redis://redis:6379/2
 
-  flower:
+  flower_blue:
     build:
       context: .
       dockerfile: Dockerfile-web
