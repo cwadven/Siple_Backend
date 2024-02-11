@@ -20,3 +20,11 @@ COPY command.cron /etc/cron.d/command.cron
 # 줄바꿈 이슈로 dos2unix 설치 후 실행
 RUN dos2unix /etc/cron.d/command.cron
 RUN chmod 0644 /etc/cron.d/command.cron
+
+
+# entrypoint.sh 복사 및 실행 권한 부여
+COPY ./entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# 컨테이너 시작 시 entrypoint.sh 실행
+ENTRYPOINT ["/app/entrypoint.sh"]
