@@ -1,0 +1,44 @@
+# docker-compose.yml Web Applications
+
+version: '3.8'
+services:
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate && 
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+
+  cron:
+    build: .
+    volumes:
+      - .:/app
+      - cron_log:/tmp
+    depends_on:
+      - web
+    command: >
+      sh -c "cat /etc/cron.d/command.cron | crontab - &&
+             service cron start &&
+             tail -f /dev/null"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile-nginx
+    volumes:
+      - .:/app
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+
+volumes:
+  cron_log:
