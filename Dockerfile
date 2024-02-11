@@ -23,9 +23,6 @@ RUN chmod 0644 /etc/cron.d/command.cron
 
 
 # entrypoint.sh 복사 및 실행 권한 부여
-COPY ./entrypoint.sh /app/entrypoint.sh
-RUN dos2unix /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
-
-# 컨테이너 시작 시 entrypoint.sh 실행
-ENTRYPOINT ["/app/entrypoint.sh"]
+COPY ./entrypoint.sh /etc/entrypoint/entrypoint.sh
+RUN dos2unix /etc/entrypoint/entrypoint.sh
+RUN chmod 777 /etc/entrypoint/entrypoint.sh
