@@ -3,9 +3,6 @@
 version: '3.8'
 services:
   db:
-    build:
-      context: .
-      dockerfile: Dockerfile-data
     image: postgres:14
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -15,14 +12,18 @@ services:
       POSTGRES_PASSWORD: mypassword
     ports:
       - "5432:5432"
+    tty: true
 
   redis:
-    build:
-      context: .
-      dockerfile: Dockerfile-data
     image: redis:latest
     ports:
       - "6379:6379"
+    tty: true
 
 volumes:
   postgres_data:
+
+networks:
+  default:
+    external:
+      name: common_network

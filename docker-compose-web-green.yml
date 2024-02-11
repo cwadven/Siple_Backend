@@ -70,3 +70,8 @@ services:
 
 volumes:
   cron_log:
+
+networks:
+  default:
+    external:
+      name: common_network
