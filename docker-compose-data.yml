@@ -1,8 +1,9 @@
 # docker-compose.yml Databases
 
-version: '3.8'
+version: '3.6'
 services:
   db:
+    container_name: database
     image: postgres:14
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -10,18 +11,42 @@ services:
       POSTGRES_DB: mydatabase
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
+      TZ: Asia/Seoul
     ports:
       - "5432:5432"
     tty: true
+    logging:
+      options:
+        max-file: "7"
+        max-size: "5m"
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: unless-stopped
+    ports:
+      - "5556:80"
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=example@pgadmin.com
+      - PGADMIN_DEFAULT_PASSWORD=pgadmin
+      - TZ=Asia/Seoul
+    depends_on:
+      - db
 
   redis:
+    container_name: cache
     image: redis:latest
+    volumes:
+      - redis_data:/data
     ports:
       - "6379:6379"
     tty: true
 
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
   default:
