@@ -62,6 +62,7 @@ services:
 
   celery:
     build: .
+    entrypoint: ["/bin/sh", "-c"]
     command: celery -A config worker -l info
     volumes:
       - .:/app
