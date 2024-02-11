@@ -5,7 +5,7 @@ services:
   web_green:
     build:
       context: .
-      dockerfile: Dockerfile-web
+      dockerfile: Dockerfile-app
     command: >
       sh -c "python manage.py migrate && 
              python manage.py collectstatic --noinput &&
@@ -20,7 +20,7 @@ services:
   cron_green:
     build:
       context: .
-      dockerfile: Dockerfile-web
+      dockerfile: Dockerfile-app
     volumes:
       - .:/app
       - cron_log:/tmp
@@ -33,40 +33,16 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.production
 
-  nginx_green:
-    build:
-      context: .
-      dockerfile: Dockerfile-nginx-green
-    volumes:
-      - .:/app
-    ports:
-      - "81:80"
-    depends_on:
-      - web_green
-
   celery_green:
     build:
       context: .
-      dockerfile: Dockerfile-web
+      dockerfile: Dockerfile-app
     command: celery -A config worker -l info
     volumes:
       - .:/app
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.production
       - CELERY_BROKER_URL=redis://redis:6379/2
-
-  flower_green:
-    build:
-      context: .
-      dockerfile: Dockerfile-web
-    image: mher/flower
-    command: celery -A config flower --address=0.0.0.0 --port=5555 --basic_auth=${FLOWER_USER}:${FLOWER_PASSWORD}
-    volumes:
-      - .:/app
-    ports:
-      - "5556:5555"
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.production
 
 volumes:
   cron_log:
