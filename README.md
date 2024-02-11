@@ -45,7 +45,7 @@ pip install -r requirements.txt
 # Define .env file
 fab2 generate-env
 
-
+-- Below is the example of .env file creating -- 
 -----------------1----------------------
 - Input SECRET_KEY:
 ----------------------------------------
@@ -207,13 +207,11 @@ python manage.py runserver
 celery -A config worker -l INFO -P solo
 ```
 
-If you want to use docker, you can use docker-compose.
-`docker-compose.yml` file change `environment` for your `DJANGO_SETTINGS_MODULE`
+## Testing
 
+Local Testing
 ```shell
-# Before you start, you need set .env file
-
-docker-compose up --build
+python manage test --keepdb
 ```
 
 ## CI/CD Setting
@@ -231,17 +229,9 @@ run: |
 sudo /etc/init.d/celeryd restart
 ```
 
-### Docker
+### Testing (Github action, When PR to `code-review` name branch)
 
-Need to set 
-- `DOCKER_PASSWORD`
-- `DOCKER_USERNAME`
-- `REPOSITORY_NAME`
-in `Secrets` of your repository.
-
-### Testing
-
-.github/workflows/test.yml
+- GitHub Actions (.github/workflows/test.yml)
 
 ## Database
 
@@ -255,6 +245,53 @@ Need to use by django command
 
 **[ Example ]**
 
-```
+By Local
+
+```cronexp
 30 * * * * . /var/www/ProjectName/bin/activate && cd /var/www/ProjectName && python manage.py django_commands >> /var/log/django_commands.log 2>&1
+```
+
+---
+
+## Getting Start By Docker
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+### 1. Set env file
+
+```shell
+-- Set .env file
+fab2 generate-env
+```
+
+### 2. `docker-compose.yml` file change `environment` for your `DJANGO_SETTINGS_MODULE`
+
+### 3. create `temp_static` from root directory
+```shell
+mkdir temp_static
+```
+
+### 3. Run docker-compose
+```shell
+# Before you start, you need set .env file
+
+docker-compose up --build
+```
+
+### 4. Set CRON setting
+
+```cronexp
+PATH=/usr/local/bin:/usr/bin:/bin
+* * * * * cd /app && python manage.py check >> /tmp/log/django_commands.log 2>&1
+```
+
+If you want to see CRON log
+
+```shell
+# Check docker container id (find ...cron...)
+docker ps
+
+# Ensure the container is running
+docker exec -it docker_container_id bash
+
+# Check log
+tail -f /tmp/log/django_commands.log
 ```
