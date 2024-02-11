@@ -17,6 +17,9 @@ services:
       - "5432:5432"
 
   redis:
+    build:
+      context: .
+      dockerfile: Dockerfile-data
     image: redis:latest
     ports:
       - "6379:6379"
