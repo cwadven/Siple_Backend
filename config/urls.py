@@ -4,9 +4,12 @@ from django.urls import (
     include,
     path,
 )
+from django.views.generic import TemplateView
 
 
 urlpatterns = [
+    path('', TemplateView.as_view(template_name="homepage.html")),
+
     path('admin/', admin.site.urls),
 
     path('v1/member/', include('member.urls.v1')),
