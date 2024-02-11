@@ -37,6 +37,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-nginx-blue
+    command: >
+      sh -c "nginx && nginx -s reload"
     volumes:
       - .:/app
     ports:
