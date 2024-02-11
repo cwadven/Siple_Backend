@@ -25,7 +25,7 @@ services:
       - .:/app
       - cron_log:/tmp
     depends_on:
-      - web
+      - web_blue
     command: >
       sh -c "cat /etc/cron.d/command.cron | crontab - &&
              service cron start &&
@@ -44,7 +44,7 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - web
+      - web_blue
 
   celery_blue:
     build:
