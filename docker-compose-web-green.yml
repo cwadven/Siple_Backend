@@ -37,8 +37,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-nginx-green
-    command: >
-      sh -c "nginx && nginx -s reload"
     volumes:
       - .:/app
     ports:
