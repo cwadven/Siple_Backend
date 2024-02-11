@@ -3,7 +3,7 @@ import json
 from .base import *  # noqa
 
 
-with open(Path(BASE_DIR) / '.env', 'r') as file:  # noqa
+with open(Path(BASE_DIR) / '.django_env', 'r') as file:  # noqa
     data = json.load(file)
 
 

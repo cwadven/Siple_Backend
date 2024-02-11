@@ -12,7 +12,7 @@ def generate_env(c):
     from pathlib import Path
     import json
 
-    env_file_path = Path(BASE_DIR) / '.env'
+    env_file_path = Path(BASE_DIR) / '.django_env'
 
     env_local = {
         'SECRET_KEY': _get_or_set_environment('SECRET_KEY'),
