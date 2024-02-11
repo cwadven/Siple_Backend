@@ -40,7 +40,7 @@ services:
     volumes:
       - .:/app
     ports:
-      - "80:80"
+      - "81:80"
     depends_on:
       - web_green
 
@@ -64,7 +64,7 @@ services:
     volumes:
       - .:/app
     ports:
-      - "5555:5555"
+      - "5556:5555"
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.production
 

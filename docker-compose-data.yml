@@ -25,7 +25,7 @@ services:
     image: dpage/pgadmin4
     restart: unless-stopped
     ports:
-      - "5556:80"
+      - "5557:80"
     volumes:
       - ./pgadmin:/var/lib/pgadmin
     environment:
