@@ -33,17 +33,6 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.production
 
-  nginx_blue:
-    build:
-      context: .
-      dockerfile: Dockerfile-nginx-blue
-    volumes:
-      - .:/app
-    ports:
-      - "80:80"
-    depends_on:
-      - web_blue
-
   celery_blue:
     build:
       context: .

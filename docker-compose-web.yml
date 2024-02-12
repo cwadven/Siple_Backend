@@ -3,17 +3,17 @@
 version: '3.8'
 services:
   nginx:
+    container_name: web_server
     build:
       context: .
-      dockerfile: ${DOCKER_FILE_NGINX_FILE}
+      dockerfile: Dockerfile-nginx
     volumes:
       - .:/app
     ports:
       - "80:80"
-    depends_on:
-      - web_blue
 
   flower:
+    container_name: celery_monitor
     build:
       context: .
       dockerfile: Dockerfile-app
