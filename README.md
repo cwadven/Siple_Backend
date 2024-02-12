@@ -287,14 +287,14 @@ mkdir temp_static
 
 # Run database settings docker-compose
 docker-compose -f docker-compose-data.yml up --build -d
-# Deploy Django blue app
-docker-compose -f docker-compose-app-blue.yml up --build -d
 # Deploy Web server
 docker-compose -f docker-compose-web.yml up --build -d
+# Deploy Django blue app
+docker-compose -f docker-compose-app-blue.yml up --build -d
 # Set Django blue app
 docker exec web_server /bin/sh /etc/nginx/conf.d/nginx_update_blue.sh
 # Django green app if there is then down (could be not exist)
-docker-compose -f docker-compose-app-blue.yml down
+docker-compose -f docker-compose-app-green.yml down
 
 # After deploy when you want to update
 # Deploy Django green app
