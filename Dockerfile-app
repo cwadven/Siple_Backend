@@ -16,7 +16,7 @@ COPY . .
 # CRON 적용
 RUN apt-get update && apt-get install -y cron vim dos2unix
 RUN mkdir -p /tmp/log
-COPY command.cron /etc/cron.d/command.cron
-# 줄바꿈 이슈로 dos2unix 설치 후 실행
-RUN dos2unix /etc/cron.d/command.cron
-RUN chmod 0644 /etc/cron.d/command.cron
+#COPY command.cron /etc/cron.d/command.cron
+## 줄바꿈 이슈로 dos2unix 설치 후 실행
+#RUN dos2unix /etc/cron.d/command.cron
+#RUN chmod 0644 /etc/cron.d/command.cron

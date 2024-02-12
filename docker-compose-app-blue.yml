@@ -29,9 +29,11 @@ services:
       - web_blue
     command: >
       sh -c "pip install --no-cache-dir -r requirements.txt &&
-             cat /etc/cron.d/command.cron | crontab - &&
-             service cron start &&
-             tail -f /dev/null"
+                   dos2unix command.cron &&
+                   chmod 0644 command.cron &&
+                   cat command.cron | crontab - &&
+                   service cron start &&
+                   tail -f /dev/null"
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.production
 
