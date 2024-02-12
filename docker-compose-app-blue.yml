@@ -7,7 +7,8 @@ services:
       context: .
       dockerfile: Dockerfile-app
     command: >
-      sh -c "python manage.py migrate && 
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+             python manage.py migrate && 
              python manage.py collectstatic --noinput &&
              gunicorn config.wsgi:application --bind 0.0.0.0:8000"
     volumes:
@@ -27,7 +28,8 @@ services:
     depends_on:
       - web_blue
     command: >
-      sh -c "cat /etc/cron.d/command.cron | crontab - &&
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+             cat /etc/cron.d/command.cron | crontab - &&
              service cron start &&
              tail -f /dev/null"
     environment:
@@ -37,7 +39,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-app
-    command: celery -A config worker -l info
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+             celery -A config worker -l info"
+    depends_on:
+      - web_blue
     volumes:
       - .:/app
     environment:
