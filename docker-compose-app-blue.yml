@@ -3,6 +3,7 @@
 version: '3.8'
 services:
   web_blue:
+    container_name: web_blue
     build:
       context: .
       dockerfile: Dockerfile-app
@@ -19,6 +20,7 @@ services:
       - DJANGO_SETTINGS_MODULE=config.settings.production
 
   cron_blue:
+    container_name: cron_blue
     build:
       context: .
       dockerfile: Dockerfile-app
@@ -38,6 +40,7 @@ services:
       - DJANGO_SETTINGS_MODULE=config.settings.production
 
   celery_blue:
+    container_name: celery_blue
     build:
       context: .
       dockerfile: Dockerfile-app

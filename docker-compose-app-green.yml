@@ -3,6 +3,7 @@
 version: '3.8'
 services:
   web_green:
+    container_name: web_green
     build:
       context: .
       dockerfile: Dockerfile-app
@@ -19,6 +20,7 @@ services:
       - DJANGO_SETTINGS_MODULE=config.settings.production
 
   cron_green:
+    container_name: cron_green
     build:
       context: .
       dockerfile: Dockerfile-app
@@ -38,6 +40,7 @@ services:
       - DJANGO_SETTINGS_MODULE=config.settings.production
 
   celery_green:
+    container_name: celery_green
     build:
       context: .
       dockerfile: Dockerfile-app
