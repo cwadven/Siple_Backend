@@ -339,3 +339,35 @@ docker exec -it docker_container_id bash
 # Check log
 tail -f /tmp/log/django_commands.log
 ```
+
+
+## Extra
+
+### Git Hooks
+
+- **pre-commit**: Run flake8
+- **pre-push**: Push with master branch version tag
+
+```
+# goto git hooks
+cd .git/hooks
+
+# create symbolic link
+for hook_path in ~/{Myproject}/git-hooks/*
+do
+  if [ "${hook_path##*.}" != "py" ]  # Ignore .py files
+  then
+    ln -s "$hook_path" .
+  fi
+done
+
+# Check the symbolic link
+# Window
+ls -al
+# Linux
+ls -alth
+
+# Give permission to execute
+chmod +x pre-commit
+chmod +x pre-push
+```
