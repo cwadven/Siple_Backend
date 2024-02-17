@@ -21,10 +21,9 @@ echo "> Health Check Start!"
 
 for RETRY_COUNT in $(seq 1 100)
 do
-  RESPONSE=$(curl -s http://web_blue:8000/)
+  RESPONSE=$(curl -s http://web_blue:8000/v1/common/health_check)
 
-  if [ -n "$RESPONSE" ]
-  then
+  if echo "$RESPONSE" | grep -q "OK"; then
     echo "> Health check 성공"
     echo "$NEW_CONFIG" > /etc/nginx/conf.d/default.conf
     nginx -s reload
