@@ -130,6 +130,7 @@ celerybeat.pid
 # Environments
 .env
 .django_env
+newrelic.ini
 .venv
 env/
 venv/

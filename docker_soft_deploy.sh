@@ -105,3 +105,27 @@ elif [ "$app_green_services_up" = "true" ]; then
     docker-compose -f $GREEN_APP_COMPOSE_FILE down
     echo "Remove green environment."
 fi
+
+
+CHANGED_FILES=$(git diff HEAD^ HEAD --name-only)
+
+pattern_found=false
+
+for file in $CHANGED_FILES; do
+    case "$file" in
+        *.yml|requirements.txt|Dockerfile*|nginx*)
+            pattern_found=true
+            break
+            ;;
+        *)
+            ;;
+    esac
+done
+
+# 패턴에 해당하는 파일이 변경된 경우 a.sh 실행
+if [ "$pattern_found" = true ]; then
+    echo "A target file matching the pattern has changed. Executing a.sh..."
+    ./docker_soft_deploy.sh
+else
+    echo "No target files matching the patterns have changed. Executing b.sh..."
+    ./docker_hard_deploy.sh
