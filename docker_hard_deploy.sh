@@ -105,3 +105,5 @@ elif [ "$app_green_services_up" = "true" ]; then
     docker-compose -f $GREEN_APP_COMPOSE_FILE down
     echo "Remove green environment."
 fi
+
+docker rmi $(docker images -f "dangling=true" -q) 2> /dev/null
