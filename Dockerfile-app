@@ -16,7 +16,3 @@ COPY . .
 # CRON 적용
 RUN apt-get update && apt-get install -y cron vim dos2unix
 RUN mkdir -p /tmp/log
-
-
-# NewRelic 적용
-COPY newrelic.ini /app/newrelic.ini
