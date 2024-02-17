@@ -616,6 +616,24 @@ paths:
                   value:
                     message: "카카오페이 결제 취소에 실패하였습니다."
 
+  /v1/common/health_check:
+    get:
+      tags:
+        - Common
+      summary: Health Check API
+      description: To check health check
+      responses:
+        '200':
+          description: Health Check successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "OK"
+
   /v1/payment/product/fail/kakao/{order_token}:
     post:
       tags:
