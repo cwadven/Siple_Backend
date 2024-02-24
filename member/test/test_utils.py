@@ -34,6 +34,9 @@ class ExampleSocialLoginModule(SocialLoginModule):
     def redirect_uri(self):
         return None
 
+    def username_prefix(self):
+        return 'example_'
+
     def get_user_info_with_access_token(self, access_token: str) -> dict:
         return {}
 
@@ -114,6 +117,11 @@ class TestKakaoSocialLoginModule(TestCase):
         # Given:
         # Expected:
         self.assertEqual(self.social_login_module.redirect_uri, settings.KAKAO_REDIRECT_URL)
+
+    def test_username_prefix(self):
+        # Given:
+        # Expected:
+        self.assertEqual(self.social_login_module.username_prefix, 'kakao_')
 
     def test_get_birth_day_valid_data(self):
         # Given:
@@ -324,7 +332,7 @@ class TestKakaoSocialLoginModule(TestCase):
         user_info = self.social_login_module.get_user_info_with_access_token(access_token)
 
         # Then: The expected user information should be returned
-        self.assertEqual(user_info['id'], '12345')
+        self.assertEqual(user_info['id'], 'kakao_12345')
         self.assertEqual(user_info['gender'], 'male')
         self.assertEqual(user_info['phone'], '01234567890')
         self.assertEqual(user_info['birth'].strftime('%Y-%m-%d'), '1990-01-05')
@@ -383,6 +391,11 @@ class TestNaverSocialLoginModule(TestCase):
         # Given:
         # Expected:
         self.assertEqual(self.social_login_module.redirect_uri, settings.NAVER_REDIRECT_URL)
+
+    def test_username_prefix(self):
+        # Given:
+        # Expected:
+        self.assertEqual(self.social_login_module.username_prefix, 'naver_')
 
     def test_get_birth_day_valid_data(self):
         # Given:
@@ -519,7 +532,7 @@ class TestNaverSocialLoginModule(TestCase):
         user_info = self.social_login_module.get_user_info_with_access_token(access_token)
 
         # Then: The expected user information should be returned
-        self.assertEqual(user_info['id'], '12345')
+        self.assertEqual(user_info['id'], 'naver_12345')
         self.assertEqual(user_info['gender'], 'male')
         self.assertEqual(user_info['phone'], '1234567890')
         self.assertEqual(user_info['birth'].strftime('%Y-%m-%d'), '1990-01-05')
@@ -577,7 +590,12 @@ class TestGoogleSocialLoginModule(TestCase):
     def test_redirect_uri(self):
         # Given:
         # Expected:
-        self.assertEqual(self.social_login_module._redirect_uri, settings.GOOGLE_REDIRECT_URL)
+        self.assertEqual(self.social_login_module.redirect_uri, settings.GOOGLE_REDIRECT_URL)
+
+    def test_username_prefix(self):
+        # Given:
+        # Expected:
+        self.assertEqual(self.social_login_module.username_prefix, 'google_')
 
     @patch('member.utils.social_utils.requests.get')
     def test_get_user_info_with_access_token_successful(self, mock_requests_get):
@@ -595,7 +613,7 @@ class TestGoogleSocialLoginModule(TestCase):
         user_info = self.social_login_module.get_user_info_with_access_token(access_token)
 
         # Then: The expected user information should be returned
-        self.assertEqual(user_info['id'], '12345')
+        self.assertEqual(user_info['id'], 'google_12345')
         self.assertIsNone(user_info['gender'])
         self.assertIsNone(user_info['phone'])
         self.assertIsNone(user_info['birth'])

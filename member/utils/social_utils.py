@@ -21,6 +21,7 @@ class SocialLoginModule(ABC):
     _client_id = None
     _secret = None
     _redirect_uri = None
+    _username_prefix = None
 
     @property
     @abstractmethod
@@ -45,6 +46,11 @@ class SocialLoginModule(ABC):
     @property
     @abstractmethod
     def redirect_uri(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def username_prefix(self) -> str:
         pass
 
     @abstractmethod
@@ -78,6 +84,7 @@ class KakaoSocialLoginModule(SocialLoginModule):
         self._client_id = settings.KAKAO_API_KEY
         self._secret = settings.KAKAO_SECRET_KEY
         self._redirect_uri = settings.KAKAO_REDIRECT_URL
+        self._username_prefix = 'kakao_'
 
     @property
     def request_access_token_path(self) -> str:
@@ -98,6 +105,10 @@ class KakaoSocialLoginModule(SocialLoginModule):
     @property
     def redirect_uri(self) -> str:
         return self._redirect_uri
+
+    @property
+    def username_prefix(self) -> str:
+        return self._username_prefix
 
     @staticmethod
     def _get_birth_day(data: dict) -> Optional[datetime]:
@@ -157,7 +168,7 @@ class KakaoSocialLoginModule(SocialLoginModule):
         else:
             data = json.loads(data.text)
             return {
-                'id': data['id'],
+                'id': self.username_prefix + data['id'],
                 'gender': self._get_gender(data),
                 'phone': self._get_phone(data),
                 'birth': self._get_birth_day(data),
@@ -174,6 +185,7 @@ class NaverSocialLoginModule(SocialLoginModule):
         self._client_id = settings.NAVER_API_KEY
         self._secret = settings.NAVER_SECRET_KEY
         self._redirect_uri = settings.NAVER_REDIRECT_URL
+        self._username_prefix = 'naver_'
 
     @property
     def request_access_token_path(self) -> str:
@@ -194,6 +206,10 @@ class NaverSocialLoginModule(SocialLoginModule):
     @property
     def redirect_uri(self) -> str:
         return self._redirect_uri
+
+    @property
+    def username_prefix(self) -> str:
+        return self._username_prefix
 
     @staticmethod
     def _get_birth_day(data_response: dict) -> Optional[datetime]:
@@ -235,7 +251,7 @@ class NaverSocialLoginModule(SocialLoginModule):
 
         data = json.loads(data.text)['response']
         return {
-            'id': data['id'],
+            'id': self.username_prefix + data['id'],
             'gender': self._get_gender(data),
             'phone': self._get_phone(data),
             'birth': self._get_birth_day(data),
@@ -252,6 +268,7 @@ class GoogleSocialLoginModule(SocialLoginModule):
         self._client_id = settings.GOOGLE_CLIENT_ID
         self._secret = settings.GOOGLE_SECRET_KEY
         self._redirect_uri = settings.GOOGLE_REDIRECT_URL
+        self._username_prefix = 'google_'
 
     @property
     def request_access_token_path(self) -> str:
@@ -273,6 +290,10 @@ class GoogleSocialLoginModule(SocialLoginModule):
     def redirect_uri(self) -> str:
         return self._redirect_uri
 
+    @property
+    def username_prefix(self) -> str:
+        return self._username_prefix
+
     def get_user_info_with_access_token(self, access_token: str) -> dict:
         data = requests.get(
             self.request_user_info_path,
@@ -286,7 +307,7 @@ class GoogleSocialLoginModule(SocialLoginModule):
         data = json.loads(data.text)
 
         return {
-            'id': data.get('sub'),
+            'id': self.username_prefix + data.get('sub'),
             'gender': None,
             'phone': None,
             'birth': None,
