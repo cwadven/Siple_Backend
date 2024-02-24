@@ -70,16 +70,7 @@ https://nulls.co.kr/bones-skins/482
 "KAKAO_REDIRECT_URL" Example: "http://...."
 ----------------------------------------
 
----------------3------------------------
-- Input NAVER_API_KEY:
-- Input NAVER_SECRET_KEY:
-----------------------------------------
-You can get it here: https://developers.naver.com/main/
-"NAVER_API_KEY" Example: "4df48d962f....."
-"NAVER_SECRET_KEY" Example: "sdfaefse....."
-----------------------------------------
-
-----------------4-----------------------
+----------------3-----------------------
 - Input KAKAO_PAY_API_KEY:
 - Input KAKAO_PAY_CID:
 ----------------------------------------
@@ -88,15 +79,18 @@ For Kakao Pay, you need to get a separate key.
 "KAKAO_PAY_CID" Example: "TC0ONETIME"
 ----------------------------------------
 
----------------5------------------------
-[ More Explain ]
-https://nulls.co.kr/bones-skins/483
-
-"NAVER_API_KEY" Example: "jg5wTSCNqh....."
-"NAVER_SECRET_KEY" Example: "zzZAXHt....."
+---------------4------------------------
+- Input NAVER_API_KEY:
+- Input NAVER_SECRET_KEY:
+- Input NAVER_REDIRECT_URL:
+----------------------------------------
+You can get it here: https://developers.naver.com/main/
+"NAVER_API_KEY" Example: "4df48d962f....."
+"NAVER_SECRET_KEY" Example: "sdfaefse....."
+"NAVER_REDIRECT_URL" Example: "http://...."
 ----------------------------------------
 
-----------------6-----------------------
+----------------5-----------------------
 - Input GOOGLE_CLIENT_ID:
 - Input GOOGLE_SECRET_KEY:
 - Input GOOGLE_REDIRECT_URL:
@@ -108,7 +102,7 @@ You can get it here: https://console.cloud.google.com/apis/credentials
 "GOOGLE_REDIRECT_URL" Example: "http://127.0.0.1:8000/account/login"
 ----------------------------------------
 
-----------------7-----------------------
+----------------6-----------------------
 - Input CHANNEL_HOST:
 - Input CHANNEL_PORT:
 ----------------------------------------
@@ -118,7 +112,7 @@ Channels uses Redis as a channel layer.
 "CHANNEL_PORT" Example: 6379
 ----------------------------------------
 
-----------------8-----------------------
+----------------7-----------------------
 - Input CELERY_BROKER_URL:
 - Input result_backend:
 ----------------------------------------
@@ -129,7 +123,7 @@ Need to install Redis: https://redis.io/
 "result_backend" Example: redis://localhost:6379/2
 ----------------------------------------
 
-----------------9-----------------------
+----------------8-----------------------
 - Input CACHEOPS_REDIS_HOST:
 - Input CACHEOPS_REDIS_PORT:
 - Input CACHEOPS_REDIS_DB:
@@ -142,7 +136,7 @@ Cacheops uses Redis as a cache.
 (redis db number)
 ----------------------------------------
 
-----------------10-----------------------
+----------------9-----------------------
 - Input CACHES_LOCATION:
 ----------------------------------------
 Cache uses location.
@@ -150,7 +144,7 @@ Cache uses location.
 "CACHES_LOCATION" Example: redis://localhost:6379/1
 ----------------------------------------
 
------------------11----------------------
+-----------------10----------------------
 - Input DB_ENGINE:
 - Input DB_NAME:
 - Input DB_USER:
@@ -170,7 +164,7 @@ Database settings.
 "DB_TEST_NAME" Example: nully_test
 ----------------------------------------
 
-------------------12---------------------
+------------------11---------------------
 - Input EMAIL_HOST_USER:
 - Input EMAIL_HOST_PASSWORD:
 ----------------------------------------
@@ -181,7 +175,7 @@ Default Gmail if you want to use other email services, you need to change the se
 "EMAIL_HOST_PASSWORD" Example: 1234
 ----------------------------------------
 
------------------13---------------------
+-----------------12---------------------
 - Input AWS_IAM_ACCESS_KEY:
 - Input AWS_IAM_SECRET_ACCESS_KEY:
 - Input AWS_S3_BUCKET_NAME:

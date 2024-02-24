@@ -2,14 +2,17 @@ from .base import * # noqa
 
 
 SECRET_KEY = 'development_secret_key'
+
 KAKAO_API_KEY = 'development_KAKAO_API_KEY'
 KAKAO_SECRET_KEY = 'development_KAKAO_SECRET_KEY'
 KAKAO_REDIRECT_URL = 'development_KAKAO_REDIRECT_URL'
 KAKAO_PAY_API_KEY = 'development_KAKAO_PAY_API_KEY'
 KAKAO_PAY_CID = 'TC0ONETIME'
+
 NAVER_API_KEY = 'development_NAVER_API_KEY'
 NAVER_SECRET_KEY = 'development_NAVER_SECRET_KEY'
 NAVER_REDIRECT_URL = 'development_NAVER_REDIRECT_URL'
+
 GOOGLE_CLIENT_ID = 'development_GOOGLE_CLIENT_ID'
 GOOGLE_SECRET_KEY = 'development_GOOGLE_SECRET_KEY'
 GOOGLE_REDIRECT_URL = 'development_GOOGLE_REDIRECT_URL'
