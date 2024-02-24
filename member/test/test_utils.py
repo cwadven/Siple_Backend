@@ -88,7 +88,7 @@ class TestKakaoSocialLoginModule(TestCase):
         self.assertEqual(self.social_login_module._request_user_info_path, 'https://kapi.kakao.com/v2/user/me')
         self.assertEqual(self.social_login_module._client_id, settings.KAKAO_API_KEY)
         self.assertEqual(self.social_login_module._secret, settings.KAKAO_SECRET_KEY)
-        self.assertEqual(self.social_login_module._redirect_uri, '')
+        self.assertEqual(self.social_login_module._redirect_uri, settings.KAKAO_REDIRECT_URL)
 
     def test_request_access_token_path(self):
         # Given:
@@ -113,7 +113,7 @@ class TestKakaoSocialLoginModule(TestCase):
     def test_redirect_uri(self):
         # Given:
         # Expected:
-        self.assertEqual(self.social_login_module.redirect_uri, '')
+        self.assertEqual(self.social_login_module.redirect_uri, settings.KAKAO_REDIRECT_URL)
 
     def test_get_birth_day_valid_data(self):
         # Given:
@@ -357,7 +357,7 @@ class TestNaverSocialLoginModule(TestCase):
         self.assertEqual(self.social_login_module._request_user_info_path, 'https://openapi.naver.com/v1/nid/me')
         self.assertEqual(self.social_login_module._client_id, settings.NAVER_API_KEY)
         self.assertEqual(self.social_login_module._secret, settings.NAVER_SECRET_KEY)
-        self.assertEqual(self.social_login_module._redirect_uri, '')
+        self.assertEqual(self.social_login_module._redirect_uri, settings.NAVER_REDIRECT_URL)
 
     def test_request_access_token_path(self):
         # Given:
@@ -382,7 +382,7 @@ class TestNaverSocialLoginModule(TestCase):
     def test_redirect_uri(self):
         # Given:
         # Expected:
-        self.assertEqual(self.social_login_module.redirect_uri, '')
+        self.assertEqual(self.social_login_module.redirect_uri, settings.NAVER_REDIRECT_URL)
 
     def test_get_birth_day_valid_data(self):
         # Given:
