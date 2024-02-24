@@ -18,6 +18,7 @@ def generate_env(c):
         'SECRET_KEY': _get_or_set_environment('SECRET_KEY'),
         'KAKAO_API_KEY': _get_or_set_environment('KAKAO_API_KEY'),
         'KAKAO_SECRET_KEY': _get_or_set_environment('KAKAO_SECRET_KEY'),
+        'KAKAO_REDIRECT_URL': _get_or_set_environment('KAKAO_REDIRECT_URL'),
         'KAKAO_PAY_API_KEY': _get_or_set_environment('KAKAO_PAY_API_KEY'),
         'KAKAO_PAY_CID': _get_or_set_environment('KAKAO_PAY_CID'),
         'NAVER_API_KEY': _get_or_set_environment('NAVER_API_KEY'),

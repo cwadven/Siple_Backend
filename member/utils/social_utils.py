@@ -76,7 +76,7 @@ class KakaoSocialLoginModule(SocialLoginModule):
         self._request_user_info_path = 'https://kapi.kakao.com/v2/user/me'
         self._client_id = settings.KAKAO_API_KEY
         self._secret = settings.KAKAO_SECRET_KEY
-        self._redirect_uri = ''
+        self._redirect_uri = settings.KAKAO_REDIRECT_URL
 
     @property
     def request_access_token_path(self) -> str:

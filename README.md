@@ -58,6 +58,7 @@ You can generate it here: https://djecrety.ir/
 ----------------2-----------------------
 - Input KAKAO_API_KEY:
 - Input KAKAO_SECRET_KEY:
+- Input KAKAO_REDIRECT_URL:
 ----------------------------------------
 You can get it here: https://developers.kakao.com/
 
@@ -66,6 +67,7 @@ https://nulls.co.kr/bones-skins/482
 
 "KAKAO_API_KEY" Example: "4df48d962f....."
 "KAKAO_SECRET_KEY" Example: "sdfaefse....."
+"KAKAO_REDIRECT_URL" Example: "http://...."
 ----------------------------------------
 
 ---------------3------------------------
