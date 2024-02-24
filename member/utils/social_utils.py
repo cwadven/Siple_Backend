@@ -5,6 +5,7 @@ from abc import (
 )
 from datetime import datetime
 from typing import Optional
+from urllib.parse import unquote
 
 import requests
 from django.conf import settings
@@ -58,7 +59,7 @@ class SocialLoginModule(ABC):
                 'client_id': self.client_id,
                 'client_secret': self.secret,
                 'redirect_uri': self.redirect_uri,
-                'code': code
+                'code': unquote(code)
             }
         )
         if access_data.status_code != 200:
