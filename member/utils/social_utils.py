@@ -172,7 +172,7 @@ class NaverSocialLoginModule(SocialLoginModule):
         self._request_user_info_path = 'https://openapi.naver.com/v1/nid/me'
         self._client_id = settings.NAVER_API_KEY
         self._secret = settings.NAVER_SECRET_KEY
-        self._redirect_uri = ''
+        self._redirect_uri = settings.NAVER_REDIRECT_URL
 
     @property
     def request_access_token_path(self) -> str:
