@@ -71,12 +71,12 @@ https://nulls.co.kr/bones-skins/482
 ----------------------------------------
 
 ----------------3-----------------------
-- Input KAKAO_PAY_API_KEY:
 - Input KAKAO_PAY_CID:
+- Input KAKAO_PAY_SECRET_KEY:
 ----------------------------------------
 For Kakao Pay, you need to get a separate key.
-"KAKAO_PAY_API_KEY" Example: "897a....."
 "KAKAO_PAY_CID" Example: "TC0ONETIME"
+"KAKAO_PAY_SECRET_KEY" Example: "897a....."
 ----------------------------------------
 
 ---------------4------------------------

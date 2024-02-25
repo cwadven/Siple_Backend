@@ -13,13 +13,13 @@ from payment.exceptions import (
 
 class KakaoPay:
     def __init__(self, handler: 'KakaoPayHandler') -> None:
-        self.kakao_pay_api_key = settings.KAKAO_PAY_API_KEY
-        self.kakao_pay_ready_url = 'https://kapi.kakao.com/v1/payment/ready'
-        self.kakao_pay_approve_url = 'https://kapi.kakao.com/v1/payment/approve'
-        self.kakao_pay_cancel_url = 'https://kapi.kakao.com/v1/payment/cancel'
+        self.kakao_pay_secret_key = settings.KAKAO_PAY_SECRET_KEY
+        self.kakao_pay_ready_url = 'https://open-api.kakaopay.com/online/v1/payment/ready'
+        self.kakao_pay_approve_url = 'https://open-api.kakaopay.com/online/v1/payment/approve'
+        self.kakao_pay_cancel_url = 'https://open-api.kakaopay.com/online/v1/payment/cancel'
         self.headers = {
-            'Authorization': 'KakaoAK ' + self.kakao_pay_api_key,
-            'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
+            'Authorization': 'SECRET_KEY ' + self.kakao_pay_secret_key,
+            'Content-type': 'application/json',
         }
         self.handler = handler
 
