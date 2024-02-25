@@ -1,4 +1,8 @@
+from datetime import datetime
+
 from django.test import TestCase
+from freezegun import freeze_time
+
 from member.models import Guest
 from point.exceptions import NotEnoughGuestPoints
 from point.models import GuestPoint
@@ -55,6 +59,60 @@ class GuestPointTestCase(TestCase):
 
         # Then: 0 반환
         self.assertEqual(total_point, 0)
+
+    @freeze_time('2020-01-02 00:00:00')
+    def test_get_guest_available_total_point_when_point_valid_until_is_invalid(self):
+        # Given: Point 생성
+        user_point1 = self._give_guest_points(self.guest, 100)
+        # And: is_active True
+        user_point1.is_active = True
+        # And: Set valid_from None 언제나 사용 가능
+        user_point1.valid_from = None
+        # And: Set valid_until 과거 시간
+        user_point1.valid_until = datetime(2020, 1, 1)
+        user_point1.save()
+
+        # When:
+        total_point = get_guest_available_total_point(self.guest.id)
+
+        # Then: 0 반환
+        self.assertEqual(total_point, 0)
+
+    @freeze_time('2020-01-01 00:00:00')
+    def test_get_guest_available_total_point_when_point_valid_from_is_invalid(self):
+        # Given: Point 생성
+        user_point1 = self._give_guest_points(self.guest, 100)
+        # And: is_active True
+        user_point1.is_active = True
+        # And: Set valid_from 미래 시간
+        user_point1.valid_from = datetime(2020, 1, 2)
+        # And: Set valid_until None 언제나 사용 가능
+        user_point1.valid_until = None
+        user_point1.save()
+
+        # When:
+        total_point = get_guest_available_total_point(self.guest.id)
+
+        # Then: 0 반환
+        self.assertEqual(total_point, 0)
+
+    @freeze_time('2020-01-02 00:00:00')
+    def test_get_guest_available_total_point_when_point_valid_from_and_valid_until_is_valid(self):
+        # Given: Point 생성
+        user_point1 = self._give_guest_points(self.guest, 100)
+        # And: is_active True
+        user_point1.is_active = True
+        # And: Set valid_from 과거 시간
+        user_point1.valid_from = datetime(2020, 1, 2)
+        # And: Set valid_until 미래 시간
+        user_point1.valid_until = datetime(2020, 1, 3)
+        user_point1.save()
+
+        # When:
+        total_point = get_guest_available_total_point(self.guest.id)
+
+        # Then: 100 반환
+        self.assertEqual(total_point, 100)
 
     def test_use_point_should_raise_error_when_user_has_not_enough_point(self):
         # Given:
