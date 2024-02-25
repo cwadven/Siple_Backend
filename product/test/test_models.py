@@ -18,12 +18,14 @@ from product.consts import (
     ProductGivenStatus,
     ProductType,
 )
+from product.exceptions import ProductStockNotEnough
 from product.models import (
     GiveProduct,
     GiveProductLog,
     PointProduct,
     ProductImage,
 )
+from product.test import ConcreteProductTestModel
 
 
 @freeze_time('2022-01-01')
@@ -396,7 +398,7 @@ class PointProductMethodTestCase(TestCase):
         quantity = 10
 
         # When:
-        self.point_1000_product.initialize_order(
+        self.point_1000_product._initialize_order(
             guest=self.guest,
             order_phone_number='01012341234',
             payment_type='KAKAO',
@@ -472,6 +474,153 @@ class ProductMethodTestCase(TestCase):
             image_url='deleted_image1',
             is_deleted=True,
         )
+
+    @patch('product.models.Product.save')
+    def test_adjust_stock_after_sale_should_not_call_save_when_total_quantity_is_false_type(self, mock_save):
+        # Given:
+        expected_total_quantities = [
+            0,
+            None
+        ]
+        for expected_total_quantity in expected_total_quantities:
+            # And: Product total_quantity is None
+            product = ConcreteProductTestModel(
+                title='포인트 1000',
+                price=1000,
+                created_guest=self.guest,
+                total_quantity=expected_total_quantity,
+            )
+
+            # When:
+            product._adjust_stock_after_sale(
+                quantity=1,
+            )
+
+            # Then:
+            mock_save.assert_not_called()
+
+    @patch('product.models.Product.save')
+    def test_adjust_stock_after_sale_should_not_call_save_when_left_quantity_is_false_type(self, mock_save):
+        # Given:
+        expected_left_quantities = [
+            0,
+            None
+        ]
+        for expected_left_quantity in expected_left_quantities:
+            # And: Product total_quantity is None
+            product = ConcreteProductTestModel(
+                title='포인트 1000',
+                price=1000,
+                created_guest=self.guest,
+                left_quantity=expected_left_quantity,
+            )
+
+            # When:
+            product._adjust_stock_after_sale(
+                quantity=1,
+            )
+
+            # Then:
+            mock_save.assert_not_called()
+
+    @patch('product.models.Product.save')
+    def test_adjust_stock_after_sale_should_raise_error_when_left_quantity_is_less_then_zero(self, mock_save):
+        # Given:
+        product = ConcreteProductTestModel(
+            title='포인트 1000',
+            price=1000,
+            created_guest=self.guest,
+            total_quantity=80,
+            left_quantity=10,
+        )
+
+        # When: left_quantity over than quantity
+        with self.assertRaises(ProductStockNotEnough) as e:
+            product._adjust_stock_after_sale(
+                quantity=11,
+            )
+            self.assertEqual(e.exception.detail, '상품 재고가 부족합니다.')
+
+        # Then:
+        mock_save.assert_not_called()
+
+    @patch('product.models.Product.save')
+    def test_adjust_stock_after_sale_should_success_save_with_increase_bought_count(self, mock_save):
+        # Given:
+        product = ConcreteProductTestModel(
+            title='포인트 1000',
+            price=1000,
+            created_guest=self.guest,
+            total_quantity=80,
+            left_quantity=10,
+        )
+
+        # When:
+        product._adjust_stock_after_sale(
+            quantity=5,
+        )
+
+        # Then: bought_count should be increased
+        self.assertEqual(product.bought_count, 1)
+        self.assertEqual(product.left_quantity, 5)
+        # And: save should be called
+        mock_save.assert_called_once_with(
+            update_fields=['left_quantity', 'bought_count', 'is_sold_out']
+        )
+
+    @patch('product.models.Product.save')
+    def test_adjust_stock_after_sale_should_make_sold_out_when_left_quantity_is_zero(self, mock_save):
+        # Given:
+        product = ConcreteProductTestModel(
+            title='포인트 1000',
+            price=1000,
+            created_guest=self.guest,
+            total_quantity=80,
+            left_quantity=10,
+        )
+
+        # When:
+        product._adjust_stock_after_sale(
+            quantity=10,
+        )
+
+        # Then: bought_count should be increased
+        self.assertEqual(product.bought_count, 1)
+        self.assertEqual(product.left_quantity, 0)
+        # And: is_sold_out should be True
+        self.assertEqual(product.is_sold_out, True)
+        # And: save should be called
+        mock_save.assert_called_once_with(
+            update_fields=['left_quantity', 'bought_count', 'is_sold_out']
+        )
+
+    @patch('product.models.Product._adjust_stock_after_sale')
+    @patch('product.models.Product._initialize_order')
+    def test_initialize_order(self, mock_initialize_order, mock_adjust_stock_after_sale):
+        # Given: Product
+        product = ConcreteProductTestModel(
+            title='포인트 1000',
+            price=1000,
+            created_guest=self.guest,
+        )
+
+        # When:
+        product.initialize_order(
+            guest=self.guest,
+            order_phone_number='01012341234',
+            payment_type='KAKAO',
+            quantity=1,
+        )
+
+        # Then:
+        mock_initialize_order.assert_called_once_with(
+            self.guest,
+            '01012341234',
+            'KAKAO',
+            1,
+            None,
+        )
+        mock_adjust_stock_after_sale.assert_called_once_with(1)
 
     def test_get_product_images(self):
         # Given:

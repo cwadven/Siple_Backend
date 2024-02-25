@@ -15,6 +15,7 @@ from point.services import (
     give_point,
 )
 from product.consts import ProductGivenStatus, ProductType
+from product.exceptions import ProductStockNotEnough
 from product.managers import ProductQuerySet
 
 
@@ -47,11 +48,9 @@ class Product(models.Model):
     is_active = models.BooleanField(verbose_name='활성화', default=True)
     start_time = models.DateTimeField(verbose_name='시작 시간', null=True, blank=True, db_index=True)
     end_time = models.DateTimeField(verbose_name='끝 시간', null=True, blank=True, db_index=True)
-    # TODO: 총 수량 - 남은 수량 = 품절 여부 만들기
     total_quantity = models.PositiveIntegerField(verbose_name='총 수량', default=0, db_index=True, blank=True, null=True)  # Null 이면 무제한
     left_quantity = models.PositiveIntegerField(verbose_name='남은 수량', default=0, db_index=True, blank=True, null=True)  # Null 이면 무제한
     is_sold_out = models.BooleanField(verbose_name='품절 여부', default=False, db_index=True)
-    # TODO: 구매한 경우 구매 수 증가
     bought_count = models.PositiveIntegerField(verbose_name='구매 수', default=0, db_index=True)
     review_count = models.PositiveIntegerField(verbose_name='리뷰 수', default=0, db_index=True)
     like_count = models.PositiveIntegerField(verbose_name='좋아요 수', default=0, db_index=True)
@@ -79,6 +78,30 @@ class Product(models.Model):
     def __str__(self):
         return f'{self.title} - {self.price}'
 
+    def _adjust_stock_after_sale(self, quantity: int) -> None:
+        if not self.total_quantity or not self.left_quantity:
+            return
+        left_quantity = self.left_quantity - quantity
+        if left_quantity < 0:
+            raise ProductStockNotEnough()
+        self.left_quantity = max(left_quantity, 0)
+        self.bought_count = self.bought_count + 1
+        if self.left_quantity == 0:
+            self.is_sold_out = True
+        self.save(update_fields=['left_quantity', 'bought_count', 'is_sold_out'])
+
+    def _initialize_order(
+            self,
+            guest: 'Guest',  # noqa
+            order_phone_number: str,
+            payment_type: str,
+            quantity: int,
+            discount_handler: callable = None,
+            **kwargs
+    ) -> 'Order': # noqa
+        raise NotImplementedError()
+
+    @transaction.atomic
     def initialize_order(
             self,
             guest: 'Guest',  # noqa
@@ -88,7 +111,15 @@ class Product(models.Model):
             discount_handler: callable = None,
             **kwargs
     ) -> 'Order':  # noqa
-        raise NotImplementedError()
+        self._adjust_stock_after_sale(quantity)
+        return self._initialize_order(
+            guest,
+            order_phone_number,
+            payment_type,
+            quantity,
+            discount_handler,
+            **kwargs
+        )
 
     def get_product_images(self) -> List['ProductImage']:
         return list(
@@ -114,8 +145,7 @@ class PointProduct(Product):
     def __str__(self):
         return f'{self.title} - {self.price} - {self.point}'
 
-    @transaction.atomic
-    def initialize_order(
+    def _initialize_order(
             self,
             guest: 'Guest',  # noqa
             order_phone_number: str,
