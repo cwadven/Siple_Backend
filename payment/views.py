@@ -71,8 +71,8 @@ class KakaoPayReadyForBuyProductAPIView(APIView):
             guest_id=str(request.guest.id),
             product_name=product_name,
             quantity='1',
-            total_amount=str(order.total_paid_price),
-            tax_free_amount=str(0),
+            total_amount=order.total_paid_price,
+            tax_free_amount=0,
         )
         order.tid = ready_to_pay['tid']
         order.save(update_fields=['tid'])

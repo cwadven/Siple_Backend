@@ -29,8 +29,8 @@ class KakaoPay:
             guest_id: str,
             product_name: str,
             quantity: str,
-            total_amount: str,
-            tax_free_amount: str
+            total_amount: int,
+            tax_free_amount: int
     ) -> dict:
         """
         아래와 같은 형태로 return
@@ -45,7 +45,7 @@ class KakaoPay:
             "created_at": "2023-05-21T15:20:55"
         }
         """
-        params = {
+        data = {
             'cid': settings.KAKAO_PAY_CID,
             'partner_order_id': order_id,
             'partner_user_id': guest_id,
@@ -57,7 +57,7 @@ class KakaoPay:
             'cancel_url': self.handler.cancel_url,
             'fail_url': self.handler.fail_url,
         }
-        res = requests.post(self.kakao_pay_ready_url, headers=self.headers, params=params)
+        res = requests.post(self.kakao_pay_ready_url, headers=self.headers, json=data)
         return res.json()
 
     def approve_payment(self, tid: str, pg_token: str, order_id: str, guest_id: str) -> dict:
@@ -87,14 +87,14 @@ class KakaoPay:
             "approved_at": "2023-05-21T15:25:31"
         }
         """
-        params = {
+        data = {
             'cid': settings.KAKAO_PAY_CID,
             'tid': tid,
             'partner_order_id': order_id,
             'partner_user_id': guest_id,
             'pg_token': pg_token,
         }
-        res = requests.post(self.kakao_pay_approve_url, headers=self.headers, params=params)
+        res = requests.post(self.kakao_pay_approve_url, headers=self.headers, json=data)
         response = res.json()
         if res.status_code == 400:
             extras = response.get('extras')
@@ -159,14 +159,14 @@ class KakaoPay:
             "payload": "테스"
         }
         """
-        params = {
+        data = {
             'cid': settings.KAKAO_PAY_CID,
             'tid': tid,
             'cancel_amount': cancel_price,
             'cancel_tax_free_amount': cancel_tax_free_price,
             'payload': payload,
         }
-        res = requests.post(self.kakao_pay_cancel_url, headers=self.headers, params=params)
+        res = requests.post(self.kakao_pay_cancel_url, headers=self.headers, json=data)
         response = res.json()
         if res.status_code == 400:
             extras = response.get('extras')

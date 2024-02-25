@@ -176,8 +176,8 @@ class KakaoPayReadyForBuyProductAPIViewTestCase(GuestTokenMixin, TestCase):
             guest_id=f'{self.guest.id}',
             product_name=f'{self.active_1000_point_product_ordering_1.title} (3개)',
             quantity='1',
-            total_amount=f'{self.active_1000_point_product_ordering_1.price * 3}',
-            tax_free_amount='0',
+            total_amount=self.active_1000_point_product_ordering_1.price * 3,
+            tax_free_amount=0,
         )
         self.assertDictEqual(
             content,
