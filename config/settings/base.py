@@ -37,6 +37,7 @@ PROJECT_APPS = [
     'product',
     'point',
     'payment',
+    'promotion',
 ]
 
 PROJECT_SETTING_APPS = []
