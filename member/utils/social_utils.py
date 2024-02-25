@@ -168,7 +168,7 @@ class KakaoSocialLoginModule(SocialLoginModule):
         else:
             data = json.loads(data.text)
             return {
-                'id': self.username_prefix + data['id'],
+                'id': self.username_prefix + str(data['id']),
                 'gender': self._get_gender(data),
                 'phone': self._get_phone(data),
                 'birth': self._get_birth_day(data),
@@ -251,7 +251,7 @@ class NaverSocialLoginModule(SocialLoginModule):
 
         data = json.loads(data.text)['response']
         return {
-            'id': self.username_prefix + data['id'],
+            'id': self.username_prefix + str(data['id']),
             'gender': self._get_gender(data),
             'phone': self._get_phone(data),
             'birth': self._get_birth_day(data),
@@ -307,7 +307,7 @@ class GoogleSocialLoginModule(SocialLoginModule):
         data = json.loads(data.text)
 
         return {
-            'id': self.username_prefix + data.get('sub'),
+            'id': self.username_prefix + str(data.get('sub')),
             'gender': None,
             'phone': None,
             'birth': None,
