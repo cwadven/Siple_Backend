@@ -23,6 +23,10 @@ class PromotionRule(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = '프로모션 기본 규칙'
+        verbose_name_plural = '프로모션 기본 규칙'
+
 
 class PromotionTag(models.Model):
     name = models.CharField(
@@ -32,6 +36,10 @@ class PromotionTag(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = '프로모션 Tag'
+        verbose_name_plural = '프로모션 Tag'
 
 
 class Banner(models.Model):
@@ -85,6 +93,10 @@ class Banner(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     tags = models.ManyToManyField(PromotionTag, blank=True)
+
+    class Meta:
+        verbose_name = '배너'
+        verbose_name_plural = '배너'
 
     def __str__(self):
         return self.title
