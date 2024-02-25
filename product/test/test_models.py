@@ -453,21 +453,21 @@ class ProductMethodTestCase(TestCase):
         self.point_1000_product_image1 = ProductImage.objects.create(
             product_pk=self.point_1000_product.id,
             product_type=ProductType.POINT.value,
-            sequence=1,
+            ordering=1,
             created_guest=self.guest,
             image_url='image1',
         )
         self.point_1000_product_image2 = ProductImage.objects.create(
             product_pk=self.point_1000_product.id,
             product_type=ProductType.POINT.value,
-            sequence=2,
+            ordering=2,
             created_guest=self.guest,
             image_url='image2',
         )
         self.point_1000_product_deleted_image1 = ProductImage.objects.create(
             product_pk=self.point_1000_product.id,
             product_type=ProductType.POINT.value,
-            sequence=1,
+            ordering=1,
             created_guest=self.guest,
             image_url='deleted_image1',
             is_deleted=True,
