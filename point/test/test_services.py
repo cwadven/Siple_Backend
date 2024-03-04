@@ -2,7 +2,6 @@ from datetime import datetime
 
 from django.test import TestCase
 from freezegun import freeze_time
-
 from member.models import Guest
 from point.exceptions import NotEnoughGuestPoints
 from point.models import GuestPoint
