@@ -42,6 +42,9 @@ class PromotionRule(models.Model):
         verbose_name = '프로모션 기본 규칙'
         verbose_name_plural = '프로모션 기본 규칙'
 
+    def __str__(self):
+        return self.description
+
 
 class PromotionTag(models.Model):
     name = models.CharField(
@@ -55,6 +58,9 @@ class PromotionTag(models.Model):
     class Meta:
         verbose_name = '프로모션 Tag'
         verbose_name_plural = '프로모션 Tag'
+
+    def __str__(self):
+        return self.name
 
 
 class Banner(models.Model):
