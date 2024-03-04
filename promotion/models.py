@@ -1,7 +1,7 @@
 from django.db import models
 from promotion.consts import (
     ActionPage,
-    BannerTargetPage,
+    BannerTargetLayer,
 )
 
 
@@ -107,7 +107,7 @@ class Banner(models.Model):
     target_layer = models.CharField(
         verbose_name='Banner target',
         max_length=100,
-        choices=BannerTargetPage.choices(),
+        choices=BannerTargetLayer.choices(),
         null=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
