@@ -6,5 +6,5 @@ class ActionPage(StrValueLabel):
     SELF = ('_self', 'Same Page')
 
 
-class BannerTargetPage(StrValueLabel):
+class BannerTargetLayer(StrValueLabel):
     HOME_TOP = ('HOME_TOP', '홈 상단')
