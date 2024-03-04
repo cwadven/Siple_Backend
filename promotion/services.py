@@ -7,7 +7,7 @@ from promotion.consts import BannerTargetLayer
 from promotion.models import Banner
 
 
-def get_active_banners(target_layer: BannerTargetLayer, now=None) -> QuerySet[Banner]:
+def get_active_banners(target_layer: BannerTargetLayer, now: timezone = None) -> QuerySet[Banner]:
     if now is None:
         now = timezone.now()
 
