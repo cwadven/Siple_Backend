@@ -1,4 +1,8 @@
 from django.db import models
+from promotion.consts import (
+    ActionPage,
+    BannerTargetPage,
+)
 
 
 class PromotionRule(models.Model):
@@ -9,13 +13,24 @@ class PromotionRule(models.Model):
     action_page = models.CharField(
         verbose_name='Action Page',
         max_length=100,
-        choices=[
-            ('_blank', 'New Page'),
-            ('_self', 'Same Page'),
-        ],
+        choices=ActionPage.choices(),
         null=True,
     )
-    target_url = models.TextField(
+    target_pk = models.CharField(
+        verbose_name='Action for using pk',
+        max_length=255,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    target_type = models.CharField(
+        verbose_name='Action for using type',
+        max_length=255,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    external_target_url = models.TextField(
         verbose_name='Action for using url',
         null=True,
         blank=True,
@@ -87,6 +102,12 @@ class Banner(models.Model):
     small_image = models.TextField(
         verbose_name='Banner small page for image',
         blank=True,
+        null=True,
+    )
+    target_layer = models.CharField(
+        verbose_name='Banner target',
+        max_length=100,
+        choices=BannerTargetPage.choices(),
         null=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)

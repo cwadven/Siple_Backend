@@ -1,6 +1,9 @@
 from django.contrib import admin
-
-from promotion.models import PromotionRule, PromotionTag, Banner
+from promotion.models import (
+    Banner,
+    PromotionRule,
+    PromotionTag,
+)
 
 
 class PromotionRuleAdmin(admin.ModelAdmin):
@@ -11,7 +14,9 @@ class PromotionRuleAdmin(admin.ModelAdmin):
         'display_start_time',
         'display_end_time',
         'action_page',
-        'target_url',
+        'target_pk',
+        'target_type',
+        'external_target_url',
     ]
 
 
@@ -31,6 +36,7 @@ class BannerAdmin(admin.ModelAdmin):
         'description',
         'description_font_color',
         'background_color',
+        'target_layer',
     ]
 
 
