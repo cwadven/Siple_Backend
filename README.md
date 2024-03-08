@@ -45,7 +45,16 @@ pip install -r requirements.txt
 # Define .django_env file
 fab2 generate-env
 
--- Below is the example of .django_env file creating -- 
+-- Below is the example of .django_env file creating --
+
+-----------------0----------------------
+- Input HOST_IP:
+----------------------------------------
+For use CSRF_TRUSTED_ORIGINS, you need to set the host ip.
+
+"HOST_IP" Example: "http://127.0.0.1"
+----------------------------------------
+ 
 -----------------1----------------------
 - Input SECRET_KEY:
 ----------------------------------------
