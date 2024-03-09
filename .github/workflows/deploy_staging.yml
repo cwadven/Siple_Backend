@@ -1,4 +1,4 @@
-name: CI/CD
+name: Staging Deploy
 
 env:
   DJANGO_SETTINGS_MODULE: config.settings.production
