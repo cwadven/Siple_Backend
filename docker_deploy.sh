@@ -12,7 +12,7 @@ echo "Previous tag 2: $previous_tag_2"
 pattern_file_changed_exists=false
 
 if [ -z "$latest_tag" ] || [ -z "$previous_tag_1" ] || [ -z "$previous_tag_2" ]; then
-   echo "No tags found"
+    echo "No tags found"
 else
     changed_files_latest_tag_to_previous_tag_1=$(git diff --name-only $previous_tag_1 $latest_tag)
     changed_files_previous_tag_1_to_previous_tag_2=$(git diff --name-only $previous_tag_2 $previous_tag_1)
