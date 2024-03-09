@@ -1,4 +1,3 @@
-# Check Master Recent Tag
 latest_tag=$(git describe --tags --match "*" --abbrev=0 2>/dev/null)
 
 previous_tag_1=$(git describe --tags --match "*" --abbrev=0 ${latest_tag}^ 2>/dev/null)
