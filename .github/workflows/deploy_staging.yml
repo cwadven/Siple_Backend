@@ -18,6 +18,10 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
+    - name: Set Safe Directory
+      run: |
+        git config --global --add safe.directory "${{ secrets.DEVELOPMENT_PROJECT_FILE_PATH }}"
+
     - name: Pull Development Branch
       run: |
         cd ${{ secrets.DEVELOPMENT_PROJECT_FILE_PATH }} && sudo git pull origin development
