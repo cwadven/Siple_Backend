@@ -15,7 +15,7 @@ def generate_env(c):
     env_file_path = Path(BASE_DIR) / '.django_env'
 
     env_local = {
-        'HOST_IP': _get_or_set_environment('HOST_IP'),
+        'CSRF_TRUSTED_ORIGIN': _get_or_set_environment('CSRF_TRUSTED_ORIGIN'),
         'SECRET_KEY': _get_or_set_environment('SECRET_KEY'),
         'KAKAO_API_KEY': _get_or_set_environment('KAKAO_API_KEY'),
         'KAKAO_SECRET_KEY': _get_or_set_environment('KAKAO_SECRET_KEY'),

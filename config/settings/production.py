@@ -68,4 +68,4 @@ CACHES = {
 
 KAKAO_PAY_BASE_DOMAIN = 'http://127.0.0.1:8000'
 
-CSRF_TRUSTED_ORIGINS = [data.get('HOST_IP', 'http://127.0.0.1')]
+CSRF_TRUSTED_ORIGINS = [data.get('CSRF_TRUSTED_ORIGIN', 'http://127.0.0.1')]
