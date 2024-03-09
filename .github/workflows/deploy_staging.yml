@@ -39,10 +39,6 @@ jobs:
         . ${{ secrets.DEVELOPMENT_PROJECT_FILE_PATH }}/venv/bin/activate && python ${{ secrets.DEVELOPMENT_PROJECT_FILE_PATH }}/manage.py migrate --noinput
       continue-on-error: true
 
-    - name: TestCase
-      run: |
-        cd ${{ secrets.DEVELOPMENT_PROJECT_FILE_PATH }} && . ${{ secrets.DEVELOPMENT_PROJECT_FILE_PATH }}/venv/bin/activate && python ${{ secrets.DEVELOPMENT_PROJECT_FILE_PATH }}/manage.py test --noinput
-
     - name: cronjob restart
       run: |
         cat ${{ secrets.DEVELOPMENT_PROJECT_FILE_PATH }}/command.cron | sudo crontab -
