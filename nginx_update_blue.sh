@@ -15,6 +15,10 @@ NEW_CONFIG="server {
     location /static/ {
         alias /app/static/;
     }
+
+    location /media/ {
+        alias /app/media/;
+    }
 }"
 
 echo "> Health Check Start!"
