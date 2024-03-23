@@ -39,6 +39,7 @@ PROJECT_APPS = [
     'payment',
     'promotion',
     'project',
+    'job',
 ]
 
 PROJECT_SETTING_APPS = []
