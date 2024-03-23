@@ -80,3 +80,16 @@ class MemberJobExperience(models.Model):
     class Meta:
         verbose_name = '경력'
         verbose_name_plural = '경력'
+
+
+class MemberInformation(models.Model):
+    member = models.ForeignKey(Member, models.DO_NOTHING)
+    description = models.TextField()
+    is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = '회원 정보'
+        verbose_name_plural = '회원 정보'
