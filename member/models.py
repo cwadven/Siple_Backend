@@ -65,3 +65,18 @@ class Guest(models.Model):
 
     def __str__(self):
         return self.temp_nickname
+
+
+class MemberJobExperience(models.Model):
+    member = models.ForeignKey(Member, models.DO_NOTHING)
+    job = models.ForeignKey('job.Job', models.DO_NOTHING)
+    start_date = models.DateField(blank=True, null=True, db_index=True)
+    end_date = models.DateField(blank=True, null=True, db_index=True)
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = '경력'
+        verbose_name_plural = '경력'
