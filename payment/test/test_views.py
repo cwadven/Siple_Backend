@@ -845,7 +845,7 @@ class ApproveGiveProductCancelByTemplateTestCase(GuestTokenMixin, TestCase):
         # Then: 유효하지 않은 주문 status 로 요청 취소 실패
         self.assertTemplateUsed(response, 'payment/pay_abused/not_found.html')
 
-    @patch('payment.services.kakao_pay_approve_give_product_cancel')
+    @patch('payment.views.kakao_pay_approve_give_product_cancel')
     def test_kakao_pay_cancel_for_buy_product_template_when_unexpected_response_from_kakao(self, mock_kakao_pay_approve_give_product_cancel):
         # Given:
         self.login_guest(self.guest)
