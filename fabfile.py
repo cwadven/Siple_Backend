@@ -1,3 +1,4 @@
+import json
 import os
 
 from fabric2 import task
@@ -72,3 +73,24 @@ def _get_or_set_environment(environment_key):
     if os.environ.get(environment_key) is None:
         return input(f'Input {environment_key}: ')
     return os.environ[environment_key]
+
+
+@task
+def update_crontab(c):
+    from jinja2 import Template
+    from pathlib import Path
+
+    django_env_str = Path('.django_env').read_text()
+    if not django_env_str:
+        raise Exception('.django_env file not found')
+    django_env = json.loads(django_env_str)
+    try:
+        prefix_command = django_env['CRONTAB_PREFIX_COMMAND']
+    except KeyError:
+        raise Exception('CRONTAB_PREFIX_COMMAND not found in .django_env file')
+
+    template = Template(Path('crontab.j2').read_text())
+    rendered = template.render(
+        prefix_command=prefix_command,
+    )
+    Path('command.cron').write_text(rendered)
