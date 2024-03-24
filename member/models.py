@@ -1,6 +1,9 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from member.consts import MemberStatusExceptionTypeSelector
+from member.consts import (
+    MemberAttributeAcquisitionStatus,
+    MemberStatusExceptionTypeSelector,
+)
 from member.managers import MemberManager
 
 
@@ -150,3 +153,36 @@ class MemberAttribute(models.Model):
 
     def __str__(self):
         return f'{self.member_id, self.member_attribute_type_id, self.value}'
+
+
+class MemberAttributeAcquisition(models.Model):
+    member = models.ForeignKey(Member, models.DO_NOTHING)
+    member_attribute_type = models.ForeignKey(MemberAttributeType, models.DO_NOTHING)
+    value = models.PositiveBigIntegerField()
+    acquisition_action_pk = models.CharField(
+        max_length=256,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    acquisition_action_pk_type = models.CharField(
+        max_length=256,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    reason = models.TextField(blank=True, null=True)
+    status = models.CharField(
+        max_length=100,
+        default=MemberAttributeAcquisitionStatus.RECEIVED.value,
+        choices=MemberAttributeAcquisitionStatus.choices(),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = '회원 속성 획득'
+        verbose_name_plural = '회원 속성 획득'
+
+    def __str__(self):
+        return f'{self.member_id, self.member_attribute_type_id, self.value, self.status}'

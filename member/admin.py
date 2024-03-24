@@ -3,6 +3,7 @@ from member.models import (
     Guest,
     Member,
     MemberAttribute,
+    MemberAttributeAcquisition,
     MemberAttributeType,
     MemberExtraLink,
     MemberInformation,
@@ -108,6 +109,18 @@ class MemberAttributeTypeAdmin(admin.ModelAdmin):
     ]
 
 
+class MemberAttributeAcquisitionAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'member_id',
+        'member_attribute_type_id',
+        'value',
+        'acquisition_action_pk',
+        'acquisition_action_pk_type',
+        'status',
+    ]
+
+
 admin.site.register(Guest, GuestAdmin)
 admin.site.register(Member, MemberAdmin)
 admin.site.register(MemberProvider, MemberProviderAdmin)
@@ -118,3 +131,4 @@ admin.site.register(MemberInformation, MemberInformationAdmin)
 admin.site.register(MemberExtraLink, MemberExtraLinkAdmin)
 admin.site.register(MemberAttribute, MemberAttributeAdmin)
 admin.site.register(MemberAttributeType, MemberAttributeTypeAdmin)
+admin.site.register(MemberAttributeAcquisition, MemberAttributeAcquisitionAdmin)
