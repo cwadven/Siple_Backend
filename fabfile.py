@@ -63,6 +63,7 @@ def generate_env(c):
         'AWS_IAM_SECRET_ACCESS_KEY': _get_or_set_environment('AWS_IAM_SECRET_ACCESS_KEY'),
         'AWS_S3_BUCKET_NAME': _get_or_set_environment('AWS_S3_BUCKET_NAME'),
         'AWS_SQS_URL': _get_or_set_environment('AWS_SQS_URL'),
+        'CRONTAB_PREFIX_COMMAND': _get_or_set_environment('CRONTAB_PREFIX_COMMAND'),
     }
 
     with open(env_file_path, 'w', encoding='utf-8') as f:
