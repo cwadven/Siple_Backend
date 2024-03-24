@@ -109,3 +109,16 @@ class MemberExtraLink(models.Model):
     class Meta:
         verbose_name = '회원 링크'
         verbose_name_plural = '회원 링크'
+
+
+class MemberAttributeType(models.Model):
+    display_name = models.CharField(max_length=256, unique=True)
+    name = models.CharField(max_length=256, db_index=True, unique=True)
+    description = models.TextField(blank=True, null=True)
+    is_deleted = models.BooleanField(default=False)
+    is_hidden = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
