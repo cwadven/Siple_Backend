@@ -1,6 +1,9 @@
-# Django Nully Backend API Template
+# Siple Backend API
 
-Easy to set up Django backend API template with PostgreSQL database.
+`사이플` 은 `사이드 프로젝트` 를 원활하게 진행할 수 있도록 관련된 사람들을 모아주는 어플리케이션입니다.
+
+사용자들은 `사이플` 을 통해 자신의 프로젝트에 맞는 팀원을 찾고, 업무를 할당하며, 프로젝트 진행 상황을 모니터링할 수 있습니다.
+
 
 ## Features
 
@@ -18,11 +21,16 @@ Easy to set up Django backend API template with PostgreSQL database.
 
 ## CI/CD
 
-![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white) <br>
+![Jenkins](https://img.shields.io/badge/jenkins-%23D24939.svg?style=for-the-badge&logo=jenkins&logoColor=white)
 
-## Deploy (Optional)
+## Deploy
 
-![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white) (Optional) <br>
+### Live Server
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white) <br>
+
+### Staging Server
+![OracleCloud](https://img.shields.io/badge/oraclecloud-%23F80000.svg?style=for-the-badge&logo=oracle&logoColor=white) <br>
 
 
 ## Getting Started
@@ -223,7 +231,7 @@ python manage test --keepdb
 
 ### Deploying (self-hosted)
 
-.github/workflows/deploy.yml
+.github/workflows/deploy_staging.yml
 
 1. Edit `DJANGO_SETTINGS_MODULE`
 2. `/var/www/ProjectName/` file directory of your project
@@ -237,10 +245,11 @@ sudo /etc/init.d/celeryd restart
 ### Testing (Github action, When PR to `code-review` name branch)
 
 - GitHub Actions (.github/workflows/test.yml)
+- GitHub Actions (.github/workflows/lint.yml)
 
 ## Database
 
-![NullyBackendAPITemplate](./docs/Database/NullyBakendAPITemplate.png)
+Not Ready
 
 ## Setting CRON
 
