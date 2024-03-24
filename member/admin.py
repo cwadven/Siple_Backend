@@ -2,6 +2,7 @@ from django.contrib import admin
 from member.models import (
     Guest,
     Member,
+    MemberExtraLink,
     MemberInformation,
     MemberJobExperience,
     MemberProvider,
@@ -76,6 +77,16 @@ class MemberInformationAdmin(admin.ModelAdmin):
     ]
 
 
+class MemberExtraLinkAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'member',
+        'url',
+        'title',
+        'is_deleted',
+    ]
+
+
 admin.site.register(Guest, GuestAdmin)
 admin.site.register(Member, MemberAdmin)
 admin.site.register(MemberProvider, MemberProviderAdmin)
@@ -83,3 +94,4 @@ admin.site.register(MemberStatus, MemberStatusAdmin)
 admin.site.register(MemberType, MemberTypeAdmin)
 admin.site.register(MemberJobExperience, MemberJobExperienceAdmin)
 admin.site.register(MemberInformation, MemberInformationAdmin)
+admin.site.register(MemberExtraLink, MemberExtraLinkAdmin)
