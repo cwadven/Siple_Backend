@@ -81,6 +81,9 @@ class MemberJobExperience(models.Model):
         verbose_name = '경력'
         verbose_name_plural = '경력'
 
+    def __str__(self):
+        return f'{self.member_id, self.job_id}'
+
 
 class MemberInformation(models.Model):
     member = models.ForeignKey(Member, models.DO_NOTHING)
@@ -93,6 +96,9 @@ class MemberInformation(models.Model):
     class Meta:
         verbose_name = '회원 정보'
         verbose_name_plural = '회원 정보'
+
+    def __str__(self):
+        return f'{self.member_id, self.description[:20]}'
 
 
 class MemberExtraLink(models.Model):
@@ -110,6 +116,9 @@ class MemberExtraLink(models.Model):
         verbose_name = '회원 링크'
         verbose_name_plural = '회원 링크'
 
+    def __str__(self):
+        return f'{self.member_id, self.title}'
+
 
 class MemberAttributeType(models.Model):
     display_name = models.CharField(max_length=256, unique=True)
@@ -119,6 +128,10 @@ class MemberAttributeType(models.Model):
     is_hidden = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = '회원 속성 타입'
+        verbose_name_plural = '회원 속성 타입'
 
     def __str__(self):
         return self.name
