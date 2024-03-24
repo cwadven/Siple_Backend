@@ -135,3 +135,18 @@ class MemberAttributeType(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class MemberAttribute(models.Model):
+    member = models.ForeignKey(Member, models.DO_NOTHING)
+    member_attribute_type = models.ForeignKey(MemberAttributeType, models.DO_NOTHING)
+    value = models.PositiveBigIntegerField(default=0, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = '회원 속성'
+        verbose_name_plural = '회원 속성'
+
+    def __str__(self):
+        return f'{self.member_id, self.member_attribute_type_id, self.value}'
