@@ -42,7 +42,7 @@ jobs:
 
     - name: cronjob command update
       run: |
-        . ${{ secrets.DEVELOPMENT_PROJECT_FILE_PATH }}/venv/bin/activate && fab2 update-crontab
+        . ${{ secrets.DEVELOPMENT_PROJECT_FILE_PATH }}/venv/bin/activate && cd ${{ secrets.DEVELOPMENT_PROJECT_FILE_PATH }} && fab2 update-crontab
       continue-on-error: true
 
     - name: cronjob restart
