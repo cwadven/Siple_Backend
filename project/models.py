@@ -368,3 +368,42 @@ class ProjectMemberManagement(models.Model):
                 f'직무:{self.job_id}\n'
                 f'탈주상태:{self.left_status}\n'
                 f'리더여부:{self.is_leader}')
+
+
+class ProjectMemberAttributeReferralReward(models.Model):
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.DO_NOTHING,
+        help_text='프로젝트',
+    )
+    given_member = models.ForeignKey(
+        Member,
+        on_delete=models.DO_NOTHING,
+        help_text='발송인',
+        related_name='given_members',
+    )
+    received_member = models.ForeignKey(
+        Member,
+        on_delete=models.DO_NOTHING,
+        help_text='수취인',
+        related_name='received_members',
+    )
+    member_attribute_type = models.ForeignKey(
+        'member.MemberAttributeType',
+        on_delete=models.DO_NOTHING,
+        help_text='멤버 속성 타입',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text='생성 일시',
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text='수정 일시',
+    )
+
+    def __str__(self):
+        return (f'프로젝트:{self.project_id}\n'
+                f'발송인:{self.given_member_id}\n'
+                f'수취인:{self.received_member_id}\n'
+                f'멤버 속성 타입:{self.member_attribute_type_id}')

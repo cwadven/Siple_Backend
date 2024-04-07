@@ -3,6 +3,7 @@ from project.models import (
     Project,
     ProjectDuration,
     ProjectManagementPermission,
+    ProjectMemberAttributeReferralReward,
     ProjectMemberManagement,
     ProjectRecruitApplication,
     ProjectRecruitment,
@@ -83,6 +84,16 @@ class ProjectMemberManagementAdmin(admin.ModelAdmin):
     ]
 
 
+class ProjectMemberAttributeReferralRewardAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'project',
+        'given_member',
+        'received_member',
+        'member_attribute_type',
+    ]
+
+
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(ProjectDuration, ProjectDurationAdmin)
 admin.site.register(ProjectManagementPermission, ProjectManagementPermissionAdmin)
@@ -90,3 +101,4 @@ admin.site.register(ProjectRecruitment, ProjectRecruitmentAdmin)
 admin.site.register(ProjectRecruitmentJob, ProjectRecruitmentJobAdmin)
 admin.site.register(ProjectRecruitApplication, ProjectRecruitApplicationAdmin)
 admin.site.register(ProjectMemberManagement, ProjectMemberManagementAdmin)
+admin.site.register(ProjectMemberAttributeReferralReward, ProjectMemberAttributeReferralRewardAdmin)
