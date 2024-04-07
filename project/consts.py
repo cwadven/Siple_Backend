@@ -56,3 +56,8 @@ class ProjectRecruitApplicationStatus(StrValueLabel):
     ACCEPTED = ('ACCEPTED', '승인')
     REJECTED = ('REJECTED', '거절')
     CANCELED = ('CANCELED', '취소')
+
+
+class ProjectMemberManagementLeftStatus(StrValueLabel):
+    BANNED = ('BANNED', '강퇴')
+    LEFT = ('LEFT', '탈주')

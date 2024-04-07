@@ -6,6 +6,7 @@ from project.consts import (
     ProjectJobExperienceType,
     ProjectManagementPermissionBehavior,
     ProjectManagementPermissionStatus,
+    ProjectMemberManagementLeftStatus,
     ProjectRecruitApplicationStatus,
     ProjectRecruitmentStatus,
     ProjectResourceStatus,
@@ -324,3 +325,46 @@ class ProjectRecruitApplication(models.Model):
                 f'공고직무:{self.project_recruitment_job.job_id}\n'
                 f'멤버:{self.member_id}\n'
                 f'공고상태:{self.request_status}')
+
+
+class ProjectMemberManagement(models.Model):
+    project_recruit_application = models.ForeignKey(
+        ProjectRecruitApplication,
+        on_delete=models.DO_NOTHING,
+        help_text='프로젝트지원서',
+    )
+    job = models.ForeignKey(
+        'job.Job',
+        on_delete=models.DO_NOTHING,
+        help_text='프로젝트에서 맡고 있는 직무',
+    )
+    left_status = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        choices=ProjectMemberManagementLeftStatus.choices(),
+        help_text='프로젝트 탈퇴 상태',
+    )
+    is_leader = models.BooleanField(
+        default=False,
+        help_text='리더 여부',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text='생성 일시',
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text='수정 일시',
+    )
+    left_status_updated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='프로젝트 탈퇴 상태 수정 일시',
+    )
+
+    def __str__(self):
+        return (f'프로젝트:{self.project_recruit_application.project_recruitment_job.project_recruitment.project_id}\n'
+                f'직무:{self.job_id}\n'
+                f'탈주상태:{self.left_status}\n'
+                f'리더여부:{self.is_leader}')
