@@ -87,6 +87,11 @@ class Project(models.Model):
         help_text='유효 상태',
         verbose_name='유효 상태',
     )
+    duration = models.ManyToManyField(
+        'ProjectDuration',
+        help_text='프로젝트 기간',
+        verbose_name='프로젝트 기간',
+    )
     deleted_at = models.DateTimeField(
         null=True,
         blank=True,
