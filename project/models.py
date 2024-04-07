@@ -228,3 +228,57 @@ class ProjectRecruitment(models.Model):
 
     def __str__(self):
         return f'{self.project_id} - {self.recruit_status} - {self.times_project_recruit}'
+
+
+class ProjectRecruitmentJob(models.Model):
+    project_recruitment = models.ForeignKey(
+        ProjectRecruitment,
+        on_delete=models.DO_NOTHING,
+        help_text='프로젝트 모집',
+    )
+    job = models.ForeignKey(
+        'job.Job',
+        on_delete=models.DO_NOTHING,
+        help_text='직무',
+    )
+    total_limit = models.PositiveIntegerField(
+        help_text='총 제한 인원',
+        db_index=True,
+    )
+    current_recruited = models.PositiveIntegerField(
+        help_text='현재 모집 인원',
+        default=0,
+        db_index=True,
+    )
+    recruit_status = models.CharField(
+        max_length=100,
+        default=ProjectRecruitmentStatus.RECRUITING.value,
+        choices=ProjectRecruitmentStatus.choices(),
+        help_text='모집 상태',
+    )
+    created_member = models.ForeignKey(
+        Member,
+        on_delete=models.DO_NOTHING,
+        help_text='생성자',
+    )
+    finished_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text='생성 일시',
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text='수정 일시',
+    )
+
+    def __str__(self):
+        return (f'프로젝트:{self.project_recruitment.project_id}\n'
+                f'공고id:{self.project_recruitment_id}'
+                f'직무:{self.job_id}\n'
+                f'공고상태:{self.recruit_status}\n'
+                f'총 인원 제한:{self.total_limit}\n'
+                f'현재 참가 성공 인원:{self.current_recruited}')
