@@ -123,6 +123,36 @@ class Project(models.Model):
         return self.title
 
 
+class ProjectDuration(models.Model):
+    display_name = models.CharField(
+        max_length=256,
+        help_text='표시명',
+    )
+    name = models.CharField(
+        max_length=256,
+        help_text='명칭',
+        db_index=True,
+    )
+    description = models.TextField(
+        help_text='설명',
+    )
+    is_deleted = models.BooleanField(
+        default=False,
+        help_text='삭제 여부',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text='생성 일시',
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text='수정 일시',
+    )
+
+    def __str__(self):
+        return f'{self.display_name} - {self.name} - {self.is_deleted}'
+
+
 class ProjectManagementPermission(models.Model):
     project = models.ForeignKey(
         Project,

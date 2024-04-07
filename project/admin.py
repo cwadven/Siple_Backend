@@ -1,6 +1,7 @@
 from django.contrib import admin
 from project.models import (
     Project,
+    ProjectDuration,
     ProjectManagementPermission,
     ProjectRecruitment,
 )
@@ -18,6 +19,15 @@ class ProjectAdmin(admin.ModelAdmin):
         'resource_status',
         'project_start_time',
         'project_end_time',
+    ]
+
+
+class ProjectDurationAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'display_name',
+        'name',
+        'is_deleted',
     ]
 
 
@@ -41,5 +51,6 @@ class ProjectRecruitmentAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Project, ProjectAdmin)
+admin.site.register(ProjectDuration, ProjectDurationAdmin)
 admin.site.register(ProjectManagementPermission, ProjectManagementPermissionAdmin)
 admin.site.register(ProjectRecruitment, ProjectRecruitmentAdmin)
