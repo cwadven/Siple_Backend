@@ -1,5 +1,9 @@
 from django.contrib import admin
-from project.models import Project, ProjectManagementPermission
+from project.models import (
+    Project,
+    ProjectManagementPermission,
+    ProjectRecruitment,
+)
 
 
 class ProjectAdmin(admin.ModelAdmin):
@@ -27,5 +31,15 @@ class ProjectManagementPermissionAdmin(admin.ModelAdmin):
     ]
 
 
+class ProjectRecruitmentAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'project',
+        'times_project_recruit',
+        'recruit_status',
+    ]
+
+
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(ProjectManagementPermission, ProjectManagementPermissionAdmin)
+admin.site.register(ProjectRecruitment, ProjectRecruitmentAdmin)

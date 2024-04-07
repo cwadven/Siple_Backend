@@ -44,3 +44,8 @@ class ProjectManagementPermissionStatus(StrValueLabel):
     ACTIVE = ('ACTIVE', '활성')
     WAITING = ('WAITING', '대기')
     DELETED = ('DELETED', '삭제')
+
+
+class ProjectRecruitmentStatus(StrValueLabel):
+    RECRUITING = ('RECRUITING', '모집중')
+    RECRUIT_FINISH = ('RECRUIT_FINISH', '모집 완료')

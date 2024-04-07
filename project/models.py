@@ -6,6 +6,7 @@ from project.consts import (
     ProjectJobExperienceType,
     ProjectManagementPermissionBehavior,
     ProjectManagementPermissionStatus,
+    ProjectRecruitmentStatus,
     ProjectResourceStatus,
     ProjectResultStatus,
     ProjectStatus,
@@ -154,3 +155,41 @@ class ProjectManagementPermission(models.Model):
 
     def __str__(self):
         return f'{self.project_id} - {self.member_id} - {self.permission}'
+
+
+class ProjectRecruitment(models.Model):
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.DO_NOTHING,
+        help_text='프로젝트',
+    )
+    times_project_recruit = models.PositiveIntegerField(
+        db_index=True,
+        help_text='모집 횟수 (처음 생성 시 1, 추가 모집 시 Project recruitment_time + 1)',
+    )
+    recruit_status = models.CharField(
+        max_length=100,
+        default=ProjectRecruitmentStatus.RECRUITING.value,
+        choices=ProjectRecruitmentStatus.choices(),
+    )
+    finished_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    created_member = models.ForeignKey(
+        Member,
+        on_delete=models.DO_NOTHING,
+        help_text='생성자',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text='생성 일시',
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text='수정 일시',
+    )
+
+    def __str__(self):
+        return f'{self.project_id} - {self.recruit_status} - {self.times_project_recruit}'
