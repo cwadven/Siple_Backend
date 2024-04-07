@@ -4,6 +4,8 @@ from project.consts import (
     ProjectCurrentRecruitStatus,
     ProjectEngagementLevel,
     ProjectJobExperienceType,
+    ProjectManagementPermissionBehavior,
+    ProjectManagementPermissionStatus,
     ProjectResourceStatus,
     ProjectResultStatus,
     ProjectStatus,
@@ -118,3 +120,37 @@ class Project(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ProjectManagementPermission(models.Model):
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.DO_NOTHING,
+        help_text='프로젝트',
+    )
+    member = models.ForeignKey(
+        Member,
+        on_delete=models.DO_NOTHING,
+        help_text='멤버',
+    )
+    permission = models.CharField(
+        max_length=100,
+        help_text='권한',
+        choices=ProjectManagementPermissionBehavior.choices(),
+    )
+    status = models.CharField(
+        max_length=100,
+        help_text='상태',
+        choices=ProjectManagementPermissionStatus.choices(),
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text='생성 일시',
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text='수정 일시',
+    )
+
+    def __str__(self):
+        return f'{self.project_id} - {self.member_id} - {self.permission}'

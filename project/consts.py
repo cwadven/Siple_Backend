@@ -32,3 +32,15 @@ class ProjectEngagementLevel(StrValueLabel):
 class ProjectResourceStatus(StrValueLabel):
     ACTIVE = ('ACTIVE', '활성')
     DELETED = ('DELETED', '삭제')
+
+
+class ProjectManagementPermissionBehavior(StrValueLabel):
+    PROJECT_UPDATE = ('PROJECT_UPDATE', '프로젝트 업데이트')
+    PROJECT_DELETE = ('PROJECT_DELETE', '프로젝트 삭제')
+    PROJECT_RECRUIT = ('PROJECT_RECRUIT', '프로젝트 모집')
+
+
+class ProjectManagementPermissionStatus(StrValueLabel):
+    ACTIVE = ('ACTIVE', '활성')
+    WAITING = ('WAITING', '대기')
+    DELETED = ('DELETED', '삭제')
