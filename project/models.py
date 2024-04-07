@@ -94,6 +94,12 @@ class Project(models.Model):
         help_text='프로젝트 기간',
         verbose_name='프로젝트 기간',
     )
+    bookmark_count = models.PositiveIntegerField(
+        default=0,
+        help_text='북마크 수',
+        verbose_name='북마크 수',
+        db_index=True,
+    )
     deleted_at = models.DateTimeField(
         null=True,
         blank=True,
@@ -407,3 +413,37 @@ class ProjectMemberAttributeReferralReward(models.Model):
                 f'발송인:{self.given_member_id}\n'
                 f'수취인:{self.received_member_id}\n'
                 f'멤버 속성 타입:{self.member_attribute_type_id}')
+
+
+class ProjectBookmark(models.Model):
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.DO_NOTHING,
+        help_text='프로젝트',
+    )
+    member = models.ForeignKey(
+        Member,
+        on_delete=models.DO_NOTHING,
+        help_text='멤버',
+    )
+    is_deleted = models.BooleanField(
+        default=False,
+        help_text='삭제 여부',
+    )
+    deleted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='삭제 일시',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text='생성 일시',
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text='수정 일시',
+    )
+
+    def __str__(self):
+        return (f'프로젝트:{self.project_id}\n'
+                f'멤버:{self.member_id}')
