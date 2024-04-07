@@ -321,5 +321,6 @@ class ProjectRecruitApplication(models.Model):
 
     def __str__(self):
         return (f'공고id:{self.project_recruitment_job.project_recruitment_id}'
+                f'공고직무:{self.project_recruitment_job.job_id}\n'
                 f'멤버:{self.member_id}\n'
                 f'공고상태:{self.request_status}')
