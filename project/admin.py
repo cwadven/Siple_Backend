@@ -3,6 +3,7 @@ from project.models import (
     Project,
     ProjectDuration,
     ProjectManagementPermission,
+    ProjectRecruitApplication,
     ProjectRecruitment,
     ProjectRecruitmentJob,
 )
@@ -62,8 +63,18 @@ class ProjectRecruitmentJobAdmin(admin.ModelAdmin):
     ]
 
 
+class ProjectRecruitApplicationAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'project_recruitment_job',
+        'member',
+        'request_status',
+    ]
+
+
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(ProjectDuration, ProjectDurationAdmin)
 admin.site.register(ProjectManagementPermission, ProjectManagementPermissionAdmin)
 admin.site.register(ProjectRecruitment, ProjectRecruitmentAdmin)
 admin.site.register(ProjectRecruitmentJob, ProjectRecruitmentJobAdmin)
+admin.site.register(ProjectRecruitApplication, ProjectRecruitApplicationAdmin)

@@ -6,6 +6,7 @@ from project.consts import (
     ProjectJobExperienceType,
     ProjectManagementPermissionBehavior,
     ProjectManagementPermissionStatus,
+    ProjectRecruitApplicationStatus,
     ProjectRecruitmentStatus,
     ProjectResourceStatus,
     ProjectResultStatus,
@@ -282,3 +283,43 @@ class ProjectRecruitmentJob(models.Model):
                 f'공고상태:{self.recruit_status}\n'
                 f'총 인원 제한:{self.total_limit}\n'
                 f'현재 참가 성공 인원:{self.current_recruited}')
+
+
+class ProjectRecruitApplication(models.Model):
+    project_recruitment_job = models.ForeignKey(
+        ProjectRecruitmentJob,
+        on_delete=models.DO_NOTHING,
+        help_text='프로젝트 모집 직무',
+    )
+    member = models.ForeignKey(
+        Member,
+        on_delete=models.DO_NOTHING,
+        help_text='신청 멤버',
+    )
+    request_message = models.TextField(
+        help_text='신청 메시지',
+    )
+    request_status = models.CharField(
+        max_length=100,
+        default=ProjectRecruitApplicationStatus.IN_REVIEW.value,
+        choices=ProjectRecruitApplicationStatus.choices(),
+        help_text='신청 상태',
+    )
+    request_status_updated_at = models.DateTimeField(
+        help_text='신청 상태 수정 일시',
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text='생성 일시',
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text='수정 일시',
+    )
+
+    def __str__(self):
+        return (f'공고id:{self.project_recruitment_job.project_recruitment_id}'
+                f'멤버:{self.member_id}\n'
+                f'공고상태:{self.request_status}')

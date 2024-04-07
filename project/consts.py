@@ -49,3 +49,10 @@ class ProjectManagementPermissionStatus(StrValueLabel):
 class ProjectRecruitmentStatus(StrValueLabel):
     RECRUITING = ('RECRUITING', '모집중')
     RECRUIT_FINISH = ('RECRUIT_FINISH', '모집 완료')
+
+
+class ProjectRecruitApplicationStatus(StrValueLabel):
+    IN_REVIEW = ('IN_REVIEW', '검토중')
+    ACCEPTED = ('ACCEPTED', '승인')
+    REJECTED = ('REJECTED', '거절')
+    CANCELED = ('CANCELED', '취소')
