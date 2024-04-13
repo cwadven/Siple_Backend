@@ -933,15 +933,14 @@ paths:
                 type: object
                 required:
                   - message
+                  - error_code
                 properties:
                   message:
                     type: string
                     description: '어떠한 이유로 실패했는지'
                     example: '유효하지 않은 정보를 입력하여 생성에 실패했습니다.'
                   error_code:
-                    type: string
-                    description: '유효하지 않은 이유의 코드'
-                    example: '400_000001'
+                    $ref: '#/components/schemas/ProjectCreationErrorCode'
                   errors:
                     type: object
                     description: '에러 key value 에 맞춰서 대응'
@@ -1002,8 +1001,86 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProjectDetail'
 
+  /v1/project/{id}/job/{job_id}/resume:
+    post:
+      tags:
+        - Project
+      summary: Resume Project Job
+      description: Resume Project Job
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: detail page for Project
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            type: integer
+          description: detail page for Project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: '지원서 내용'
+                  example: |
+                    '저는 15년전 DS시절부터 닌텐도를 즐겨했으며 특히 동물의숲을 좋아했습니다. 현재도 모동숲을 즐기는 유저로서 사용자의 관점에서 개발할 수 있다는 장점이 있습니다. 잘 부탁드립니다.'
+      responses:
+        '200':
+          description: Resume success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    description: '지원 성공 내용'
+                    example: '지원에 성공했습니다.'
+        '400':
+          description: Resume fail
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - error_code
+                properties:
+                  message:
+                    type: string
+                    description: '지원 실패 내용'
+                    example: '지원에 실패했습니다.'
+                  error_code:
+                    $ref: '#/components/schemas/ProjectResumeRequestErrorCode'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
 components:
   schemas:
+    ProjectResumeRequestErrorCode:
+      type: string
+      enum:
+        - '400-project_resume-00001'  # 현재 나의 진행중인 프로젝트가 많음
+        - '400-project_resume-00002'  # 이미 전부 지원이 종료됨
+
+    ProjectCreationErrorCode:
+      type: string
+      enum:
+        - '400-project_creation-00001'  # Input 값 오류 생성 오류
+
     NotUserAuthPermission:
       type: object
       required:
