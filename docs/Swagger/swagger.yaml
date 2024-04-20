@@ -1685,7 +1685,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotUserAuthPermission'
 
-  /v1/project/{project_id}/transfer_leader:
+  /v1/project/{project_id}/transfer-leader:
     post:
       tags:
         - Project
@@ -1984,7 +1984,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotUserAuthPermission'
 
-  /v1/project/my/{project_id}/team_member:
+  /v1/project/my/{project_id}/team-member:
     get:
       tags:
         - My Project
