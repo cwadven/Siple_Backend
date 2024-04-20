@@ -380,6 +380,136 @@ paths:
                   value:
                     message: "{}회 이상 인증번호를 틀리셨습니다. 현 이메일은 {}시간 동안 인증할 수 없습니다."
 
+  /v1/member/sign-up/job:
+    post:
+      tags:
+        - Member
+      summary: Get member's Job info when sign up
+      description: Get member's Job info
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpJobInformationPayload'
+
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "success"
+        '400':
+          description: Error for selecting job
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - error_code
+                properties:
+                  message:
+                    type: string
+                    description: '직무 선택 실패'
+                    example: '직무 선택 실패했습니다..'
+                  error_code:
+                    $ref: '#/components/schemas/MemberSignUpJobErrorCode'
+
+  /v1/member/my:
+    get:
+      tags:
+        - Member
+      summary: Get My profile info
+      description: Get My profile info
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileBlock'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+    put:
+      tags:
+        - Member
+      summary: Update My profile info
+      description: Update My profile info
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nickname
+                - simple_description
+                - link
+                - profile_image
+              properties:
+                nickname:
+                  type: string
+                  example: "즐거운대게"
+                simple_description:
+                  type: string
+                  example: "아아아아 즐거운 대게"
+                  nullable: true
+                link:
+                  type: string
+                  example: 'github.com'
+                  nullable: true
+                profile_image:
+                  type: string
+                  example: 'https://.....'
+                  nullable: true
+
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "success"
+        '400':
+          description: Error for update profile
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - error_code
+                properties:
+                  message:
+                    type: string
+                    description: '실패 내용'
+                    example: '실패했습니다..'
+                  error_code:
+                    $ref: '#/components/schemas/UpdateProfileErrorCode'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+
+
   /v1/product/point:
     get:
       tags:
@@ -633,6 +763,72 @@ paths:
                   message:
                     type: string
                     example: "OK"
+
+  /v1/common/image/{type}/{pk}/url:
+    get:
+      tags:
+        - Common
+      summary: Give Presigned Url
+      description: To upadte aws S3 image
+      parameters:
+        - in: path
+          name: type
+          required: true
+          schema:
+            type: string
+            enum: ['PROJECT_IMAGE', 'MEMBER_IMAGE']
+          description: Type of constance_type
+        - in: path
+          name: pk
+          required: true
+          schema:
+            type: string
+          description: Type of constance_type
+        - in: query
+          name: file_name
+          required: true
+          schema:
+            type: string
+          description: file name
+      responses:
+        '200':
+          description: Created Presigned URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: "https://s3-bucket-url.com"
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/common/{constance_type}/type:
+    get:
+      tags:
+        - Common
+      summary: Get constance type
+      description: To check health check
+      parameters:
+        - in: path
+          name: constance_type
+          required: true
+          schema:
+            type: string
+            enum: ['PROJECT_ENGAGEMENT_LEVEL', 'PROJECT_DURATION', 'JOB', 'MEMBER_ATTRIBUTE']
+          description: Type of constance_type
+      responses:
+        '200':
+          description: Health Check successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonConstanceTypeItemsResponse'
 
   /v1/payment/product/fail/kakao/{order_token}:
     post:
@@ -980,7 +1176,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotUserAuthPermission'
 
-  /v1/project/{id}:
+  /v1/project/{project_id}:
     get:
       tags:
         - Project
@@ -988,7 +1184,7 @@ paths:
       description: Get Project
       parameters:
         - in: path
-          name: id
+          name: project_id
           required: true
           schema:
             type: integer
@@ -1000,26 +1196,153 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProjectDetail'
-
-  /v1/project/{id}/job/{job_id}/resume:
-    post:
+    put:
       tags:
         - Project
-      summary: Resume Project Job
-      description: Resume Project Job
+      summary: Update Project
+      description: Update Project
       parameters:
         - in: path
-          name: id
+          name: project_id
           required: true
           schema:
             type: integer
-          description: detail page for Project
+          description: update page for Project
+      responses:
+        '200':
+          description: Updated Project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: '수정된 프로젝트 id'
+                    example: 1
+        '400':
+          description: Bad Request for information
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - error_code
+                properties:
+                  message:
+                    type: string
+                    description: '어떠한 이유로 실패했는지'
+                    example: '유효하지 않은 정보를 입력하여 생성에 실패했습니다.'
+                  error_code:
+                    $ref: '#/components/schemas/ProjectCreationErrorCode'
+                  errors:
+                    type: object
+                    description: '에러 key value 에 맞춰서 대응'
+                    properties:
+                      title:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectTitleCreationError'
+                      description:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectDescriptionCreationError'
+                      engagement_level:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectEngagementLevelCreationError'
+                      duration:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectDurationCreationError'
+                      jobs:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectJobsCreationError'
+                      experience:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectExperienceCreationError'
+                      extra_information:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectUpdatedErrorCode'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+    delete:
+      tags:
+        - Project
+      summary: Delete Project
+      operationId: deleteProject
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: integer
+          description: project id
+      responses:
+        '200':
+          description: project delete success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    description: '삭제 성공 내용'
+                    example: '프로젝트 삭제에 성공했습니다.'
+        '400':
+          description: delete fail
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - error_code
+                properties:
+                  message:
+                    type: string
+                    description: '삭제 실패 내용'
+                    example: '프로젝트 삭제에 실패했습니다.'
+                  error_code:
+                    $ref: '#/components/schemas/ProjectDeleteErrorCode'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/{project_id}/job/{job_id}/apply:
+    post:
+      tags:
+        - Project
+      summary: Apply Project Job
+      description: Apply Project Job
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: integer
+          description: project id
         - in: path
           name: job_id
           required: true
           schema:
             type: integer
-          description: detail page for Project
+          description: job id
       requestBody:
         content:
           application/json:
@@ -1028,12 +1351,12 @@ paths:
               properties:
                 description:
                   type: string
-                  description: '지원서 내용'
+                  description: '지원 내용'
                   example: |
                     '저는 15년전 DS시절부터 닌텐도를 즐겨했으며 특히 동물의숲을 좋아했습니다. 현재도 모동숲을 즐기는 유저로서 사용자의 관점에서 개발할 수 있다는 장점이 있습니다. 잘 부탁드립니다.'
       responses:
         '200':
-          description: Resume success
+          description: Apply success
           content:
             application/json:
               schema:
@@ -1046,7 +1369,7 @@ paths:
                     description: '지원 성공 내용'
                     example: '지원에 성공했습니다.'
         '400':
-          description: Resume fail
+          description: Apply fail
           content:
             application/json:
               schema:
@@ -1060,7 +1383,730 @@ paths:
                     description: '지원 실패 내용'
                     example: '지원에 실패했습니다.'
                   error_code:
-                    $ref: '#/components/schemas/ProjectResumeRequestErrorCode'
+                    $ref: '#/components/schemas/ProjectJobApplyRequestErrorCode'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/{project_id}/inprocess/application:
+    get:
+      tags:
+        - Project
+      summary: Get Recruit Application
+      operationId: getProjectRecruitApplication
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: integer
+          description: Get project id of ongoing Recruit Application
+      responses:
+        '200':
+          description: A list of ongoing recruit application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecruitApplicationListItemsResponse'
+
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/{project_id}/recruit_application/{project_recruit_application_id}/reply:
+    post:
+      tags:
+        - Project
+      summary: Reply Project Recruit Application
+      operationId: resumeResult
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: integer
+          description: project id
+        - in: path
+          name: project_recruit_application_id
+          required: true
+          schema:
+            type: integer
+          description: project of recruit application id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - action
+              type: object
+              properties:
+                action:
+                  $ref: '#/components/schemas/ProjectApplicationReply'
+      responses:
+        '200':
+          description: recruit application reply success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    description: '응답 성공 내용'
+                    example: '지원서에 응답했습니다.'
+        '400':
+          description: reply fail
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - error_code
+                properties:
+                  message:
+                    type: string
+                    description: '응답에 실패 내용'
+                    example: '응답에 실패했습니다.'
+                  error_code:
+                    $ref: '#/components/schemas/ProjectRecruitApplicationReplyErrorCode'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/{project_id}/start:
+    post:
+      tags:
+        - Project
+      summary: Project Start
+      description: Project Start
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: integer
+          description: project start
+      responses:
+        '200':
+          description: start success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    description: '시작 성공 내용'
+                    example: '시작에 성공했습니다.'
+        '400':
+          description: Start fail
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - error_code
+                properties:
+                  message:
+                    type: string
+                    description: '시작 실패 내용'
+                    example: '시작에 실패했습니다.'
+                  error_code:
+                    $ref: '#/components/schemas/ProjectStartErrorCode'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/{project_id}/leave:
+    post:
+      tags:
+        - Project
+      summary: Project Leave
+      description: Project Leave
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: integer
+          description: project id
+      responses:
+        '200':
+          description: making Leave
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    description: '프로젝트 탈주 성공'
+                    example: '프로젝트 탈주 성공했습니다.'
+        '400':
+          description: Fail Leave
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - error_code
+                properties:
+                  message:
+                    type: string
+                    description: '프로젝트 탈주 실패 내용'
+                    example: '프로젝트 탈주 실패했습니다.'
+                  error_code:
+                    $ref: '#/components/schemas/ProjectLeaveErrorCode'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/{project_id}/fail:
+    post:
+      tags:
+        - Project
+      summary: Project Fail
+      description: Project Fail
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: integer
+          description: project id
+      responses:
+        '200':
+          description: making fail success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    description: '실패로 전환 성공 내용'
+                    example: '실패에 성공했습니다.'
+        '400':
+          description: Fail failed
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - error_code
+                properties:
+                  message:
+                    type: string
+                    description: '실패처리 실패 내용'
+                    example: '실패처리에 실패했습니다.'
+                  error_code:
+                    $ref: '#/components/schemas/ProjectFailErrorCode'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/{project_id}/finish:
+    post:
+      tags:
+        - Project
+      summary: Project Finish
+      description: Project Finish
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: integer
+          description: project finish
+      responses:
+        '200':
+          description: finish success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    description: '종료 성공 내용'
+                    example: '종료에 성공했습니다.'
+        '400':
+          description: finish fail
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - error_code
+                properties:
+                  message:
+                    type: string
+                    description: '종료 실패 내용'
+                    example: '종료에 실패했습니다.'
+                  error_code:
+                    $ref: '#/components/schemas/ProjectFinishErrorCode'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/{project_id}/transfer_leader:
+    post:
+      tags:
+        - Project
+      summary: Project Leader Transfer
+      description: Project Leader Transfer
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: integer
+          description: project id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - transfer_member_id
+              properties:
+                transfer_member_id:
+                  type: integer
+                  example: 1
+      responses:
+        '200':
+          description: Leader transfer
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    description: '리더를 위임하는 성공 내용'
+                    example: '리더 위임에 성공했습니다.'
+        '400':
+          description: Fail transfer leader
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - error_code
+                properties:
+                  message:
+                    type: string
+                    description: '리더 위임 실패 내용'
+                    example: '리더 위임에 실패했습니다.'
+                  error_code:
+                    $ref: '#/components/schemas/ProjectTrasferLeaderErrorCode'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/{project_id}/ban:
+    post:
+      tags:
+        - Project
+      summary: Ban Request member
+      description: Ban Request member
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: integer
+          description: project id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ban_member_id
+              properties:
+                ban_member_id:
+                  type: integer
+                  example: 1
+                reason:
+                  type: string
+                  example: '욕설을 많이 했습니다.'
+      responses:
+        '200':
+          description: Ban Request member
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    description: '밴 요청 성공 내용'
+                    example: '밴 요청에 성공했습니다.'
+        '400':
+          description: Ban Request member Fail
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - error_code
+                properties:
+                  message:
+                    type: string
+                    description: '밴 요청 실패 내용'
+                    example: '밴 요청에 실패했습니다.'
+                  error_code:
+                    $ref: '#/components/schemas/ProjectBanRequestErrorCode'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/{project_id}/extra-recruit:
+    post:
+      tags:
+        - Project
+      summary: Extra recruit
+      description: Extra recruit
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: integer
+          description: project id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExtraRecruitPayload'
+      responses:
+        '200':
+          description: Success Create Extra recruit
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    description: '성공 내용'
+                    example: '성공했습니다.'
+        '400':
+          description: Fail Create Extra recruit
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - error_code
+                properties:
+                  message:
+                    type: string
+                    description: '실패 내용'
+                    example: '실패했습니다.'
+                  error_code:
+                    $ref: '#/components/schemas/ProjectExtraRecruitErrorCode'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/my/ongoing:
+    get:
+      tags:
+        - My Project
+      summary: Get Member currently active List of Projects
+      operationId: getActiveProjects
+      responses:
+        '200':
+          description: A list of Projects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyDoingProjectItemsResponse'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/my/bookmark:
+    get:
+      tags:
+        - My Project
+      summary: Get Bookmarked Projects
+      operationId: getBookmarkedProjects
+      responses:
+        '200':
+          description: A list of Bookmarked Projects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyBookmarkProjectItemsResponse'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/my:
+    get:
+      tags:
+        - My Project
+      summary: Get Member currently active List of Projects
+      operationId: getMyProjects
+      parameters:
+        - name: next_cursor
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProjectNextCursor'
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+          description: Number of banners per page.
+        - name: title
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Search title of siple
+          example: '사이플'
+        - name: jobs
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 직무별
+          example: 'FE,BE'
+        - name: experience
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProjectExperienceType'
+          description: 경력 여부
+          example: 'ONLY_EXPERIENCE'
+        - name: engagement_level
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ['MEDIUM', 'HIGH']
+          description: 요구 몰입도
+          example: 'HIGH,MEDIUM'
+        - name: duration
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 기간
+          example: '1_2,3_4,5_6'
+        - name: project_result_status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProjectResultStatus'
+          description: 프로젝트 상태
+          example: 'SUCCESS'
+      responses:
+        '200':
+          description: A My Projects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyProjectItemsResponse'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/my/{project_id}/team_member:
+    get:
+      tags:
+        - My Project
+      summary: Get Members of my specific team
+      operationId: getProjectTeamMember
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: integer
+          description: project id
+      responses:
+        '200':
+          description: List of Team Members
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMemberListItemsResponse'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/my/{project_id}/give-attribute:
+    post:
+      tags:
+        - My Project
+      summary: Give Members of Attribute
+      operationId: giveProjectTeamMemberAttribute
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: integer
+          description: project id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GiveAttributeTeamMemberPayload'
+      responses:
+        '200':
+          description: List of Team Members
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMemberListItemsResponse'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/my/recruit_application:
+    get:
+      tags:
+        - My Project
+      summary: Get my recruit application
+      operationId: getRecruitApplication
+      responses:
+        '200':
+          description: List of my applied recruit application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyRecruitApplicationListItemsResponse'
+        '403':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/my/recruit_application/{project_recruit_application_id}/cancel:
+    post:
+      tags:
+        - My Project
+      summary: Cancel recruit application
+      operationId: cancelRecruitApplication
+      parameters:
+        - in: path
+          name: project_recruit_application_id
+          required: true
+          schema:
+            type: integer
+          description: project_recruit_application_id
+      responses:
+        '200':
+          description: cancel success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    description: '지원 취소 성공 내용'
+                    example: '지원 취소 성공했습니다.'
+        '400':
+          description: cancel fail
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - error_code
+                properties:
+                  message:
+                    type: string
+                    description: '지원 취소 실패 내용'
+                    example: '지원 취소 실패했습니다.'
+                  error_code:
+                    $ref: '#/components/schemas/ProjectRecruitApplicationCancelErrorCode'
         '403':
           description: No Auth
           content:
@@ -1070,7 +2116,75 @@ paths:
 
 components:
   schemas:
-    ProjectResumeRequestErrorCode:
+    UpdateProfileErrorCode:
+      type: string
+      enum:
+        - '400-profile_update-00001'  # 닉네임 중복
+        - '400-profile_update-00002'  # 어쩌고 저쩌고
+
+    ProjectExtraRecruitErrorCode:
+      type: string
+      enum:
+        - '400-project_extra_recruit-00001'  # 없는 프로젝트
+        - '400-project_extra_recruit-00002'  # 권한이 없는 유저
+        - '400-project_extra_recruit-00003'  # 할 수 없는 프로젝트 상태
+
+    ProjectBanRequestErrorCode:
+      type: string
+      enum:
+        - '400-project_ban-00001'  # 프로젝트에 없는 유저
+        - '400-project_ban-00002'  # 밴 사유가 너무 김
+
+    MemberSignUpJobErrorCode:
+      type: string
+      enum:
+        - '400-member_sign_up_job-00001'  # 유효하지 않게 생성하는 경우
+
+    ProjectRecruitApplicationCancelErrorCode:
+      type: string
+      enum:
+        - '400-project_recruit_application_cancel-00001' # 이미 취소 한 경우
+
+    ProjectLeaveErrorCode:
+      type: string
+      enum:
+        - '400-project_leave-00001' # 해당 프로젝트에 참가하지 않은 경우
+        - '400-project_leave-00002' # 이미 탈주한 경우
+        - '400-project_leave-00003' # 프로젝트 탈주를 할 수 없는 프로젝트 상태인경우
+
+    ProjectTrasferLeaderErrorCode:
+      type: string
+      enum:
+        - '400-tranfer_leader-00001'  # 프로젝트에 없는 유저로 위임하려는 경우
+        - '400-tranfer_leader-00002'  # 리더가 아니면서 위임하려고 하는 경우
+
+    ProjectFailErrorCode:
+      type: string
+      enum:
+        - '400-project_fail-00001' # 실패할 수 없는 status 에서 실패하려고 하는 경우
+
+    ProjectStartErrorCode:
+      type: string
+      enum:
+        - '400-project_start-00001' # 시작하지 못하는 status 에서 시작하려는 경우
+
+    ProjectFinishErrorCode:
+      type: string
+      enum:
+        - '400-project_finish-00001' # 종료하지 못하는 status 에서 시작하려는 경우
+
+    ProjectDeleteErrorCode:
+      type: string
+      enum:
+        - '400-project_delete-00001'  # 팀원이 존재하는 경우
+        - '400-project_delete-00002'  # 프로젝트가 이미 시작한 경우
+
+    ProjectRecruitApplicationReplyErrorCode:
+      type: string
+      enum:
+        - '400-project_recruit_application_reply-00001'  # 이미 지원자가 꽉 찼습니다.
+
+    ProjectJobApplyRequestErrorCode:
       type: string
       enum:
         - '400-project_resume-00001'  # 현재 나의 진행중인 프로젝트가 많음
@@ -1080,6 +2194,11 @@ components:
       type: string
       enum:
         - '400-project_creation-00001'  # Input 값 오류 생성 오류
+
+    ProjectUpdatedErrorCode:
+      type: string
+      enum:
+        - '400-project_update-00001'  # Input 값 오류 수정 오류
 
     NotUserAuthPermission:
       type: object
@@ -1126,6 +2245,11 @@ components:
       description: 'extra_information 이 어떠한 이유로 실패했는지'
       example: '유효하지 않은 무언가가 들어갔습니다.'
 
+    ProjectApplicationReply:
+      type: string
+      enum: ['ACCEPT', 'DENY']
+      example: 'ACCEPT'
+
     ProjectDuration:
       type: string
       enum: ['1_2', '3_4', '5_6']
@@ -1149,15 +2273,106 @@ components:
       description: 프로젝트 상태가 모집중, 진행중(추가 모집)
       example: 'RECRUITING'
 
+    ProfileBlock:
+      type: object
+      required:
+            - id
+            - profile_image
+            - nickname
+            - simple_description
+            - member_main_attribute
+            - member_job_experience
+            - project_info
+            - link
+      properties:
+        id:
+          type: integer
+          description: 맴버 id
+          example: 1
+        profile_image:
+          type: string
+          description: '프로필 사진'
+          nullable: true
+          example: 'https://프로필_이미지.com'
+        nickname:
+          type: string
+          description: '닉네임'
+          example: 'SIPLE_DEV'
+        simple_description:
+          type: string
+          description: '한줄 소개'
+          nullable: true
+          example: '사이플 관리자 입니다.'
+        member_main_attribute:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - display_name
+            properties:
+              id:
+                type: integer
+                description: '성격 id'
+                example: 1
+              name:
+                type: string
+                description: '고유 name'
+                example: 'kind'
+              display_name:
+                type: string
+                description: '사용자에게 보여주는 성격 정보'
+                example: '친절해요'
+        member_job_experience:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - display_name
+              - year
+            properties:
+              id:
+                type: integer
+                description: 'Job id'
+                example: 1
+              display_name:
+                type: string
+                description: '사용자에게 보여주는 직업 정보'
+                example: '백엔드'
+              year:
+                type: integer
+                description: '연차'
+                example: 2
+        project_info:
+          type: object
+          required:
+            - success
+            - working
+            - leaved
+          properties:
+            success:
+              type: integer
+              description: '성공한 프로젝트 개수'
+              example: 3
+            working:
+              type: integer
+              description: '진행중인 프로젝트 개수'
+              example: 1
+            leaved:
+              type: integer
+              description: '탈주한 프로젝트 개수'
+              example: 1
+        link:
+          type: string
+          description: '링크'
+          example: 'github.com/extra'
+
+
     ProjectExperienceType:
       type: string
       enum: ['ALL', 'ONLY_EXPERIENCE']
       example: 'ONLY_EXPERIENCE'
-
-    ProjectDetailExperienceDisplayName:
-      type: string
-      enum: ['경력자 only']
-      example: '경력자 only'
 
     MainProjectListItem:
       type: object
@@ -1193,6 +2408,8 @@ components:
                 example: True
         experience:
           $ref: '#/components/schemas/ProjectExperienceType'
+        engagement_level:
+          $ref: '#/components/schemas/ProjectEngagementLevelType'
         current_recruit_status:
           $ref: '#/components/schemas/ProjectCurrentRecruitStatus'
         image:
@@ -1204,8 +2421,109 @@ components:
           description: '북마크 설정 여부'
           example: false
 
+    ExtraRecruitPayload:
+      type: object
+      required:
+        - jobs
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExtraRecruitData'
+
+    ExtraRecruitData:
+      type: object
+      required:
+        - id
+        - total_limit
+      properties:
+        id:
+          type: integer
+          description: job pk
+          example: 1
+        total_limit:
+          type: integer
+          description: '기존 맴버수와 더해서 10명 이하로 신규 구직'
+          example: 3
+
+    SignUpJobInformationPayload:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SignUpJobInformation'
+
+    SignUpJobInformation:
+      type: object
+      required:
+        - job_id
+        - job_experience
+        - experience_start_date
+        - experience_end_date
+        - is_working
+      properties:
+        job_id:
+          type: integer
+          description: job pk
+          example: 1
+        job_experience:
+          type: string
+          enum: ['NEWBIE', 'EXPERIENCE']
+          example: 'NEWBIE'
+        experience_start_date:
+          type: string
+          description: '경력 시작 일자'
+          nullable: true
+          example: '2024-04-01'
+        experience_end_date:
+          type: string
+          description: '경력 종료 일자'
+          nullable: true
+          example: '2024-04-030'
+        is_working:
+          type: boolean
+          description: '재직중'
+          example: true
+
+    CommonConstanceTypeItemsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommonConstanceTypeItem'
+
+    CommonConstanceTypeItem:
+      type: object
+      required:
+        - id
+        - name
+        - display_name
+      properties:
+        id:
+          type: integer
+          description: type pk
+          example: 1
+        name:
+          type: string
+          description: searching for wording
+          example: Frontend
+        display_name:
+          type: string
+          description: What user will see
+          example: '프론트엔더'
+
     MainProjectPaginatedItemsResponse:
       type: object
+      required:
+        - data
+        - next_cursor
+        - has_more
       properties:
         data:
           type: array
@@ -1218,6 +2536,425 @@ components:
           description: '더 많은 데이터가 있는지 여부'
           example: true
 
+    MyDoingProjectListItem:
+      type: object
+      required:
+        - id
+        - title
+        - simple_description
+        - jobs
+        - experience
+        - engagement_level
+        - current_recruit_status
+        - image
+        - is_bookmarked
+        - is_leader
+        - is_editable
+        - is_member_manageable
+        - is_resume_manageable
+      properties:
+        id:
+          type: integer
+          description: '프로젝트 고유 ID'
+          example: 1
+        title:
+          type: string
+          description: '프로젝트 title'
+          example: '오버워치 전적 공유 사이트 만듭시다!'
+        simple_description:
+          type: string
+          description: '프로젝트 description (100글자 정도 컷?)'
+          example: '오버워치 전적 공유 사이트 만듭시다! 어이어이 ~'
+        jobs:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: '직종 고유 ID'
+                example: 1
+              display_name:
+                type: string
+                description: '사용자에게 보여주는 정보'
+                example: '프론트엔드'
+              is_avaliable:
+                type: boolean
+                description: '직무의 마감 여부 / 직무 마감시 비활성화 표시'
+                example: True
+        experience:
+          $ref: '#/components/schemas/ProjectExperienceType'
+        engagement_level:
+          $ref: '#/components/schemas/ProjectEngagementLevelType'
+        current_recruit_status:
+          $ref: '#/components/schemas/ProjectCurrentRecruitStatus'
+        image:
+          type: string
+          description: '이미지 사진'
+          example: 'https://이미지.이미지'
+        is_bookmarked:
+          type: boolean
+          description: '북마크 설정 여부'
+          example: false
+        is_leader:
+          type: boolean
+          description: '프로젝트 리더 여부'
+          example: true
+        is_editable:
+          type: boolean
+          description: '프로젝트 수정 여부'
+          example: true
+        is_member_manageable:
+          type: boolean
+          description: '프로젝트 팀원 관리 가능 여부'
+          example: true
+        is_resume_manageable:
+          type: boolean
+          description: '프로젝트 지원서 관리 가능 여부'
+          example: true
+
+    MyBookmarkProjectItemsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyBookmarkProjectItem'
+
+    MyBookmarkProjectItem:
+      type: object
+      required:
+        - id
+        - title
+        - simple_description
+        - jobs
+        - experience
+        - engagement_level
+        - project_result_status
+        - image
+        - is_bookmarked
+        - is_leader
+        - is_member_manageable
+      properties:
+        id:
+          type: integer
+          description: '프로젝트 고유 ID'
+          example: 1
+        title:
+          type: string
+          description: '프로젝트 title'
+          example: '오버워치 전적 공유 사이트 만듭시다!'
+        simple_description:
+          type: string
+          description: '프로젝트 description (100글자 정도 컷?)'
+          example: '오버워치 전적 공유 사이트 만듭시다! 어이어이 ~'
+        jobs:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: '직종 고유 ID'
+                example: 1
+              display_name:
+                type: string
+                description: '사용자에게 보여주는 정보'
+                example: '프론트엔드'
+              is_avaliable:
+                type: boolean
+                description: '직무의 마감 여부 / 직무 마감시 비활성화 표시'
+                example: True
+        experience:
+          $ref: '#/components/schemas/ProjectExperienceType'
+        engagement_level:
+          $ref: '#/components/schemas/ProjectEngagementLevelType'
+        project_result_status:
+          $ref: '#/components/schemas/ProjectResultStatus'
+        image:
+          type: string
+          description: '이미지 사진'
+          example: 'https://이미지.이미지'
+        is_bookmarked:
+          type: boolean
+          description: '북마크 설정 여부'
+          example: false
+        is_leader:
+          type: boolean
+          description: '프로젝트 리더 여부'
+          example: true
+        is_member_manageable:
+          type: boolean
+          description: '프로젝트 팀원 관리 가능 여부'
+          example: true
+
+    MyDoingProjectItemsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyDoingProjectListItem'
+
+    MyProjectListItem:
+      type: object
+      required:
+        - id
+        - title
+        - simple_description
+        - jobs
+        - experience
+        - engagement_level
+        - project_result_status
+        - image
+        - is_bookmarked
+        - is_leader
+        - is_member_manageable
+        - is_member_evaluatable
+      properties:
+        id:
+          type: integer
+          description: '프로젝트 고유 ID'
+          example: 1
+        title:
+          type: string
+          description: '프로젝트 title'
+          example: '오버워치 전적 공유 사이트 만듭시다!'
+        simple_description:
+          type: string
+          description: '프로젝트 description (100글자 정도 컷?)'
+          example: '오버워치 전적 공유 사이트 만듭시다! 어이어이 ~'
+        jobs:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: '직종 고유 ID'
+                example: 1
+              display_name:
+                type: string
+                description: '사용자에게 보여주는 정보'
+                example: '프론트엔드'
+              is_avaliable:
+                type: boolean
+                description: '직무의 마감 여부 / 직무 마감시 비활성화 표시'
+                example: True
+        experience:
+          $ref: '#/components/schemas/ProjectExperienceType'
+        engagement_level:
+          $ref: '#/components/schemas/ProjectEngagementLevelType'
+        project_result_status:
+          $ref: '#/components/schemas/ProjectResultStatus'
+        image:
+          type: string
+          description: '이미지 사진'
+          example: 'https://이미지.이미지'
+        is_bookmarked:
+          type: boolean
+          description: '북마크 설정 여부'
+          example: false
+        is_leader:
+          type: boolean
+          description: '프로젝트 리더 여부'
+          example: true
+        is_member_manageable:
+          type: boolean
+          description: '프로젝트 팀원 관리 가능 여부'
+          example: true
+        is_member_evaluatable:
+          type: boolean
+          description: '프로젝트 팀원 평가 가능 여부'
+          example: true
+
+    MyProjectItemsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyProjectListItem'
+
+    RecruitApplicationListItem:
+      type: object
+      required:
+        - application_id
+        - job_display_name
+        - request_message
+        - member_info
+      properties:
+        application_id:
+          type: integer
+          description: '지원서 ID'
+          example: 1
+        job_display_name:
+          type: string
+          description: '직종 이름'
+          example: '프론트엔드'
+        request_message:
+          type: string
+          description: '지원할 때 쓴 내용'
+          example: '지원하겠습니다~'
+        member_info:
+          $ref: '#/components/schemas/ProfileBlock'
+
+    RecruitApplicationListItemsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecruitApplicationListItem'
+
+    MyRecruitApplicationListItemsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyRecruitApplicationListItem'
+
+    MyRecruitApplicationListItem:
+      type: object
+      required:
+        - project_id
+        - application_id
+        - application_description
+        - application_status
+        - application_job_display_name
+        - title
+        - simple_description
+        - jobs
+        - experience
+        - engagement_level
+        - current_project_status
+        - image
+        - is_bookmarked
+      properties:
+        project_id:
+          type: integer
+          description: '프로젝트 고유 ID'
+          example: 1
+        application_id:
+          type: integer
+          description: '지원서의 id'
+          example: 1
+        application_description:
+          type: string
+          description: '지원 내용'
+          example: '지원한 계기는 ....'
+        application_status:
+          type: string
+          description: '지원 상태'
+          enum: ['IN_REVIEW', 'ACCEPTED', 'REJECTED']
+          example: 'IN_REVIEW'
+        application_job_display_name:
+          type: string
+          description: '지원 직무'
+          example: '프론트엔드'
+        title:
+          type: string
+          description: '프로젝트 title'
+          example: '오버워치 전적 공유 사이트 만듭시다!'
+        simple_description:
+          type: string
+          description: '프로젝트 description (100글자 정도 컷?)'
+          example: '오버워치 전적 공유 사이트 만듭시다! 어이어이 ~'
+        jobs:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: '직종 고유 ID'
+                example: 1
+              display_name:
+                type: string
+                description: '사용자에게 보여주는 정보'
+                example: '프론트엔드'
+              is_avaliable:
+                type: boolean
+                description: '직무의 마감 여부 / 직무 마감시 비활성화 표시'
+                example: True
+        experience:
+          $ref: '#/components/schemas/ProjectExperienceType'
+        engagement_level:
+          $ref: '#/components/schemas/ProjectEngagementLevelType'
+        current_project_status:
+          type: string
+          description: '진행중인지'
+          enum: ['WORKING', 'WAITING']
+          example: 'WORKING'
+        image:
+          type: string
+          description: '이미지 사진'
+          example: 'https://이미지.이미지'
+        is_bookmarked:
+          type: boolean
+          description: '북마크 설정 여부'
+          example: false
+
+    GiveAttributeTeamMemberPayload:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/GiveAttributeTeamMemberData'
+
+    GiveAttributeTeamMemberData:
+      type: object
+      required:
+        - member_id
+        - member_attribute_id
+      properties:
+        member_id:
+          type: integer
+          description: '맴버 id'
+          example: 1
+        member_attribute_id:
+          type: integer
+          description: '성격 id'
+          nullable: true
+          example: 1
+
+    TeamMemberListItemsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamMemberListItem'
+
+    TeamMemberListItem:
+      type: object
+      required:
+        - job_display_name
+        - member_info
+      properties:
+        job_display_name:
+          type: string
+          description: '직종 이름'
+          example: '프론트엔드'
+        member_info:
+          $ref: '#/components/schemas/ProfileBlock'
+
     ProjectDetail:
       type: object
       required:
@@ -1225,9 +2962,10 @@ components:
         - title
         - description
         - duration_display_name
+        - engagement_level
         - extra_information
         - jobs
-        - experience_display_name
+        - experience
         - status_display_name
         - image
         - leader_info
@@ -1249,6 +2987,8 @@ components:
           type: string
           description: '프로젝트 기간'
           example: '1~2개월'
+        engagement_level:
+          $ref: '#/components/schemas/ProjectEngagementLevelType'
         extra_information:
           type: string
           description: '오카방 정보 및 핸드폰 정보'
@@ -1271,8 +3011,8 @@ components:
                 description: |
                   '직무의 마감 여부 / 직무 마감시 비활성화 표시 (혹은 경력 입력 안된 사람 지원 불가)'
                 example: True
-        experience_display_name:
-          $ref: '#/components/schemas/ProjectDetailExperienceDisplayName'
+        experience:
+          $ref: '#/components/schemas/ProjectExperienceType'
         status_display_name:
           $ref: '#/components/schemas/ProjectDetailStatusDisplayName'
         image:
@@ -1281,93 +3021,15 @@ components:
           nullable: true
           example: 'https://이미지.이미지'
         leader_info:
-          type: object
-          required:
-            - profile_image
-            - nickname
-            - simple_description
-            - member_main_attribute
-            - member_job_experience
-            - project_info
-          properties:
-            profile_image:
-              type: string
-              description: '프로필 사진'
-              nullable: true
-              example: 'https://프로필_이미지.com'
-            nickname:
-              type: string
-              description: '닉네임'
-              example: 'SIPLE_DEV'
-            simple_description:
-              type: string
-              description: '한줄 소개'
-              nullable: true
-              example: '사이플 관리자 입니다.'
-            member_main_attribute:
-              type: array
-              items:
-                type: object
-                required:
-                  - id
-                  - display_name
-                properties:
-                  id:
-                    type: integer
-                    description: '성격 id'
-                    example: 1
-                  name:
-                    type: string
-                    description: '고유 name'
-                    example: 'kind'
-                  display_name:
-                    type: string
-                    description: '사용자에게 보여주는 성격 정보'
-                    example: '친절해요'
-            member_job_experience:
-              type: array
-              items:
-                type: object
-                required:
-                  - id
-                  - display_name
-                  - year
-                properties:
-                  id:
-                    type: integer
-                    description: 'Job id'
-                    example: 1
-                  display_name:
-                    type: string
-                    description: '사용자에게 보여주는 직업 정보'
-                    example: '백엔드'
-                  year:
-                    type: integer
-                    description: '연차'
-                    example: 2
-            project_info:
-              type: object
-              required:
-                - success
-                - working
-                - leaved
-              properties:
-                success:
-                  type: integer
-                  description: '성공한 프로젝트 개수'
-                  example: 3
-                working:
-                  type: integer
-                  description: '진행중인 프로젝트 개수'
-                  example: 1
-                leaved:
-                  type: integer
-                  description: '탈주한 프로젝트 개수'
-                  example: 1
+          $ref: '#/components/schemas/ProfileBlock'
         created_at:
           type: string
           description: '생성 시간'
           example: '2024-04-01T00:00:00'
+
+    ProjectResultStatus:
+      type: string
+      enum: ['FAIL', 'SUCCESS', 'LEFT']
 
     ProjectDetailStatusDisplayName:
       type: string
