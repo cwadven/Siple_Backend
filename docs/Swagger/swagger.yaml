@@ -746,7 +746,7 @@ paths:
                   value:
                     message: "카카오페이 결제 취소에 실패하였습니다."
 
-  /v1/common/health_check:
+  /v1/common/health-check:
     get:
       tags:
         - Common
@@ -1419,7 +1419,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotUserAuthPermission'
 
-  /v1/project/{project_id}/recruit_application/{project_recruit_application_id}/reply:
+  /v1/project/{project_id}/recruit-application/{project_recruit_application_id}/reply:
     post:
       tags:
         - Project
@@ -2044,7 +2044,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotUserAuthPermission'
 
-  /v1/project/my/recruit_application:
+  /v1/project/my/recruit-application:
     get:
       tags:
         - My Project
@@ -2064,7 +2064,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotUserAuthPermission'
 
-  /v1/project/my/recruit_application/{project_recruit_application_id}/cancel:
+  /v1/project/my/recruit-application/{project_recruit_application_id}/cancel:
     post:
       tags:
         - My Project
