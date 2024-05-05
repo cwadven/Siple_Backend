@@ -156,7 +156,7 @@ def cursor_pagination(default_size=10, cursor_criteria: list[Type[CursorCriteria
                 except ValueError:
                     raise APIException('Invalid next_cursor.')
             else:
-                decoded_next_cursor = None
+                decoded_next_cursor = {}
 
             try:
                 size = int(request.GET.get('size', default_size))
