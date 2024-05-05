@@ -5,7 +5,7 @@ from common.common_utils.encode_utils import data_to_urlsafe_base64
 from django.test import TestCase
 
 
-class TestDictToUrlSafeBase64(TestCase):
+class TestDataToUrlSafeBase64(TestCase):
     def test_data_to_urlsafe_base64(self):
         # Given: Set up the test data
         test_data = {'name': '홍길동', 'age': 30}
