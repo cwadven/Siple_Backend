@@ -5,7 +5,7 @@ from abc import (
 from typing import Any
 
 
-class CursorCriteria(ABC):
+class CursorCriteriaInterface(ABC):
     @classmethod
     @abstractmethod
     def is_valid_decoded_cursor(cls, decoded_cursor: dict) -> bool:
