@@ -122,3 +122,31 @@ def pagination(default_size=10):
             return cls_or_func
 
     return decorator
+
+
+def cursor_pagination(default_size=10):
+    def _paging(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Here we assume that the first argument is the request
+            request = next((x for x in args if isinstance(x, (WSGIRequest, HttpRequest, Request))), None)
+            if request is None:
+                raise CodeInvalidateException()
+            try:
+                next_cursor = request.GET.get('next_cursor')
+                size = int(request.GET.get('size', default_size))
+            except APIException as e:
+                raise APIException(e)
+            return func(next_cursor=next_cursor, size=size, *args, **kwargs)
+        return wrapper
+
+    def decorator(cls_or_func):
+        if isinstance(cls_or_func, FunctionType):
+            return _paging(cls_or_func)
+        else:
+            for attr_name, attr_value in cls_or_func.__dict__.items():
+                if callable(attr_value):
+                    setattr(cls_or_func, attr_name, _paging(attr_value))
+            return cls_or_func
+
+    return decorator
