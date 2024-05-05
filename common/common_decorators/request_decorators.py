@@ -2,11 +2,11 @@ from functools import wraps
 from types import FunctionType
 from typing import Type
 
+from common.common_criteria.cursor_criteria import CursorCriteria
 from common.common_exceptions.exceptions import (
     CodeInvalidateException,
     MissingMandatoryParameterException,
 )
-from common.common_interfaces.cursor_criteria_interfaces import CursorCriteria
 from common.common_utils.decode_utils import urlsafe_base64_to_data
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
