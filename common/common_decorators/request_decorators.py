@@ -5,6 +5,7 @@ from common.common_exceptions.exceptions import (
     CodeInvalidateException,
     MissingMandatoryParameterException,
 )
+from common.common_utils.decode_utils import urlsafe_base64_to_data
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
 from rest_framework.exceptions import APIException
@@ -132,12 +133,21 @@ def cursor_pagination(default_size=10):
             request = next((x for x in args if isinstance(x, (WSGIRequest, HttpRequest, Request))), None)
             if request is None:
                 raise CodeInvalidateException()
+            base64_next_cursor = request.GET.get('next_cursor')
+            if base64_next_cursor is not None:
+                try:
+                    decoded_next_cursor = urlsafe_base64_to_data(base64_next_cursor)
+                except ValueError:
+                    raise APIException('Invalid next_cursor.')
+            else:
+                decoded_next_cursor = None
+
             try:
-                next_cursor = request.GET.get('next_cursor')
                 size = int(request.GET.get('size', default_size))
-            except APIException as e:
-                raise APIException(e)
-            return func(next_cursor=next_cursor, size=size, *args, **kwargs)
+            except (TypeError, ValueError):
+                raise APIException('Invalid size.')
+
+            return func(decoded_next_cursor=decoded_next_cursor, size=size, *args, **kwargs)
         return wrapper
 
     def decorator(cls_or_func):
