@@ -5,6 +5,8 @@ from abc import (
 
 
 class CursorCriteria(ABC):
+    @classmethod
     @abstractmethod
-    def is_valid_decoded_cursor(self, decoded_cursor: dict):
+    def is_valid_decoded_cursor(cls, decoded_cursor: dict) -> bool:
+        """Define this method to validate decoded cursors in subclasses."""
         pass
