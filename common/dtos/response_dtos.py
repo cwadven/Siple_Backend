@@ -9,6 +9,6 @@ class HealthCheckResponse(BaseModel):
 
 
 class CursorPaginatorResponse(BaseModel):
-    data: list
-    next_cursor: str
-    has_more: bool
+    data: list = Field(...)
+    next_cursor: str = Field(...)
+    has_more: bool = Field(...)
