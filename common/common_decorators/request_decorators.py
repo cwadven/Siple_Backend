@@ -5,6 +5,7 @@ from common.common_exceptions.exceptions import (
     CodeInvalidateException,
     MissingMandatoryParameterException,
 )
+from common.common_interfaces.cursor_criteria_interfaces import CursorCriteria
 from common.common_utils.decode_utils import urlsafe_base64_to_data
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
@@ -125,7 +126,20 @@ def pagination(default_size=10):
     return decorator
 
 
-def cursor_pagination(default_size=10):
+def cursor_pagination(default_size=10, cursor_criteria: list[CursorCriteria] = None):
+    if cursor_criteria is None:
+        criteria = []
+
+    def _validate_criteria(_decoded_next_cursor: dict):
+        if not cursor_criteria:
+            return
+
+        for c in criteria:
+            if c.is_valid_decoded_cursor(_decoded_next_cursor):
+                return
+
+        raise APIException('Invalid next_cursor.')
+
     def _paging(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -137,6 +151,7 @@ def cursor_pagination(default_size=10):
             if base64_next_cursor is not None:
                 try:
                     decoded_next_cursor = urlsafe_base64_to_data(base64_next_cursor)
+                    _validate_criteria(decoded_next_cursor)
                 except ValueError:
                     raise APIException('Invalid next_cursor.')
             else:
