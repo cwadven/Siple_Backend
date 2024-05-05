@@ -1,5 +1,6 @@
 from functools import wraps
 from types import FunctionType
+from typing import Type
 
 from common.common_exceptions.exceptions import (
     CodeInvalidateException,
@@ -126,15 +127,15 @@ def pagination(default_size=10):
     return decorator
 
 
-def cursor_pagination(default_size=10, cursor_criteria: list[CursorCriteria] = None):
+def cursor_pagination(default_size=10, cursor_criteria: list[Type[CursorCriteria]] = None):
     if cursor_criteria is None:
-        criteria = []
+        cursor_criteria = []
 
     def _validate_criteria(_decoded_next_cursor: dict):
         if not cursor_criteria:
             return
 
-        for c in criteria:
+        for c in cursor_criteria:
             if c.is_valid_decoded_cursor(_decoded_next_cursor):
                 return
 
