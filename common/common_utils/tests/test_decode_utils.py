@@ -19,3 +19,21 @@ class TestUrlSafeBase64ToData(TestCase):
 
         # Then: 변환된 데이터가 원본 데이터와 같은지 확인
         self.assertEqual(result, original_data)
+
+    def test_invalid_base64_string(self):
+        # 잘못된 base64 문자열
+        invalid_base64_str = '이건 잘못된 base64 문자열@@@'
+
+        # 함수 테스트 및 예외 검증
+        with self.assertRaises(ValueError):
+            urlsafe_base64_to_data(invalid_base64_str)
+
+    def test_invalid_json_format(self):
+        # 잘못된 JSON 형식을 포함한 base64 문자열
+        invalid_json_str = 'plain text'
+        invalid_json_bytes = invalid_json_str.encode('utf-8')
+        invalid_base64_str = base64.urlsafe_b64encode(invalid_json_bytes).decode('utf-8')
+
+        # 함수 테스트 및 예외 검증
+        with self.assertRaises(ValueError):
+            urlsafe_base64_to_data(invalid_base64_str)
