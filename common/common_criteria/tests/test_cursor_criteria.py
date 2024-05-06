@@ -57,9 +57,9 @@ class CursorCriteriaTests(TestCase):
         # And: data_to_urlsafe_base64 called with expected dict
         expected_dict = {
             'id__lte': 1,
-            'timestamp__lt': '2021-08-01 12:00:00',  # Assumes date formatting in valid_keys handling
+            'timestamp__lt': '2021-08-01T12:00:00+09:00',  # Assumes date formatting in valid_keys handling
             'name': 'Project',
-            'datestamp__gt': '2021-08-01 00:00:00',
+            'datestamp__gt': '2021-08-01T00:00:00+09:00',
         }
         # And: data_to_urlsafe_base64 called with expected dict
         mock_data_to_urlsafe_base64.assert_called_once_with(expected_dict)
