@@ -117,16 +117,21 @@ class Project(models.Model):
         verbose_name='수정 일시',
     )
     rearrangement_time = models.DateTimeField(
+        auto_now_add=True,
         help_text='정렬 기준 시간',
         verbose_name='정렬 기준 시간',
         db_index=True,
     )
     project_start_time = models.DateTimeField(
+        null=True,
+        blank=True,
         help_text='시작 시간',
         verbose_name='시작 시간',
         db_index=True,
     )
     project_end_time = models.DateTimeField(
+        null=True,
+        blank=True,
         help_text='종료 시간',
         verbose_name='종료 시간',
         db_index=True,
