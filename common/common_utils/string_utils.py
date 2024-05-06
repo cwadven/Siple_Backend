@@ -39,6 +39,8 @@ def get_filtered_by_startswith_text_and_convert_to_standards(startswith_text: st
 
 def format_iso8601(dt: Union[datetime, date], date_timezone: str = '+09:00'):
     if isinstance(dt, datetime):
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=datetime.now().astimezone().tzinfo)
         formatted = dt.strftime('%Y-%m-%dT%H:%M:%S%z')
         return formatted[:-2] + ':' + formatted[-2:]
     elif isinstance(dt, date):

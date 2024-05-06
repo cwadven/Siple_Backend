@@ -122,6 +122,16 @@ class FormatISO8601Tests(TestCase):
         # Then: The datetime object is formatted correctly
         self.assertEqual(result, "2024-05-01T13:00:00+02:00")
 
+    def test_datetime_without_timezone_offset(self):
+        # Given: A datetime object with a timezone offset
+        dt = datetime(2024, 5, 1, 13, 0, 0)
+
+        # When: The datetime object is formatted
+        result = format_iso8601(dt)
+
+        # Then: The datetime object is formatted correctly
+        self.assertEqual(result, "2024-05-01T13:00:00+09:00")
+
     def test_datetime_with_microseconds(self):
         # Given: A datetime object with microseconds
         dt = datetime(2024, 5, 1, 13, 0, 0, 500000, tzinfo=timezone.utc)
