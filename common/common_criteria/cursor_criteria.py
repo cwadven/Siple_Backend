@@ -5,6 +5,7 @@ from datetime import (
 from typing import Any
 
 from common.common_interfaces.cursor_criteria_interfaces import CursorCriteriaInterface
+from common.common_utils import format_iso8601
 from common.common_utils.encode_utils import data_to_urlsafe_base64
 
 
@@ -29,7 +30,7 @@ class CursorCriteria(CursorCriteriaInterface):
             except AttributeError:
                 raise ValueError(f"Attribute '{attribute}' not found in '{data.__class__.__name__}'")
             if isinstance(value, (datetime, date)):
-                encoding_data[cursor_key] = value.strftime('%Y-%m-%d %H:%M:%S')
+                encoding_data[cursor_key] = format_iso8601(value)
             else:
                 encoding_data[cursor_key] = value
 
