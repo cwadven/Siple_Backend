@@ -76,3 +76,9 @@ class GuestTokenMixin(TestCase):
             guest = Guest.objects.all().first()
 
         self.client.defaults['HTTP_AUTHORIZATION'] = f'jwt {get_jwt_guest_token(guest)}'
+
+
+class SampleModel:
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
