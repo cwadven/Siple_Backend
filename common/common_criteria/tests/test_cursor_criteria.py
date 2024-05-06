@@ -81,3 +81,36 @@ class CursorCriteriaTests(TestCase):
             e.exception.args[0],
             'Attribute \'datestamp\' not found in \'SampleModel\'',
         )
+
+    def test_ordering_data_empty(self):
+        # Given: SampleEmptyCursorCriteria with no cursor_keys
+        class SampleEmptyCursorCriteria(CursorCriteria):
+            cursor_keys = []
+
+        # When: get_ordering_data
+        ordering_data = SampleEmptyCursorCriteria.get_ordering_data()
+
+        # Then: empty list
+        self.assertEqual(ordering_data, [])
+
+    def test_ordering_data_simple_without_underlying(self):
+        # Given: SampleEmptyCursorCriteria with cursor_keys
+        class SampleEmptyCursorCriteria(CursorCriteria):
+            cursor_keys = ['id', 'created']
+
+        # When: get_ordering_data
+        ordering_data = SampleEmptyCursorCriteria.get_ordering_data()
+
+        # Then: expected ordering data
+        self.assertEqual(ordering_data, [])
+
+    def test_ordering_data_with_operators(self):
+        # Given:
+        class SampleEmptyCursorCriteria(CursorCriteria):
+            cursor_keys = ['id__lt', 'created__lte', 'name__gt']
+
+        # When:
+        ordering_data = SampleEmptyCursorCriteria.get_ordering_data()
+
+        # Then:
+        self.assertEqual(ordering_data, ['-id', '-created', 'name'])

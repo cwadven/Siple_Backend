@@ -35,3 +35,15 @@ class CursorCriteria(CursorCriteriaInterface):
                 encoding_data[cursor_key] = value
 
         return data_to_urlsafe_base64(encoding_data)
+
+    @classmethod
+    def get_ordering_data(cls):
+        ordering_data = []
+        for cursor_key in cls.cursor_keys:
+            if '__' in cursor_key:
+                attribute, operator = cursor_key.split('__')
+                if operator in {'lt', 'lte'}:
+                    ordering_data.append(f'-{attribute}')
+                elif operator in {'gt', 'gte'}:
+                    ordering_data.append(attribute)
+        return ordering_data
