@@ -17,3 +17,8 @@ class CursorCriteriaInterface(ABC):
     def get_encoded_base64_cursor_data(cls, data: Any) -> str:
         """Define this method to get cursor data in subclasses."""
         pass
+
+    @classmethod
+    @abstractmethod
+    def get_ordering_data(cls) -> list[str]:
+        pass
