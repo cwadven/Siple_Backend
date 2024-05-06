@@ -1,5 +1,9 @@
 import random
 import string
+from datetime import (
+    date,
+    datetime,
+)
 from typing import (
     List,
     Sequence,
@@ -31,3 +35,14 @@ def get_filtered_by_startswith_text_and_convert_to_standards(startswith_text: st
         int(key.replace(startswith_text, '')) if is_integer else key.replace(startswith_text, '')
         for key in keys if key.startswith(startswith_text)
     ]
+
+
+def format_iso8601(dt: Union[datetime, date], date_timezone: str = '+09:00'):
+    if isinstance(dt, datetime):
+        formatted = dt.strftime('%Y-%m-%dT%H:%M:%S%z')
+        return formatted[:-2] + ':' + formatted[-2:]
+    elif isinstance(dt, date):
+        formatted = dt.strftime('%Y-%m-%d')
+        return f'{formatted}T00:00:00{date_timezone}'
+    else:
+        raise TypeError("Unsupported type")

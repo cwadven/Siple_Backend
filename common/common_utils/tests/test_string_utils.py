@@ -1,6 +1,13 @@
+from datetime import (
+    date,
+    datetime,
+    timedelta,
+    timezone,
+)
 from unittest.mock import patch
 
 from common.common_utils.string_utils import (
+    format_iso8601,
     generate_random_string_digits,
     get_filtered_by_startswith_text_and_convert_to_standards,
 )
@@ -63,3 +70,64 @@ class TestFilteredConversion(TestCase):
 
         # Then:
         self.assertEqual(result, ['1', '2', '3', '4'])
+
+
+class FormatISO8601Tests(TestCase):
+
+    def test_format_datetime(self):
+        # Given: A datetime object
+        dt = datetime(2024, 5, 1, 13, 0, 0, tzinfo=timezone.utc)
+
+        # When: The datetime object is formatted
+        result = format_iso8601(dt)
+
+        # Then: The datetime object is formatted correctly
+        self.assertEqual(result, "2024-05-01T13:00:00+00:00")
+
+    def test_format_date(self):
+        # Given: A date object
+        d = date(2024, 5, 1)
+
+        # When: The date object is formatted
+        result = format_iso8601(d)
+
+        # Then: The date object is formatted correctly
+        self.assertEqual(result, "2024-05-01T00:00:00+09:00")
+
+    def test_format_date_with_date_timezone(self):
+        # Given: A date object
+        d = date(2024, 5, 1)
+
+        # When: The date object is formatted
+        result = format_iso8601(d, date_timezone='+02:00')
+
+        # Then: The date object is formatted correctly
+        self.assertEqual(result, "2024-05-01T00:00:00+02:00")
+
+    def test_invalid_type(self):
+        # Given: An object of an unsupported type
+        d = 'invalid_type'
+
+        # Expected: A TypeError is raised
+        with self.assertRaises(TypeError):
+            format_iso8601(d)
+
+    def test_datetime_with_timezone_offset(self):
+        # Given: A datetime object with a timezone offset
+        dt = datetime(2024, 5, 1, 13, 0, 0, tzinfo=timezone(timedelta(hours=2)))
+
+        # When: The datetime object is formatted
+        result = format_iso8601(dt)
+
+        # Then: The datetime object is formatted correctly
+        self.assertEqual(result, "2024-05-01T13:00:00+02:00")
+
+    def test_datetime_with_microseconds(self):
+        # Given: A datetime object with microseconds
+        dt = datetime(2024, 5, 1, 13, 0, 0, 500000, tzinfo=timezone.utc)
+
+        # When: The datetime object is formatted
+        result = format_iso8601(dt)
+
+        # Then: The datetime object is formatted correctly
+        self.assertEqual(result, "2024-05-01T13:00:00+00:00")
