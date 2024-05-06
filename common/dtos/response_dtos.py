@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import (
     BaseModel,
     Field,
@@ -10,5 +12,5 @@ class HealthCheckResponse(BaseModel):
 
 class CursorPaginatorResponse(BaseModel):
     data: list = Field(...)
-    next_cursor: str = Field(...)
+    next_cursor: Optional[str] = Field(None)
     has_more: bool = Field(...)
