@@ -91,6 +91,8 @@ class Project(models.Model):
     )
     duration = models.ManyToManyField(
         'ProjectDuration',
+        null=True,
+        blank=True,
         help_text='프로젝트 기간',
         verbose_name='프로젝트 기간',
     )
