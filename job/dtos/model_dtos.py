@@ -11,3 +11,9 @@ class ProjectJobRecruitInfo(BaseModel):
     total_limit: int = Field(..., description='Job total recruit limit')
     current_recruited: int = Field(..., description='Current recruited')
     recruit_status: str = Field(..., description='Recruit status')
+
+
+class ProjectJobAvailabilities(BaseModel):
+    id: int = Field(..., description='Job Id')
+    display_name: str = Field(..., description='Job display name')
+    is_available: bool = Field(..., description='Job availability')
