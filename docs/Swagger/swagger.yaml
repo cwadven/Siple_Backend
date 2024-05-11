@@ -2376,6 +2376,15 @@ components:
 
     MainProjectListItem:
       type: object
+      required:
+        - id
+        - title
+        - simple_description
+        - jobs
+        - experience
+        - engagement_level
+        - current_recruit_status
+        - is_bookmarked
       properties:
         id:
           type: integer
@@ -2393,6 +2402,10 @@ components:
           type: array
           items:
             type: object
+            required:
+              - id
+              - display_name
+              - is_available
             properties:
               id:
                 type: integer
