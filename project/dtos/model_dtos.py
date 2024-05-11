@@ -1,5 +1,9 @@
-from typing import Optional
+from typing import (
+    List,
+    Optional,
+)
 
+from job.dtos.model_dtos import ProjectJobAvailabilities
 from pydantic import (
     BaseModel,
     Field,
@@ -10,7 +14,7 @@ class ProjectListItem(BaseModel):
     id: int = Field(..., description='Project ID')
     title: str = Field(..., description='Project title')
     simple_description: str = Field(..., description='Project simple description')
-    jobs: list = Field(..., description='List of jobs entity')
+    jobs: List[ProjectJobAvailabilities] = Field(..., description='Project jobs')
     experience: str = Field(..., description='프로젝트 들어올 수 있는 경력 수준')
     engagement_level: str = Field(..., description='프로젝트 몰입도 수준')
     current_recruit_status: str = Field(..., description='현재 모집 상태')
