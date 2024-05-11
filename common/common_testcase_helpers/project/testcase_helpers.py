@@ -6,14 +6,11 @@ from project.models import (
 )
 
 
-def create_project_with_active_job_recruitment_for_testcase(job_id: int,
+def create_project_with_active_job_recruitment_for_testcase(project: Project,
+                                                            job_id: int,
                                                             created_member_id: int,
                                                             total_limit: int,
                                                             current_recruited: int) -> ProjectRecruitmentJob:
-    project = Project.objects.create(
-        title='Created Project',
-        created_member_id=created_member_id,
-    )
     project_recruitment = ProjectRecruitment.objects.create(
         project=project,
         times_project_recruit=1,
