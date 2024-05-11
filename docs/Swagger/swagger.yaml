@@ -2402,7 +2402,7 @@ components:
                 type: string
                 description: '사용자에게 보여주는 정보'
                 example: '프론트엔드'
-              is_avaliable:
+              is_available:
                 type: boolean
                 description: '직무의 마감 여부 / 직무 마감시 비활성화 표시'
                 example: True
@@ -2578,7 +2578,7 @@ components:
                 type: string
                 description: '사용자에게 보여주는 정보'
                 example: '프론트엔드'
-              is_avaliable:
+              is_available:
                 type: boolean
                 description: '직무의 마감 여부 / 직무 마감시 비활성화 표시'
                 example: True
@@ -2663,7 +2663,7 @@ components:
                 type: string
                 description: '사용자에게 보여주는 정보'
                 example: '프론트엔드'
-              is_avaliable:
+              is_available:
                 type: boolean
                 description: '직무의 마감 여부 / 직무 마감시 비활성화 표시'
                 example: True
@@ -2741,7 +2741,7 @@ components:
                 type: string
                 description: '사용자에게 보여주는 정보'
                 example: '프론트엔드'
-              is_avaliable:
+              is_available:
                 type: boolean
                 description: '직무의 마감 여부 / 직무 마감시 비활성화 표시'
                 example: True
@@ -2884,7 +2884,7 @@ components:
                 type: string
                 description: '사용자에게 보여주는 정보'
                 example: '프론트엔드'
-              is_avaliable:
+              is_available:
                 type: boolean
                 description: '직무의 마감 여부 / 직무 마감시 비활성화 표시'
                 example: True
@@ -3006,7 +3006,7 @@ components:
                 type: string
                 description: '사용자에게 보여주는 정보'
                 example: '프론트엔드'
-              is_avaliable:
+              is_available:
                 type: boolean
                 description: |
                   '직무의 마감 여부 / 직무 마감시 비활성화 표시 (혹은 경력 입력 안된 사람 지원 불가)'
