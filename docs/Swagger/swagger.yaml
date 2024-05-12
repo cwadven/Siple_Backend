@@ -820,7 +820,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: ['PROJECT_ENGAGEMENT_LEVEL', 'PROJECT_DURATION', 'JOB', 'MEMBER_ATTRIBUTE']
+            enum: ['JOB', 'MEMBER_ATTRIBUTE', 'PROJECT_CATEGORY']
           description: Type of constance_type
       responses:
         '200':
@@ -1014,12 +1014,20 @@ paths:
             type: string
           description: Search title of siple
           example: '사이플'
-        - name: jobs
+        - name: job_ids
           in: query
           required: false
           schema:
             type: string
-          description: 직무별
+          description: 직무별 아이디
+          example: '1,2,3'
+        - name: category_ids
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 카테고리 아이디
+          example: '1,2,3'
         - name: jobs_operator
           in: query
           required: false
@@ -1089,11 +1097,25 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - title
+                - category_id
+                - descritpion
+                - hours_per_week
+                - duration_month
+                - image
+                - jobs
+                - experience
+                - extra_information
               properties:
                 title:
                   type: string
                   description: '프로젝트 제목'
                   example: '마인크래프트 같이 할 사람 구합니다~!'
+                category_id:
+                  type: integer
+                  description: '카테고리 id'
+                  example: 14
                 descritpion:
                   type: string
                   description: '프로젝트 내용'
@@ -1131,15 +1153,6 @@ paths:
                   description: '번호 혹은 오카방 링크'
                   example: '010-XXXX-XXXX 혹은 오카방 입니다~'
                   nullable: true
-              required:
-                - title
-                - descritpion
-                - hours_per_week
-                - duration_month
-                - image
-                - jobs
-                - experience
-                - extra_information
       responses:
         '200':
           description: Created Project
@@ -1175,6 +1188,10 @@ paths:
                     type: object
                     description: '에러 key value 에 맞춰서 대응'
                     properties:
+                      categord_id:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectCategoryIdCreationError'
                       title:
                         type: array
                         items:
@@ -1247,11 +1264,24 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - title
+                - category_id
+                - descritpion
+                - hours_per_week
+                - duration_month
+                - image
+                - experience
+                - extra_information
               properties:
                 title:
                   type: string
                   description: '프로젝트 제목'
                   example: '마인크래프트 같이 할 사람 구합니다~!'
+                category_id:
+                  type: integer
+                  description: '카테고리 id'
+                  example: 12
                 descritpion:
                   type: string
                   description: '프로젝트 내용'
@@ -1276,14 +1306,6 @@ paths:
                   description: '번호 혹은 오카방 링크'
                   example: '010-XXXX-XXXX 혹은 오카방 입니다~'
                   nullable: true
-              required:
-                - title
-                - descritpion
-                - hours_per_week
-                - duration_month
-                - image
-                - experience
-                - extra_information
       responses:
         '200':
           description: Updated Project
@@ -1316,6 +1338,10 @@ paths:
                     type: object
                     description: '에러 key value 에 맞춰서 대응'
                     properties:
+                      category_id:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectCategoryIdUpdateError'
                       title:
                         type: array
                         items:
@@ -2002,6 +2028,13 @@ paths:
             type: integer
             default: 20
           description: Number of size.
+        - name: category_ids
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 카테고리 id 들
+          example: '1,2,3'
         - name: title
           in: query
           required: false
@@ -2313,6 +2346,11 @@ components:
       description: 'hours_per_week 이 어떠한 이유로 실패했는지'
       example: '유효하지 않은 무언가가 들어갔습니다.'
 
+    ProjectCategoryIdCreationError:
+      type: string
+      description: 'category_id 이 어떠한 이유로 실패했는지'
+      example: '유효하지 않은 무언가가 들어갔습니다.'
+
     ProjectDurationMonthCreationError:
       type: string
       description: 'duration_month 이 어떠한 이유로 실패했는지'
@@ -2331,6 +2369,11 @@ components:
     ProjectExtraInformationCreationError:
       type: string
       description: 'extra_information 이 어떠한 이유로 실패했는지'
+      example: '유효하지 않은 무언가가 들어갔습니다.'
+
+    ProjectCategoryIdUpdateError:
+      type: string
+      description: 'category_id 이 어떠한 이유로 실패했는지'
       example: '유효하지 않은 무언가가 들어갔습니다.'
 
     ProjectTitleUpdateError:
@@ -2513,11 +2556,17 @@ components:
         - current_recruit_status
         - image
         - is_bookmarked
+        - bookmark_count
+        - recent_recruited_at
       properties:
         id:
           type: integer
           description: '아이템의 고유 ID'
           example: 1
+        category_display_name:
+          type: string
+          description: '카테고리 이름'
+          example: '재미 / 커뮤니티'
         title:
           type: string
           description: '프로젝트 title'
@@ -2563,6 +2612,14 @@ components:
           type: boolean
           description: '북마크 설정 여부'
           example: false
+        bookmark_count:
+          type: integer
+          description: '북마크 개수'
+          example: 40
+        recent_recruited_at:
+          type: string
+          description: '마지막 공고 일자'
+          example: '2024-01-01T00:00:00Z'
 
     ExtraRecruitPayload:
       type: object
@@ -2683,6 +2740,7 @@ components:
       type: object
       required:
         - id
+        - category_display_name
         - title
         - simple_description
         - jobs
@@ -2695,11 +2753,17 @@ components:
         - is_editable
         - is_member_manageable
         - is_resume_manageable
+        - bookmark_count
+        - recent_recruited_at
       properties:
         id:
           type: integer
           description: '프로젝트 고유 ID'
           example: 1
+        category_display_name:
+          type: string
+          description: '카테고리 이름'
+          example: '재미 / 커뮤니티'
         title:
           type: string
           description: '프로젝트 title'
@@ -2762,6 +2826,14 @@ components:
           type: boolean
           description: '프로젝트 지원서 관리 가능 여부'
           example: true
+        bookmark_count:
+          type: integer
+          description: '북마크 개수'
+          example: 40
+        recent_recruited_at:
+          type: string
+          description: '마지막 공고 일자'
+          example: '2024-01-01T00:00:00Z'
 
     MyBookmarkProjectItemsResponse:
       type: object
@@ -2777,6 +2849,7 @@ components:
       type: object
       required:
         - id
+        - category_display_name
         - title
         - simple_description
         - jobs
@@ -2787,11 +2860,17 @@ components:
         - is_bookmarked
         - is_leader
         - is_member_manageable
+        - bookmark_count
+        - recent_recruited_at
       properties:
         id:
           type: integer
           description: '프로젝트 고유 ID'
           example: 1
+        category_display_name:
+          type: string
+          description: '카테고리 이름'
+          example: '재미 / 커뮤니티'
         title:
           type: string
           description: '프로젝트 title'
@@ -2846,6 +2925,14 @@ components:
           type: boolean
           description: '프로젝트 팀원 관리 가능 여부'
           example: true
+        bookmark_count:
+          type: integer
+          description: '북마크 개수'
+          example: 40
+        recent_recruited_at:
+          type: string
+          description: '마지막 공고 일자'
+          example: '2024-01-01T00:00:00Z'
 
     MyDoingProjectItemsResponse:
       type: object
@@ -2861,6 +2948,7 @@ components:
       type: object
       required:
         - id
+        - category_display_name
         - title
         - simple_description
         - jobs
@@ -2872,11 +2960,17 @@ components:
         - is_leader
         - is_member_manageable
         - is_member_evaluatable
+        - bookmark_count
+        - recent_recruited_at
       properties:
         id:
           type: integer
           description: '프로젝트 고유 ID'
           example: 1
+        category_display_name:
+          type: string
+          description: '카테고리 이름'
+          example: '재미 / 커뮤니티'
         title:
           type: string
           description: '프로젝트 title'
@@ -2935,6 +3029,14 @@ components:
           type: boolean
           description: '프로젝트 팀원 평가 가능 여부'
           example: true
+        bookmark_count:
+          type: integer
+          description: '북마크 개수'
+          example: 40
+        recent_recruited_at:
+          type: string
+          description: '마지막 공고 일자'
+          example: '2024-01-01T00:00:00Z'
 
     MyProjectItemsResponse:
       type: object
@@ -2996,6 +3098,7 @@ components:
         - application_id
         - application_description
         - application_status
+        - category_display_name
         - application_job_display_name
         - title
         - simple_description
@@ -3005,6 +3108,8 @@ components:
         - current_project_status
         - image
         - is_bookmarked
+        - bookmark_count
+        - recent_recruited_at
       properties:
         project_id:
           type: integer
@@ -3023,6 +3128,10 @@ components:
           description: '지원 상태'
           enum: ['IN_REVIEW', 'ACCEPTED', 'REJECTED']
           example: 'IN_REVIEW'
+        category_display_name:
+          type: string
+          description: '카테고리 이름'
+          example: '재미 / 커뮤니티'
         application_job_display_name:
           type: string
           description: '지원 직무'
@@ -3076,6 +3185,14 @@ components:
           type: boolean
           description: '북마크 설정 여부'
           example: false
+        bookmark_count:
+          type: integer
+          description: '북마크 개수'
+          example: 40
+        recent_recruited_at:
+          type: string
+          description: '마지막 공고 일자'
+          example: '2024-01-01T00:00:00Z'
 
     GiveAttributeTeamMemberPayload:
       type: object
@@ -3130,6 +3247,7 @@ components:
       type: object
       required:
         - id
+        - category_display_name
         - title
         - description
         - duration_month
@@ -3140,12 +3258,18 @@ components:
         - status_display_name
         - image
         - leader_info
-        - created_at
+        - bookmark_count
+        - first_recruited_at
+        - recent_recruited_at
       properties:
         id:
           type: integer
           description: '아이템의 고유 ID'
           example: 1
+        category_display_name:
+          type: string
+          description: '카테고리 이름'
+          example: '재미 / 커뮤니티'
         title:
           type: string
           description: '프로젝트 title'
@@ -3199,10 +3323,18 @@ components:
           example: 'https://이미지.이미지'
         leader_info:
           $ref: '#/components/schemas/ProfileBlock'
-        created_at:
+        bookmark_count:
+          type: integer
+          description: '북마크 개수'
+          example: 40
+        recent_recruited_at:
           type: string
-          description: '생성 시간'
-          example: '2024-04-01T00:00:00'
+          description: '마지막 공고 일자'
+          example: '2024-05-01T00:00:00Z'
+        first_recruited_at:
+          type: string
+          description: '처음 공고 일자'
+          example: '2024-04-01T00:00:00Z'
 
     ProjectResultStatus:
       type: string
