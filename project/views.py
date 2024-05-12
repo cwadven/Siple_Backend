@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 
 class HomeProjectListAPIView(APIView):
     @cursor_pagination(default_size=20, cursor_criteria=[HomeProjectListCursorCriteria])
-    def get(self, request, decoded_next_cursor, size):
+    def get(self, request, decoded_next_cursor: dict, size: int):
         paginated_projects, has_more, next_cursor = get_objects_with_cursor_pagination(
             Project.objects.all(),
             HomeProjectListCursorCriteria,
