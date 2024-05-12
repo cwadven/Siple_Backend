@@ -42,7 +42,6 @@ class HomeProjectListAPIView(APIView):
                             ) for job_recruit in job_recruits_by_project_id.get(project.id, [])
                         ],
                         experience=project.job_experience_type,
-                        engagement_level=project.engagement_level,
                         current_recruit_status=project.current_recruit_status,
                         image=project.main_image,
                         is_bookmarked=(project.id in is_bookmarked_project_ids),

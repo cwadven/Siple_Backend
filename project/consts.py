@@ -24,11 +24,6 @@ class ProjectJobExperienceType(StrValueLabel):
     ONLY_EXPERIENCE = ('ONLY_EXPERIENCE', '경력만')
 
 
-class ProjectEngagementLevel(StrValueLabel):
-    MEDIUM = ('MEDIUM', '중간')
-    HIGH = ('HIGH', '높음')
-
-
 class ProjectResourceStatus(StrValueLabel):
     ACTIVE = ('ACTIVE', '활성')
     DELETED = ('DELETED', '삭제')

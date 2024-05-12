@@ -93,7 +93,6 @@ class HomeProjectListAPIViewTests(APITestCase):
                             }
                         ],
                         'experience': self.project3.job_experience_type,
-                        'engagement_level': self.project3.engagement_level,
                         'current_recruit_status': self.project3.current_recruit_status,
                         'image': self.project3.main_image,
                         'is_bookmarked': True,
@@ -110,7 +109,6 @@ class HomeProjectListAPIViewTests(APITestCase):
                             }
                         ],
                         'experience': self.project2.job_experience_type,
-                        'engagement_level': self.project2.engagement_level,
                         'current_recruit_status': self.project2.current_recruit_status,
                         'image': self.project2.main_image,
                         'is_bookmarked': False,

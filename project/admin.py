@@ -2,7 +2,6 @@ from django.contrib import admin
 from project.models import (
     Project,
     ProjectBookmark,
-    ProjectDuration,
     ProjectManagementPermission,
     ProjectMemberAttributeReferralReward,
     ProjectMemberManagement,
@@ -20,19 +19,9 @@ class ProjectAdmin(admin.ModelAdmin):
         'project_status',
         'project_result_status',
         'job_experience_type',
-        'engagement_level',
         'resource_status',
         'project_start_time',
         'project_end_time',
-    ]
-
-
-class ProjectDurationAdmin(admin.ModelAdmin):
-    list_display = [
-        'id',
-        'display_name',
-        'name',
-        'is_deleted',
     ]
 
 
@@ -105,7 +94,6 @@ class ProjectBookmarkAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Project, ProjectAdmin)
-admin.site.register(ProjectDuration, ProjectDurationAdmin)
 admin.site.register(ProjectManagementPermission, ProjectManagementPermissionAdmin)
 admin.site.register(ProjectRecruitment, ProjectRecruitmentAdmin)
 admin.site.register(ProjectRecruitmentJob, ProjectRecruitmentJobAdmin)

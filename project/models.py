@@ -2,7 +2,6 @@ from django.db import models
 from member.models import Member
 from project.consts import (
     ProjectCurrentRecruitStatus,
-    ProjectEngagementLevel,
     ProjectJobExperienceType,
     ProjectManagementPermissionBehavior,
     ProjectManagementPermissionStatus,
@@ -15,7 +14,52 @@ from project.consts import (
 )
 
 
+class ProjectCategory(models.Model):
+    display_name = models.CharField(
+        max_length=256,
+        help_text='표시명',
+        verbose_name='표시명',
+    )
+    name = models.CharField(
+        max_length=256,
+        help_text='카테고리명',
+        verbose_name='카테고리명',
+    )
+    description = models.TextField(
+        help_text='설명',
+        verbose_name='설명',
+        null=True,
+        blank=True,
+    )
+    is_deleted = models.BooleanField(
+        default=False,
+        help_text='삭제 여부',
+        verbose_name='삭제 여부',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text='생성 일시',
+        verbose_name='생성 일시',
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text='수정 일시',
+        verbose_name='수정 일시',
+    )
+
+    def __str__(self):
+        return self.name
+
+
 class Project(models.Model):
+    category = models.ForeignKey(
+        ProjectCategory,
+        on_delete=models.DO_NOTHING,
+        help_text='카테고리',
+        verbose_name='카테고리',
+        null=True,
+        blank=True,
+    )
     title = models.CharField(
         max_length=256,
         db_index=True,
@@ -71,12 +115,6 @@ class Project(models.Model):
         help_text='경력 구분',
         verbose_name='경력 구분',
     )
-    engagement_level = models.CharField(
-        max_length=100,
-        choices=ProjectEngagementLevel.choices(),
-        help_text='참여도',
-        verbose_name='참여도',
-    )
     created_member = models.ForeignKey(
         Member,
         on_delete=models.DO_NOTHING,
@@ -89,12 +127,19 @@ class Project(models.Model):
         help_text='유효 상태',
         verbose_name='유효 상태',
     )
-    duration = models.ManyToManyField(
-        'ProjectDuration',
+    hours_per_week = models.PositiveIntegerField(
+        help_text='주당 참여 시간',
+        verbose_name='주당 참여 시간',
+        db_index=True,
         null=True,
         blank=True,
-        help_text='프로젝트 기간',
-        verbose_name='프로젝트 기간',
+    )
+    duration_month = models.PositiveIntegerField(
+        help_text='프로젝트 기간(월)',
+        verbose_name='프로젝트 기간(월)',
+        db_index=True,
+        null=True,
+        blank=True,
     )
     bookmark_count = models.PositiveIntegerField(
         default=0,
@@ -141,36 +186,6 @@ class Project(models.Model):
 
     def __str__(self):
         return self.title
-
-
-class ProjectDuration(models.Model):
-    display_name = models.CharField(
-        max_length=256,
-        help_text='표시명',
-    )
-    name = models.CharField(
-        max_length=256,
-        help_text='명칭',
-        db_index=True,
-    )
-    description = models.TextField(
-        help_text='설명',
-    )
-    is_deleted = models.BooleanField(
-        default=False,
-        help_text='삭제 여부',
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text='생성 일시',
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        help_text='수정 일시',
-    )
-
-    def __str__(self):
-        return f'{self.display_name} - {self.name} - {self.is_deleted}'
 
 
 class ProjectManagementPermission(models.Model):
