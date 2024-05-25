@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from common.common_utils.string_utils import (
     format_iso8601,
+    format_utc,
     generate_random_string_digits,
     get_filtered_by_startswith_text_and_convert_to_standards,
 )
@@ -141,3 +142,39 @@ class FormatISO8601Tests(TestCase):
 
         # Then: The datetime object is formatted correctly
         self.assertEqual(result, "2024-05-01T13:00:00+00:00")
+
+
+class FormatUTCTests(TestCase):
+    def test_naive_datetime(self):
+        # Given: A naive datetime object
+        naive_dt = datetime(2023, 5, 25, 12, 0)
+
+        # Expected: The datetime object is formatted correctly
+        self.assertEqual(format_utc(naive_dt), '2023-05-25T12:00:00Z')
+
+    def test_aware_datetime(self):
+        # Given: An aware datetime object
+        aware_dt = datetime(2023, 5, 25, 12, 0, tzinfo=timezone(timedelta(hours=-4)))
+
+        # Expected: The datetime object is formatted correctly
+        self.assertEqual(format_utc(aware_dt), '2023-05-25T16:00:00Z')
+
+    def test_date(self):
+        # Given: A date object
+        simple_date = date(2023, 5, 25)
+
+        # Expected: The date object is formatted correctly
+        self.assertEqual(format_utc(simple_date), '2023-05-24T15:00:00Z')
+
+    def test_adjust_hours(self):
+        # Given: A date object
+        simple_date = date(2023, 5, 25)
+
+        # Expected: The date object is formatted correctly
+        self.assertEqual(format_utc(simple_date, adjust_hours=-5), '2023-05-25T05:00:00Z')
+
+    def test_unsupported_type(self):
+        # Given: An object of an unsupported type
+        # Expected: A TypeError is raised
+        with self.assertRaises(TypeError):
+            format_utc('2023-05-25')

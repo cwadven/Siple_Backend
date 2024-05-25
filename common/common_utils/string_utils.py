@@ -3,6 +3,8 @@ import string
 from datetime import (
     date,
     datetime,
+    timedelta,
+    timezone,
 )
 from typing import (
     List,
@@ -46,5 +48,24 @@ def format_iso8601(dt: Union[datetime, date], date_timezone: str = '+09:00'):
     elif isinstance(dt, date):
         formatted = dt.strftime('%Y-%m-%d')
         return f'{formatted}T00:00:00{date_timezone}'
+    else:
+        raise TypeError("Unsupported type")
+
+
+def format_utc(dt: Union[datetime, date], adjust_hours=9) -> str:
+    """
+    Adjust Hour for default value is 9 due to KST
+    """
+    if isinstance(dt, datetime):
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+    elif isinstance(dt, date):
+        _timezone = timezone(timedelta(hours=adjust_hours))
+        timezone_datetime = datetime.combine(dt, datetime.min.time(), _timezone)
+        utc_datetime = timezone_datetime.astimezone(timezone.utc)
+        return utc_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
     else:
         raise TypeError("Unsupported type")
