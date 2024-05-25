@@ -7,6 +7,7 @@ from project.dtos.model_dtos import ProjectListItem
 from project.dtos.response_dtos import HomeProjectListResponse
 from project.models import Project
 from project.services.bookmark_services import get_member_bookmarked_project_ids
+from project.services.project_recruit_services import get_project_recent_recruited_at
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -15,7 +16,7 @@ class HomeProjectListAPIView(APIView):
     @cursor_pagination(default_size=20, cursor_criteria=[HomeProjectListCursorCriteria])
     def get(self, request, decoded_next_cursor: dict, size: int):
         paginated_projects, has_more, next_cursor = get_objects_with_cursor_pagination(
-            Project.objects.all(),
+            Project.objects.select_related('category').all(),
             HomeProjectListCursorCriteria,
             decoded_next_cursor,
             size,
@@ -27,11 +28,18 @@ class HomeProjectListAPIView(APIView):
             request.member,
             [project.id for project in paginated_projects]
         )
+        recent_recruited_at_by_project_id = get_project_recent_recruited_at(
+            [project.id for project in paginated_projects]
+        )
         return Response(
             HomeProjectListResponse(
                 data=[
                     ProjectListItem(
                         id=project.id,
+                        category_display_name=(
+                            project.category.display_name
+                            if project.category else None
+                        ),
                         title=project.title,
                         simple_description=project.description[:100],
                         jobs=[
@@ -45,6 +53,8 @@ class HomeProjectListAPIView(APIView):
                         current_recruit_status=project.current_recruit_status,
                         image=project.main_image,
                         is_bookmarked=(project.id in is_bookmarked_project_ids),
+                        hours_per_week=project.hours_per_week,
+                        recent_recruited_at=recent_recruited_at_by_project_id.get(project.id),
                     )
                     for project in paginated_projects
                 ],

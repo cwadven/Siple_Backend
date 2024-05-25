@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest.mock import patch
 
 from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
@@ -5,7 +6,11 @@ from django.urls import reverse
 from job.dtos.model_dtos import ProjectJobRecruitInfo
 from member.models import Member
 from project.consts import ProjectRecruitmentStatus
-from project.models import Project
+from project.models import (
+    Project,
+    ProjectCategory,
+    ProjectRecruitment,
+)
 from rest_framework import status
 from rest_framework.test import (
     APIClient,
@@ -19,6 +24,10 @@ class HomeProjectListAPIViewTests(APITestCase):
         self.url = reverse('project:home')
         self.member1 = Member.objects.create_user(username='test1', nickname='test1')
         self.member2 = Member.objects.create_user(username='test2', nickname='test2')
+        self.category = ProjectCategory.objects.create(
+            display_name='카테고리 테스트',
+            name='category_test',
+        )
         self.project1 = Project.objects.create(
             title='Project 1',
             created_member_id=self.member2.id,
@@ -29,8 +38,18 @@ class HomeProjectListAPIViewTests(APITestCase):
         )
         self.project3 = Project.objects.create(
             title='Project 3',
+            category=self.category,
+            hours_per_week=10,
             created_member_id=self.member2.id,
         )
+        self.project3_recruitment = ProjectRecruitment.objects.create(
+            project_id=self.project3.id,
+            times_project_recruit=1,
+            recruit_status=ProjectRecruitmentStatus.RECRUIT_FINISH.value,
+            created_member_id=self.member2.id,
+        )
+        self.project3_recruitment.created_at = datetime(2021, 1, 1, 10, 0, 0)
+        self.project3_recruitment.save()
         self.job1 = create_job_for_testcase('job1')
 
     @patch('project.views.get_current_active_project_job_recruitments')
@@ -77,13 +96,14 @@ class HomeProjectListAPIViewTests(APITestCase):
         # Then: Verify the response status
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # And: Verify the response data project3 has is_bookmarked True
-        self.assertEqual(
+        self.assertDictEqual(
             response.json(),
             {
                 'data': [
                     {
                         'id': self.project3.id,
                         'title': self.project3.title,
+                        'category_display_name': self.category.display_name,
                         'simple_description': self.project3.description[:100],
                         'jobs': [
                             {
@@ -93,12 +113,15 @@ class HomeProjectListAPIViewTests(APITestCase):
                             }
                         ],
                         'experience': self.project3.job_experience_type,
+                        'hours_per_week': 10,
                         'current_recruit_status': self.project3.current_recruit_status,
                         'image': self.project3.main_image,
                         'is_bookmarked': True,
+                        'recent_recruited_at': '2021-01-01T01:00:00Z',
                     },
                     {
                         'id': self.project2.id,
+                        'category_display_name': None,
                         'title': self.project2.title,
                         'simple_description': self.project2.description[:100],
                         'jobs': [
@@ -109,9 +132,11 @@ class HomeProjectListAPIViewTests(APITestCase):
                             }
                         ],
                         'experience': self.project2.job_experience_type,
+                        'hours_per_week': None,
                         'current_recruit_status': self.project2.current_recruit_status,
                         'image': self.project2.main_image,
                         'is_bookmarked': False,
+                        'recent_recruited_at': None,
                     },
                 ],
                 'next_cursor': 'next_cursor_encoded',
