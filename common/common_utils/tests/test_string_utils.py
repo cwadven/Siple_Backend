@@ -11,6 +11,7 @@ from common.common_utils.string_utils import (
     format_utc,
     generate_random_string_digits,
     get_filtered_by_startswith_text_and_convert_to_standards,
+    string_to_list,
 )
 from django.test import TestCase
 
@@ -178,3 +179,85 @@ class FormatUTCTests(TestCase):
         # Expected: A TypeError is raised
         with self.assertRaises(TypeError):
             format_utc('2023-05-25')
+
+
+class StringToListTest(TestCase):
+    def test_with_default_separator(self):
+        # Given: A string with numbers separated by commas and spaces
+        input_string = '1, 2, 3, 4, 5'
+
+        # When: string_to_list is called with the default separator
+        result = string_to_list(input_string)
+
+        # Then: The output should be a list of numbers as strings without spaces
+        self.assertEqual(result, ['1', '2', '3', '4', '5'])
+
+    def test_with_custom_separator(self):
+        # Given: A string with numbers separated by semicolons and spaces
+        input_string = '1; 2; 3; 4; 5'
+
+        # When: string_to_list is called with a semicolon as the separator
+        result = string_to_list(input_string, separator=';')
+
+        # Then: The output should be a list of numbers as strings without spaces
+        self.assertEqual(result, ['1', '2', '3', '4', '5'])
+
+    def test_with_no_spaces(self):
+        # Given: A string with numbers separated by commas without spaces
+        input_string = '1,2,3,4,5'
+
+        # When: string_to_list is called
+        result = string_to_list(input_string)
+
+        # Then: The output should be a list of numbers as strings
+        self.assertEqual(result, ['1', '2', '3', '4', '5'])
+
+    def test_with_empty_string(self):
+        # Given: An empty string
+        input_string = ''
+
+        # When: string_to_list is called
+        result = string_to_list(input_string)
+
+        # Then: The output should be an empty list
+        self.assertEqual(result, [])
+
+    def test_with_spaces_only(self):
+        # Given: A string of only spaces and commas
+        input_string = ' , , , , '
+
+        # When: string_to_list is called
+        result = string_to_list(input_string)
+
+        # Then: The output should be a list with empty strings for each space segment
+        self.assertEqual(result, [])
+
+    def test_with_non_standard_characters(self):
+        # Given: A string with numbers separated by hash signs
+        input_string = "1#2#3#4#5"
+
+        # When: string_to_list is called with a hash sign as the separator
+        result = string_to_list(input_string, separator='#')
+
+        # Then: The output should be a list of numbers as strings
+        self.assertEqual(result, ['1', '2', '3', '4', '5'])
+
+    def test_with_mixed_separators(self):
+        # Given: A string with mixed separators
+        input_string = "1,2;3.4/5"
+
+        # When: string_to_list is called with a comma as the separator
+        result = string_to_list(input_string, separator=',')
+
+        # Then: The output should treat non-comma separators as part of the string values
+        self.assertEqual(result, ['1', '2;3.4/5'])
+
+    def test_strip_elements(self):
+        # Given: A string with numbers surrounded by spaces and separated by commas
+        input_string = " a , b , c , d "
+
+        # When: string_to_list is called
+        result = string_to_list(input_string)
+
+        # Then: The output should be a list of numbers as strings, stripped of surrounding spaces
+        self.assertEqual(result, ['a', 'b', 'c', 'd'])

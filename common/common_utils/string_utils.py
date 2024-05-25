@@ -69,3 +69,18 @@ def format_utc(dt: Union[datetime, date], adjust_hours=9) -> str:
         return utc_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
     else:
         raise TypeError("Unsupported type")
+
+
+def string_to_list(input_string: str, separator: str = ',') -> list:
+    """
+    Convert a string separated by a specified separator into a list of strings,
+    each element being stripped of surrounding whitespace and ignoring empty strings.
+
+    Args:
+    input_string (str): A string separated by the specified separator.
+    separator (str): The character used to split the input string. Default is ','.
+
+    Returns:
+    list: A list of strings where each string is stripped of any surrounding whitespace and not empty.
+    """
+    return [item.strip() for item in input_string.split(separator) if item.strip()]
