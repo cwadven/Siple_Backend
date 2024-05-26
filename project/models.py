@@ -158,6 +158,20 @@ class Project(models.Model):
         help_text='삭제 일시',
         verbose_name='삭제 일시',
     )
+    latest_project_recruitment = models.ForeignKey(
+        'ProjectRecruitment',
+        related_name='latest_project_recruitment',
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True,
+        help_text='최신 프로젝트 모집',
+        verbose_name='최신 프로젝트 모집',
+    )
+    latest_project_recruitment_jobs = models.ManyToManyField(
+        'job.Job',
+        related_name='latest_project_recruitment_jobs',
+        help_text='최신 프로젝트 모집 직무들',
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         help_text='생성 일시',
