@@ -56,3 +56,8 @@ class ProjectRecruitApplicationStatus(StrValueLabel):
 class ProjectMemberManagementLeftStatus(StrValueLabel):
     BANNED = ('BANNED', '강퇴')
     LEFT = ('LEFT', '탈주')
+
+
+class ProjectJobSearchOperator(StrValueLabel):
+    AND = ('AND', 'AND')
+    OR = ('OR', 'OR')
