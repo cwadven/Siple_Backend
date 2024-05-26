@@ -8,9 +8,9 @@ from project.cursor_criteria.cursor_criteria import HomeProjectListCursorCriteri
 from project.dtos.model_dtos import ProjectListItem
 from project.dtos.request_dtos import HomeProjectListRequest
 from project.dtos.response_dtos import HomeProjectListResponse
-from project.models import Project
 from project.services.bookmark_services import get_member_bookmarked_project_ids
 from project.services.project_recruit_services import get_project_recent_recruited_at
+from project.services.project_services import get_filtered_project_qs
 from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -20,7 +20,7 @@ class HomeProjectListAPIView(APIView):
     @cursor_pagination(default_size=20, cursor_criteria=[HomeProjectListCursorCriteria])
     def get(self, request, decoded_next_cursor: dict, size: int):
         try:
-            HomeProjectListRequest.of(request.query_params)
+            home_project_list_request = HomeProjectListRequest.of(request.query_params)
         except ValidationError as e:
             raise PydanticAPIException(
                 status_code=400,
@@ -29,8 +29,21 @@ class HomeProjectListAPIView(APIView):
                 errors=e.errors(),
             )
 
+        project_qs = get_filtered_project_qs(
+            title=home_project_list_request.title,
+            category_ids=home_project_list_request.category_ids,
+            job_ids=home_project_list_request.job_ids,
+            jobs_operator=home_project_list_request.jobs_operator,
+            experience=home_project_list_request.experience,
+            min_hours_per_week=home_project_list_request.min_hours_per_week,
+            max_hours_per_week=home_project_list_request.max_hours_per_week,
+            min_duration_month=home_project_list_request.min_duration_month,
+            max_duration_month=home_project_list_request.max_duration_month,
+            current_recruit_status=home_project_list_request.current_recruit_status,
+        )
+
         paginated_projects, has_more, next_cursor = get_objects_with_cursor_pagination(
-            Project.objects.select_related('category').all(),
+            project_qs,
             HomeProjectListCursorCriteria,
             decoded_next_cursor,
             size,

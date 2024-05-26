@@ -9,7 +9,11 @@ from common.common_testcase_helpers.job.testcase_helpers import create_job_for_t
 from django.urls import reverse
 from job.dtos.model_dtos import ProjectJobRecruitInfo
 from member.models import Member
-from project.consts import ProjectRecruitmentStatus
+from project.consts import (
+    ProjectJobExperienceType,
+    ProjectJobSearchOperator,
+    ProjectRecruitmentStatus,
+)
 from project.models import (
     Project,
     ProjectCategory,
@@ -59,11 +63,15 @@ class HomeProjectListAPIViewTests(APITestCase):
     @patch('project.views.get_current_active_project_job_recruitments')
     @patch('project.views.get_objects_with_cursor_pagination')
     @patch('project.views.get_member_bookmarked_project_ids')
+    @patch('project.views.get_filtered_project_qs')
     def test_get_projects_with_bookmarked_project(self,
+                                                  mock_get_filtered_project_qs,
                                                   mock_get_member_bookmarked_project_ids,
                                                   mock_get_objects_with_cursor_pagination,
                                                   mock_get_current_active_project_job_recruitments):
-        # Given: Setup return values for mocked services
+        # Given: Setup return values for mocked filtered project qs
+        mock_get_filtered_project_qs.return_value = [self.project3, self.project2]
+        # And: Setup return values for mocked services
         mock_get_objects_with_cursor_pagination.return_value = (
             [self.project3, self.project2],
             True,
@@ -97,7 +105,20 @@ class HomeProjectListAPIViewTests(APITestCase):
         # When: Make GET request with size 2
         response = self.client.get(self.url, {'size': 2})
 
-        # Then: Verify the response status
+        # Then: Verify the mocked services are called
+        mock_get_filtered_project_qs.assert_called_once_with(
+            title=None,
+            category_ids=[],
+            job_ids=[],
+            jobs_operator=ProjectJobSearchOperator.OR.value,
+            experience=ProjectJobExperienceType.ALL.value,
+            min_hours_per_week=None,
+            max_hours_per_week=None,
+            min_duration_month=None,
+            max_duration_month=None,
+            current_recruit_status=None,
+        )
+        # And: Verify the response status
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # And: Verify the response data project3 has is_bookmarked True
         self.assertDictEqual(
