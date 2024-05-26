@@ -3,6 +3,8 @@ from common.common_consts.common_enums import StrValueLabel
 
 class ErrorMessage(StrValueLabel):
     INVALID_INPUT_ERROR_MESSAGE = ('invalid_input', '유효하지 않은 입력값입니다.')
+    INVALID_COMPARE_ERROR_NEED_TO_BE_BIGGER = ('invalid_compare_bigger', '{} 값은 {} 보다 커야합니다.')
+    INVALID_COMPARE_ERROR_NEED_TO_BE_SMALLER = ('invalid_compare_smaller', '{} 값은 {} 보다 작아야합니다.')
 
 
 class InvalidInputResponseErrorStatus(StrValueLabel):
