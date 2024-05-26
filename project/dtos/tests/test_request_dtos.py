@@ -165,6 +165,49 @@ class HomeProjectListRequestTest(TestCase):
         )
         self.assertEqual(errors[1]['type'], ErrorMessage.INVALID_COMPARE_ERROR_NEED_TO_BE_BIGGER.value)
 
+    def test_validate_min_and_max_duration_month_valid(self):
+        # Given: Valid input data
+        data = {
+            'title': 'Test Project',
+            'min_duration_month': 10,
+            'max_duration_month': 20
+        }
+
+        # When: Creating HomeProjectListRequest instance
+        instance = HomeProjectListRequest(**data)
+
+        # Then: No validation errors should be raised
+        self.assertEqual(instance.min_duration_month, 10)
+        self.assertEqual(instance.max_duration_month, 20)
+
+    def test_validate_min_and_max_duration_month_invalid(self):
+        # Given: Invalid input data where min_duration_month is greater than max_duration_month
+        data = {
+            'title': 'Test Project',
+            'min_duration_month': 20,
+            'max_duration_month': 10
+        }
+
+        # When: Expecting a ValidationError to be raised
+        with self.assertRaises(ValidationError) as context:
+            HomeProjectListRequest(**data)
+
+        # Then: Validate the error details
+        errors = context.exception.errors()
+        self.assertEqual(len(errors), 2)
+        self.assertEqual(errors[0]['loc'], ('min_duration_month',))
+        self.assertEqual(
+            errors[0]['msg'].split(',')[1].strip(),
+            'min_duration_month 값은 max_duration_month 보다 작아야합니다.',
+        )
+        self.assertEqual(errors[0]['type'], ErrorMessage.INVALID_COMPARE_ERROR_NEED_TO_BE_SMALLER.value)
+        self.assertEqual(errors[1]['loc'], ('max_duration_month',))
+        self.assertEqual(
+            errors[1]['msg'].split(',')[1].strip(),
+            'max_duration_month 값은 min_duration_month 보다 커야합니다.',
+        )
+        self.assertEqual(errors[1]['type'], ErrorMessage.INVALID_COMPARE_ERROR_NEED_TO_BE_BIGGER.value)
+
     def test_of_method(self):
         # Given: request_data
         request_data = QueryDict(mutable=True)

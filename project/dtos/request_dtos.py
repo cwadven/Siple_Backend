@@ -124,6 +124,40 @@ class HomeProjectListRequest(BaseModel):
                 )
         return self
 
+    @model_validator(mode='after')
+    def validate_min_and_max_duration_month(self) -> Self:
+        errors = []
+        if self.min_duration_month and self.max_duration_month:
+            if self.min_duration_month > self.max_duration_month:
+                errors.append(
+                    generate_pydantic_error_detail(
+                        ErrorMessage.INVALID_COMPARE_ERROR_NEED_TO_BE_SMALLER.value,
+                        ErrorMessage.INVALID_COMPARE_ERROR_NEED_TO_BE_SMALLER.label.format(
+                            'min_duration_month',
+                            'max_duration_month',
+                        ),
+                        'min_duration_month',
+                        self.min_duration_month,
+                    )
+                )
+                errors.append(
+                    generate_pydantic_error_detail(
+                        ErrorMessage.INVALID_COMPARE_ERROR_NEED_TO_BE_BIGGER.value,
+                        ErrorMessage.INVALID_COMPARE_ERROR_NEED_TO_BE_BIGGER.label.format(
+                            'max_duration_month',
+                            'min_duration_month',
+                        ),
+                        'max_duration_month',
+                        self.max_duration_month,
+                    )
+                )
+            if errors:
+                raise ValidationError.from_exception_data(
+                    title=self.__class__.__name__,
+                    line_errors=errors,
+                )
+        return self
+
     @classmethod
     def of(cls, request: QueryDict):
         return cls(
