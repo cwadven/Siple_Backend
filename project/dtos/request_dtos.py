@@ -3,7 +3,7 @@ from typing import (
     Optional,
 )
 
-from common.common_consts.common_error_messages import INVALID_INPUT_ERROR_MESSAGE
+from common.common_consts.common_error_messages import ErrorMessage
 from common.common_utils import string_to_list
 from django.http import QueryDict
 from project.consts import (
@@ -43,9 +43,9 @@ class HomeProjectListRequest(BaseModel):
                 elif isinstance(item, str) and item.isdigit():
                     validated_list.append(int(item))
                 else:
-                    raise ValueError(INVALID_INPUT_ERROR_MESSAGE)
+                    raise ValueError(ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
             return validated_list
-        raise ValueError(INVALID_INPUT_ERROR_MESSAGE)
+        raise ValueError(ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
 
     @field_validator(
         'min_hours_per_week',
@@ -59,7 +59,7 @@ class HomeProjectListRequest(BaseModel):
             return v
         if isinstance(v, int):
             return v
-        raise ValueError(INVALID_INPUT_ERROR_MESSAGE)
+        raise ValueError(ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
 
     @field_validator(
         'jobs_operator',
@@ -71,7 +71,7 @@ class HomeProjectListRequest(BaseModel):
         try:
             return ProjectJobSearchOperator(v).value
         except ValueError:
-            raise ValueError(INVALID_INPUT_ERROR_MESSAGE)
+            raise ValueError(ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
 
     @field_validator(
         'experience',
@@ -83,7 +83,7 @@ class HomeProjectListRequest(BaseModel):
         try:
             return ProjectJobExperienceType(v).value
         except ValueError:
-            raise ValueError(INVALID_INPUT_ERROR_MESSAGE)
+            raise ValueError(ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
 
     @classmethod
     def of(cls, request: QueryDict):

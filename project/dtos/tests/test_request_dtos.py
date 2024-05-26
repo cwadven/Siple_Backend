@@ -1,4 +1,4 @@
-from common.common_consts.common_error_messages import INVALID_INPUT_ERROR_MESSAGE
+from common.common_consts.common_error_messages import ErrorMessage
 from django.http import QueryDict
 from django.test import TestCase
 from project.consts import (
@@ -30,7 +30,7 @@ class HomeProjectListRequestTest(TestCase):
         # When/Then: ValueError 발생
         with self.assertRaises(ValueError) as context:
             HomeProjectListRequest.check_if_integer(invalid_category_ids)
-        self.assertEqual(str(context.exception), INVALID_INPUT_ERROR_MESSAGE)
+        self.assertEqual(str(context.exception), ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
 
     def test_check_if_integer_invalid_list(self):
         # Given: invalid category_ids type not as list
@@ -39,7 +39,7 @@ class HomeProjectListRequestTest(TestCase):
         # When/Then: ValueError 발생
         with self.assertRaises(ValueError) as context:
             HomeProjectListRequest.check_if_integer(invalid_category_ids)
-        self.assertEqual(str(context.exception), INVALID_INPUT_ERROR_MESSAGE)
+        self.assertEqual(str(context.exception), ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
 
     def test_check_if_none_or_integer_valid(self):
         # Given: valid min_hours_per_week and max_hours_per_week
@@ -61,7 +61,7 @@ class HomeProjectListRequestTest(TestCase):
         # When/Then: ValueError 발생
         with self.assertRaises(ValueError) as context:
             HomeProjectListRequest.check_if_none_or_integer(invalid_min_hours_per_week)
-        self.assertEqual(str(context.exception), INVALID_INPUT_ERROR_MESSAGE)
+        self.assertEqual(str(context.exception), ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
 
     def test_check_jobs_operator_value_valid(self):
         # Given: valid jobs_operator
@@ -90,7 +90,7 @@ class HomeProjectListRequestTest(TestCase):
         # When/Then: ValueError 발생
         with self.assertRaises(ValueError) as context:
             HomeProjectListRequest.check_jobs_operator_value(invalid_jobs_operator)
-        self.assertEqual(str(context.exception), INVALID_INPUT_ERROR_MESSAGE)
+        self.assertEqual(str(context.exception), ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
 
     def test_check_experience_value_valid(self):
         # Given: valid experience
@@ -119,7 +119,7 @@ class HomeProjectListRequestTest(TestCase):
         # When/Then: ValueError 발생
         with self.assertRaises(ValueError) as context:
             HomeProjectListRequest.check_experience_value(invalid_experience)
-        self.assertEqual(str(context.exception), INVALID_INPUT_ERROR_MESSAGE)
+        self.assertEqual(str(context.exception), ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
 
     def test_of_method(self):
         # Given: request_data
