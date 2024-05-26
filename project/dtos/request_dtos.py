@@ -57,9 +57,10 @@ class HomeProjectListRequest(BaseModel):
     def check_if_none_or_integer(cls, v):
         if v is None:
             return v
-        if isinstance(v, int):
-            return v
-        raise ValueError(ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
+        try:
+            return int(v)
+        except ValueError:
+            raise ValueError(ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
 
     @field_validator(
         'jobs_operator',
