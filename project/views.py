@@ -1,13 +1,17 @@
+from common.common_consts.common_error_messages import InvalidInputResponseErrorStatus
 from common.common_decorators.request_decorators import cursor_pagination
+from common.common_exceptions import PydanticAPIException
 from common.common_paginations.cursor_pagination_helpers import get_objects_with_cursor_pagination
 from job.dtos.model_dtos import ProjectJobAvailabilities
 from job.services.project_job_services import get_current_active_project_job_recruitments
 from project.cursor_criteria.cursor_criteria import HomeProjectListCursorCriteria
 from project.dtos.model_dtos import ProjectListItem
+from project.dtos.request_dtos import HomeProjectListRequest
 from project.dtos.response_dtos import HomeProjectListResponse
 from project.models import Project
 from project.services.bookmark_services import get_member_bookmarked_project_ids
 from project.services.project_recruit_services import get_project_recent_recruited_at
+from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -15,6 +19,16 @@ from rest_framework.views import APIView
 class HomeProjectListAPIView(APIView):
     @cursor_pagination(default_size=20, cursor_criteria=[HomeProjectListCursorCriteria])
     def get(self, request, decoded_next_cursor: dict, size: int):
+        try:
+            HomeProjectListRequest.of(request.query_params)
+        except ValidationError as e:
+            raise PydanticAPIException(
+                status_code=400,
+                detail=InvalidInputResponseErrorStatus.INVALID_INPUT_HOME_LIST_PARAM_ERROR_400.label,
+                code=InvalidInputResponseErrorStatus.INVALID_INPUT_HOME_LIST_PARAM_ERROR_400.value,
+                errors=e.errors(),
+            )
+
         paginated_projects, has_more, next_cursor = get_objects_with_cursor_pagination(
             Project.objects.select_related('category').all(),
             HomeProjectListCursorCriteria,

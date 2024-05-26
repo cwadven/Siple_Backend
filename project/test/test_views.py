@@ -1,6 +1,10 @@
 from datetime import datetime
 from unittest.mock import patch
 
+from common.common_consts.common_error_messages import (
+    ErrorMessage,
+    InvalidInputResponseErrorStatus,
+)
 from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
 from django.urls import reverse
 from job.dtos.model_dtos import ProjectJobRecruitInfo
@@ -141,5 +145,28 @@ class HomeProjectListAPIViewTests(APITestCase):
                 ],
                 'next_cursor': 'next_cursor_encoded',
                 'has_more': True,
+            }
+        )
+
+    def test_get_projects_should_raise_error_when_request_param_is_invalid(self):
+        # Given: Invalid Param error
+        data = {
+            'size': 2,
+            'category_ids': '1,2,invalid_category_id',
+        }
+        # When: Make GET request with error param
+        response = self.client.get(self.url, data)
+
+        # Then: Error 400
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # And: Error info
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': InvalidInputResponseErrorStatus.INVALID_INPUT_HOME_LIST_PARAM_ERROR_400.label,
+                'error_code': InvalidInputResponseErrorStatus.INVALID_INPUT_HOME_LIST_PARAM_ERROR_400.value,
+                'errors': {
+                    'category_ids': [ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label],
+                }
             }
         )
