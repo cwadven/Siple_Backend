@@ -7,6 +7,7 @@ from project.consts import (
     ProjectJobSearchOperator,
 )
 from project.dtos.request_dtos import HomeProjectListRequest
+from pydantic import ValidationError
 
 
 class HomeProjectListRequestTest(TestCase):
@@ -120,6 +121,49 @@ class HomeProjectListRequestTest(TestCase):
         with self.assertRaises(ValueError) as context:
             HomeProjectListRequest.check_experience_value(invalid_experience)
         self.assertEqual(str(context.exception), ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
+
+    def test_validate_min_and_max_hours_per_week_valid(self):
+        # Given: Valid input data
+        data = {
+            'title': 'Test Project',
+            'min_hours_per_week': 10,
+            'max_hours_per_week': 20
+        }
+
+        # When: Creating HomeProjectListRequest instance
+        instance = HomeProjectListRequest(**data)
+
+        # Then: No validation errors should be raised
+        self.assertEqual(instance.min_hours_per_week, 10)
+        self.assertEqual(instance.max_hours_per_week, 20)
+
+    def test_validate_min_and_max_hours_per_week_invalid(self):
+        # Given: Invalid input data where min_hours_per_week is greater than max_hours_per_week
+        data = {
+            'title': 'Test Project',
+            'min_hours_per_week': 20,
+            'max_hours_per_week': 10
+        }
+
+        # When: Expecting a ValidationError to be raised
+        with self.assertRaises(ValidationError) as context:
+            HomeProjectListRequest(**data)
+
+        # Then: Validate the error details
+        errors = context.exception.errors()
+        self.assertEqual(len(errors), 2)
+        self.assertEqual(errors[0]['loc'], ('min_hours_per_week',))
+        self.assertEqual(
+            errors[0]['msg'].split(',')[1].strip(),
+            'min_hours_per_week 값은 max_hours_per_week 보다 작아야합니다.',
+        )
+        self.assertEqual(errors[0]['type'], 'value_error')
+        self.assertEqual(errors[1]['loc'], ('max_hours_per_week',))
+        self.assertEqual(
+            errors[1]['msg'].split(',')[1].strip(),
+            'max_hours_per_week 값은 min_hours_per_week 보다 커야합니다.',
+        )
+        self.assertEqual(errors[1]['type'], 'value_error')
 
     def test_of_method(self):
         # Given: request_data

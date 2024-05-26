@@ -1,10 +1,12 @@
 from typing import (
     List,
     Optional,
+    Self,
 )
 
 from common.common_consts.common_error_messages import ErrorMessage
 from common.common_utils import string_to_list
+from common.common_utils.error_utils import generate_pydantic_error_detail
 from django.http import QueryDict
 from project.consts import (
     ProjectJobExperienceType,
@@ -13,7 +15,9 @@ from project.consts import (
 from pydantic import (
     BaseModel,
     Field,
+    ValidationError,
     field_validator,
+    model_validator,
 )
 
 
@@ -85,6 +89,34 @@ class HomeProjectListRequest(BaseModel):
             return ProjectJobExperienceType(v).value
         except ValueError:
             raise ValueError(ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
+
+    @model_validator(mode='after')
+    def validate_min_and_max_hours_per_week(self) -> Self:
+        errors = []
+        if self.min_hours_per_week and self.max_hours_per_week:
+            if self.min_hours_per_week > self.max_hours_per_week:
+                errors.append(
+                    generate_pydantic_error_detail(
+                        'value_error',
+                        'min_hours_per_week 값은 max_hours_per_week 보다 작아야합니다.',
+                        'min_hours_per_week',
+                        self.min_hours_per_week,
+                    )
+                )
+                errors.append(
+                    generate_pydantic_error_detail(
+                        'value_error',
+                        'max_hours_per_week 값은 min_hours_per_week 보다 커야합니다.',
+                        'max_hours_per_week',
+                        self.max_hours_per_week,
+                    )
+                )
+            if errors:
+                raise ValidationError.from_exception_data(
+                    title=self.__class__.__name__,
+                    line_errors=errors,
+                )
+        return self
 
     @classmethod
     def of(cls, request: QueryDict):
