@@ -147,6 +147,11 @@ class Project(models.Model):
         verbose_name='북마크 수',
         db_index=True,
     )
+    is_deleted = models.BooleanField(
+        default=False,
+        help_text='삭제 여부',
+        verbose_name='삭제 여부',
+    )
     deleted_at = models.DateTimeField(
         null=True,
         blank=True,
