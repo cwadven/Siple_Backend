@@ -97,7 +97,7 @@ class HomeProjectListRequest(BaseModel):
             if self.min_hours_per_week > self.max_hours_per_week:
                 errors.append(
                     generate_pydantic_error_detail(
-                        'value_error',
+                        ErrorMessage.INVALID_COMPARE_ERROR_NEED_TO_BE_SMALLER.value,
                         ErrorMessage.INVALID_COMPARE_ERROR_NEED_TO_BE_SMALLER.label.format(
                             'min_hours_per_week',
                             'max_hours_per_week',
@@ -108,7 +108,7 @@ class HomeProjectListRequest(BaseModel):
                 )
                 errors.append(
                     generate_pydantic_error_detail(
-                        'value_error',
+                        ErrorMessage.INVALID_COMPARE_ERROR_NEED_TO_BE_BIGGER.value,
                         ErrorMessage.INVALID_COMPARE_ERROR_NEED_TO_BE_BIGGER.label.format(
                             'max_hours_per_week',
                             'min_hours_per_week',

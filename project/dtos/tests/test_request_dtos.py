@@ -157,13 +157,13 @@ class HomeProjectListRequestTest(TestCase):
             errors[0]['msg'].split(',')[1].strip(),
             'min_hours_per_week 값은 max_hours_per_week 보다 작아야합니다.',
         )
-        self.assertEqual(errors[0]['type'], 'value_error')
+        self.assertEqual(errors[0]['type'], ErrorMessage.INVALID_COMPARE_ERROR_NEED_TO_BE_SMALLER.value)
         self.assertEqual(errors[1]['loc'], ('max_hours_per_week',))
         self.assertEqual(
             errors[1]['msg'].split(',')[1].strip(),
             'max_hours_per_week 값은 min_hours_per_week 보다 커야합니다.',
         )
-        self.assertEqual(errors[1]['type'], 'value_error')
+        self.assertEqual(errors[1]['type'], ErrorMessage.INVALID_COMPARE_ERROR_NEED_TO_BE_BIGGER.value)
 
     def test_of_method(self):
         # Given: request_data
