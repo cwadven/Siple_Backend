@@ -45,16 +45,10 @@ class MissingMandatoryParameterException(CommonAPIException):
     default_code = 'missing-mandatory-parameter'
 
 
-class CodeInvalidateException(APIException):
+class CodeInvalidateException(CommonAPIException):
     status_code = 400
     default_detail = '서버에 문제가 있습니다.'
     default_code = 'invalidate-exception'
-
-    @classmethod
-    def to_message(cls):
-        return {
-            'message': cls.default_detail,
-        }
 
 
 class PydanticAPIException(CommonAPIException):

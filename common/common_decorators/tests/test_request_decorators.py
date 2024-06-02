@@ -37,8 +37,12 @@ class TestMandatoriesDecorator(TestCase):
 
         # When: Call the decorated function with missing mandatory parameter
         request.GET = {'param1': 'value1'}
-        with self.assertRaises(MissingMandatoryParameterException):
+        with self.assertRaises(MissingMandatoryParameterException) as e:
             my_mandatories_view_function(request)
+
+        self.assertEqual(e.exception.default_detail, '입력값을 다시 확인해주세요.')
+        self.assertEqual(e.exception.default_code, 'missing-mandatory-parameter')
+        self.assertEqual(e.exception.errors, {'param2': ['param2 입력값을 확인해주세요.']})
 
     def test_decorator_applied_to_class_method(self):
         # Given: Create a request
@@ -55,8 +59,12 @@ class TestMandatoriesDecorator(TestCase):
 
         # When: Instantiate the class and call the decorated method with missing mandatory parameter
         request.GET = {'param1': 'value1'}
-        with self.assertRaises(MissingMandatoryParameterException):
+        with self.assertRaises(MissingMandatoryParameterException) as e:
             view_instance.my_method(request)
+
+        self.assertEqual(e.exception.default_detail, '입력값을 다시 확인해주세요.')
+        self.assertEqual(e.exception.default_code, 'missing-mandatory-parameter')
+        self.assertEqual(e.exception.errors, {'param2': ['param2 입력값을 확인해주세요.']})
 
     def test_decorator_without_request_argument(self):
         # When: Call the decorator without a request argument (should raise CodeInvalidateException)
