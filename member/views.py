@@ -40,7 +40,10 @@ from member.dtos.response_dtos import (
     RefreshTokenResponse,
     SocialLoginResponse,
 )
-from member.exceptions import NormalLoginFailedException
+from member.exceptions import (
+    InvalidRefreshTokenErrorException,
+    NormalLoginFailedException,
+)
 from member.models import (
     Guest,
     Member,
@@ -122,7 +125,7 @@ class RefreshTokenView(APIView):
                 refresh_token=get_jwt_refresh_token(member.guest),
             )
         except (Member.DoesNotExist, jwt.InvalidTokenError):
-            return Response({'message': '잘못된 리프레시 토큰입니다.'}, status=401)
+            raise InvalidRefreshTokenErrorException()
         return Response(refresh_token_response.model_dump(), status=200)
 
 

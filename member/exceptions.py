@@ -21,6 +21,12 @@ class SocialLoginTokenErrorException(CommonAPIException):
     default_code = 'social-token-error'
 
 
+class InvalidRefreshTokenErrorException(CommonAPIException):
+    status_code = 401
+    default_detail = '잘못된 리프레시 토큰입니다.'
+    default_code = 'invalid-refresh-token'
+
+
 class BlackMemberException(CommonAPIException):
     status_code = 400
     default_detail = '정지된 유저입니다.'
