@@ -158,6 +158,25 @@ class HomeProjectListRequest(BaseModel):
                 )
         return self
 
+    @model_validator(mode='after')
+    def validate_job_ids_maximum_input_length(self) -> Self:
+        errors = []
+        if len(self.job_ids) > 5:
+            errors.append(
+                generate_pydantic_error_detail(
+                    ErrorMessage.INVALID_MAXIMUM_LENGTH.value,
+                    ErrorMessage.INVALID_MAXIMUM_LENGTH.label,
+                    'job_ids',
+                    self.job_ids,
+                )
+            )
+        if errors:
+            raise ValidationError.from_exception_data(
+                title=self.__class__.__name__,
+                line_errors=errors,
+            )
+        return self
+
     @classmethod
     def of(cls, request: QueryDict):
         return cls(

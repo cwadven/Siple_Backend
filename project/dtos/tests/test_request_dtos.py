@@ -165,6 +165,37 @@ class HomeProjectListRequestTest(TestCase):
         )
         self.assertEqual(errors[1]['type'], ErrorMessage.INVALID_COMPARE_ERROR_NEED_TO_BE_BIGGER.value)
 
+    def test_validate_job_ids_maximum_input_length_valid(self):
+        # Given: Valid input data
+        data = {
+            'title': 'Test Project',
+            'job_ids': [1, 2, 3, 4, 5]
+        }
+
+        # When: Creating HomeProjectListRequest instance
+        instance = HomeProjectListRequest(**data)
+
+        # Then: No validation errors should be raised
+        self.assertEqual(instance.job_ids, [1, 2, 3, 4, 5])
+
+    def test_validate_job_ids_maximum_input_length_invalid(self):
+        # Given: Invalid input data where job_ids length is greater than 5
+        data = {
+            'title': 'Test Project',
+            'job_ids': [1, 2, 3, 4, 5, 6]
+        }
+
+        # When: Expecting a ValidationError to be raised
+        with self.assertRaises(ValidationError) as context:
+            HomeProjectListRequest(**data)
+
+        # Then: Validate the error details
+        errors = context.exception.errors()
+        self.assertEqual(len(errors), 1)
+        self.assertEqual(errors[0]['loc'], ('job_ids',))
+        self.assertEqual(errors[0]['msg'].split(',')[1].strip(), ErrorMessage.INVALID_MAXIMUM_LENGTH.label)
+        self.assertEqual(errors[0]['type'], ErrorMessage.INVALID_MAXIMUM_LENGTH.value)
+
     def test_validate_min_and_max_duration_month_valid(self):
         # Given: Valid input data
         data = {
