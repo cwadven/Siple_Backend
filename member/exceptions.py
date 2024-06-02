@@ -27,6 +27,12 @@ class InvalidRefreshTokenErrorException(CommonAPIException):
     default_code = 'invalid-refresh-token'
 
 
+class InvalidValueForSignUpFieldErrorException(CommonAPIException):
+    status_code = 400
+    default_detail = '입력값을 다시 확인해주세요.'
+    default_code = 'invalid-sign-up-field-value'
+
+
 class BlackMemberException(CommonAPIException):
     status_code = 400
     default_detail = '정지된 유저입니다.'

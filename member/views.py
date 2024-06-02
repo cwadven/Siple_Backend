@@ -42,6 +42,7 @@ from member.dtos.response_dtos import (
 )
 from member.exceptions import (
     InvalidRefreshTokenErrorException,
+    InvalidValueForSignUpFieldErrorException,
     NormalLoginFailedException,
 )
 from member.models import (
@@ -231,7 +232,7 @@ class SignUpValidationView(APIView):
         payload_validator = SignUpPayloadValidator(payload.model_dump())
         error_dict = payload_validator.validate()
         if error_dict:
-            return Response(error_dict, 400)
+            raise InvalidValueForSignUpFieldErrorException(errors=error_dict)
         return Response({'message': 'success'}, 200)
 
 
