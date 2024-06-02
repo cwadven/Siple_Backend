@@ -78,7 +78,11 @@ class PromotionBannerAPITests(TestCase):
         # And: 반환된 데이터가 기대하는 값과 일치하는지 검증
         self.assertDictEqual(
             response.json(),
-            {'message': '입력값을 다시 확인해주세요.'}
+            {
+                'message': '입력값을 다시 확인해주세요.',
+                'error_code': 'missing-mandatory-parameter',
+                'errors': None,
+            }
         )
 
     def test_get_promotion_banner_should_return_400_when_target_layer_invalid(self):

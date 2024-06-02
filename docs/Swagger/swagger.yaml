@@ -820,7 +820,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: ['PROJECT_ENGAGEMENT_LEVEL', 'PROJECT_DURATION', 'JOB', 'MEMBER_ATTRIBUTE']
+            enum: ['JOB', 'MEMBER_ATTRIBUTE', 'PROJECT_CATEGORY']
           description: Type of constance_type
       responses:
         '200':
@@ -1014,13 +1014,27 @@ paths:
             type: string
           description: Search title of siple
           example: '사이플'
-        - name: jobs
+        - name: job_ids
           in: query
           required: false
           schema:
             type: string
-          description: 직무별
-          example: 'FE,BE'
+          description: 직무별 아이디
+          example: '1,2,3'
+        - name: category_ids
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 카테고리 아이디
+          example: '1,2,3'
+        - name: jobs_operator
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProjectJobOperator'
+          description: OR 혹은 AND 조건으로 검색 여부
+          example: 'OR'
         - name: experience
           in: query
           required: false
@@ -1028,21 +1042,42 @@ paths:
             $ref: '#/components/schemas/ProjectExperienceType'
           description: 경력 여부
           example: 'ONLY_EXPERIENCE'
-        - name: engagement_level
+        - name: min_hours_per_week
           in: query
           required: false
           schema:
-            type: string
-            enum: ['MEDIUM', 'HIGH']
-            example: 'HIGH,MEDIUM'
-          description: 요구 몰입도
-        - name: duration
+            type: integer
+            example: 1
+          description: 최소 주 N 시간
+        - name: max_hours_per_week
           in: query
           required: false
           schema:
-            type: string
-          description: 기간
-          example: '1_2,3_4,5_6'
+            type: integer
+            example: 3
+          description: 최대 주 N 시간
+        - name: min_duration_month
+          in: query
+          required: false
+          schema:
+            type: integer
+            example: 1
+          description: 프로젝트 최소 유지 기간
+          example: 1
+        - name: max_duration_month
+          in: query
+          required: false
+          schema:
+            type: integer
+            example: 3
+          description: 프로젝트 최대 유지 기간
+          example: 3
+        - name: current_recruit_status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProjectMainLisFilterCurrentRecruitStatus'
+          description: 값을 보내지 않으면 전체.
       responses:
         '200':
           description: A list of Projects
@@ -1062,19 +1097,37 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - title
+                - category_id
+                - descritpion
+                - hours_per_week
+                - duration_month
+                - image
+                - jobs
+                - experience
+                - extra_information
               properties:
                 title:
                   type: string
                   description: '프로젝트 제목'
                   example: '마인크래프트 같이 할 사람 구합니다~!'
+                category_id:
+                  type: integer
+                  description: '카테고리 id'
+                  example: 14
                 descritpion:
                   type: string
                   description: '프로젝트 내용'
                   example: '야생 마인크래프트 같이 할 사람 구합니다~!'
-                engagement_level:
-                  $ref: '#/components/schemas/ProjectEngagementLevelType'
-                duration:
-                  $ref: '#/components/schemas/ProjectDuration'
+                hours_per_week:
+                  type: integer
+                  description: '주 N 시간'
+                  example: 14
+                duration_month:
+                  type: integer
+                  description: '프로젝트 진행 개월'
+                  example: 1
                 image:
                   type: string
                   description: '프로젝트 배경 이미지'
@@ -1100,15 +1153,6 @@ paths:
                   description: '번호 혹은 오카방 링크'
                   example: '010-XXXX-XXXX 혹은 오카방 입니다~'
                   nullable: true
-              required:
-                - title
-                - descritpion
-                - engagement_level
-                - duration
-                - image
-                - jobs
-                - experience
-                - extra_information
       responses:
         '200':
           description: Created Project
@@ -1116,6 +1160,8 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - id
                 properties:
                   id:
                     type: integer
@@ -1130,6 +1176,7 @@ paths:
                 required:
                   - message
                   - error_code
+                  - errors
                 properties:
                   message:
                     type: string
@@ -1141,6 +1188,10 @@ paths:
                     type: object
                     description: '에러 key value 에 맞춰서 대응'
                     properties:
+                      categord_id:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectCategoryIdCreationError'
                       title:
                         type: array
                         items:
@@ -1149,14 +1200,14 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/ProjectDescriptionCreationError'
-                      engagement_level:
+                      hours_per_week:
                         type: array
                         items:
-                          $ref: '#/components/schemas/ProjectEngagementLevelCreationError'
-                      duration:
+                          $ref: '#/components/schemas/ProjectHoursPerWeekCreationError'
+                      duration_month:
                         type: array
                         items:
-                          $ref: '#/components/schemas/ProjectDurationCreationError'
+                          $ref: '#/components/schemas/ProjectDurationMonthCreationError'
                       jobs:
                         type: array
                         items:
@@ -1208,6 +1259,53 @@ paths:
           schema:
             type: integer
           description: update page for Project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - category_id
+                - descritpion
+                - hours_per_week
+                - duration_month
+                - image
+                - experience
+                - extra_information
+              properties:
+                title:
+                  type: string
+                  description: '프로젝트 제목'
+                  example: '마인크래프트 같이 할 사람 구합니다~!'
+                category_id:
+                  type: integer
+                  description: '카테고리 id'
+                  example: 12
+                descritpion:
+                  type: string
+                  description: '프로젝트 내용'
+                  example: '야생 마인크래프트 같이 할 사람 구합니다~!'
+                hours_per_week:
+                  type: integer
+                  description: '주 N 시간'
+                  example: 14
+                duration_month:
+                  type: integer
+                  description: '프로젝트 진행 개월'
+                  example: 1
+                image:
+                  type: string
+                  description: '프로젝트 배경 이미지'
+                  example: 'https://이미지.com'
+                  nullable: true
+                experience:
+                  $ref: '#/components/schemas/ProjectExperienceType'
+                extra_information:
+                  type: string
+                  description: '번호 혹은 오카방 링크'
+                  example: '010-XXXX-XXXX 혹은 오카방 입니다~'
+                  nullable: true
       responses:
         '200':
           description: Updated Project
@@ -1235,39 +1333,39 @@ paths:
                     description: '어떠한 이유로 실패했는지'
                     example: '유효하지 않은 정보를 입력하여 생성에 실패했습니다.'
                   error_code:
-                    $ref: '#/components/schemas/ProjectCreationErrorCode'
+                    $ref: '#/components/schemas/ProjectUpdatedErrorCode'
                   errors:
                     type: object
                     description: '에러 key value 에 맞춰서 대응'
                     properties:
+                      category_id:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectCategoryIdUpdateError'
                       title:
                         type: array
                         items:
-                          $ref: '#/components/schemas/ProjectTitleCreationError'
+                          $ref: '#/components/schemas/ProjectTitleUpdateError'
                       description:
                         type: array
                         items:
-                          $ref: '#/components/schemas/ProjectDescriptionCreationError'
-                      engagement_level:
+                          $ref: '#/components/schemas/ProjectDescriptionUpdateError'
+                      hours_per_week:
                         type: array
                         items:
-                          $ref: '#/components/schemas/ProjectEngagementLevelCreationError'
-                      duration:
+                          $ref: '#/components/schemas/ProjectHoursPerWeekUpdateError'
+                      duration_month:
                         type: array
                         items:
-                          $ref: '#/components/schemas/ProjectDurationCreationError'
-                      jobs:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/ProjectJobsCreationError'
+                          $ref: '#/components/schemas/ProjectDurationMonthUpdateError'
                       experience:
                         type: array
                         items:
-                          $ref: '#/components/schemas/ProjectExperienceCreationError'
+                          $ref: '#/components/schemas/ProjectExperienceUpdateError'
                       extra_information:
                         type: array
                         items:
-                          $ref: '#/components/schemas/ProjectUpdatedErrorCode'
+                          $ref: '#/components/schemas/ProjectExtraInformationUpdateError'
         '403':
           description: No Auth
           content:
@@ -1348,6 +1446,8 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - description
               properties:
                 description:
                   type: string
@@ -1768,6 +1868,7 @@ paths:
               type: object
               required:
                 - ban_member_id
+                - reason
               properties:
                 ban_member_id:
                   type: integer
@@ -1926,7 +2027,14 @@ paths:
           schema:
             type: integer
             default: 20
-          description: Number of banners per page.
+          description: Number of size.
+        - name: category_ids
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 카테고리 id 들
+          example: '1,2,3'
         - name: title
           in: query
           required: false
@@ -1948,21 +2056,34 @@ paths:
             $ref: '#/components/schemas/ProjectExperienceType'
           description: 경력 여부
           example: 'ONLY_EXPERIENCE'
-        - name: engagement_level
+        - name: min_hours_per_week
           in: query
           required: false
           schema:
-            type: string
-            enum: ['MEDIUM', 'HIGH']
-          description: 요구 몰입도
-          example: 'HIGH,MEDIUM'
-        - name: duration
+            type: integer
+          description: '최소 주 N 시간'
+          example: 1
+        - name: max_hours_per_week
           in: query
           required: false
           schema:
-            type: string
-          description: 기간
-          example: '1_2,3_4,5_6'
+            type: integer
+          description: '최대 주 N 시간'
+          example: 4
+        - name: min_duration_month
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: 최소 프로젝트 기간
+          example: 1
+        - name: max_duration_month
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: 최대 프로젝트 기간
+          example: 4
         - name: project_result_status
           in: query
           required: false
@@ -2220,14 +2341,19 @@ components:
       description: 'description 이 어떠한 이유로 실패했는지'
       example: '유효하지 않은 무언가가 들어갔습니다.'
 
-    ProjectEngagementLevelCreationError:
+    ProjectHoursPerWeekCreationError:
       type: string
-      description: 'engagement_level 이 어떠한 이유로 실패했는지'
+      description: 'hours_per_week 이 어떠한 이유로 실패했는지'
       example: '유효하지 않은 무언가가 들어갔습니다.'
 
-    ProjectDurationCreationError:
+    ProjectCategoryIdCreationError:
       type: string
-      description: 'duration 이 어떠한 이유로 실패했는지'
+      description: 'category_id 이 어떠한 이유로 실패했는지'
+      example: '유효하지 않은 무언가가 들어갔습니다.'
+
+    ProjectDurationMonthCreationError:
+      type: string
+      description: 'duration_month 이 어떠한 이유로 실패했는지'
       example: '유효하지 않은 무언가가 들어갔습니다.'
 
     ProjectJobsCreationError:
@@ -2245,23 +2371,49 @@ components:
       description: 'extra_information 이 어떠한 이유로 실패했는지'
       example: '유효하지 않은 무언가가 들어갔습니다.'
 
+    ProjectCategoryIdUpdateError:
+      type: string
+      description: 'category_id 이 어떠한 이유로 실패했는지'
+      example: '유효하지 않은 무언가가 들어갔습니다.'
+
+    ProjectTitleUpdateError:
+      type: string
+      description: 'title 이 어떠한 이유로 실패했는지'
+      example: '100 글자를 넘었습니다.'
+
+    ProjectDescriptionUpdateError:
+      type: string
+      description: 'description 이 어떠한 이유로 실패했는지'
+      example: '유효하지 않은 무언가가 들어갔습니다.'
+
+    ProjectHoursPerWeekUpdateError:
+      type: string
+      description: 'hours_per_week 이 어떠한 이유로 실패했는지'
+      example: '유효하지 않은 무언가가 들어갔습니다.'
+
+    ProjectDurationMonthUpdateError:
+      type: string
+      description: 'duration_month 이 어떠한 이유로 실패했는지'
+      example: '유효하지 않은 무언가가 들어갔습니다.'
+
+    ProjectExperienceUpdateError:
+      type: string
+      description: 'experience 가 어떠한 이유로 실패했는지'
+      example: '유효하지 않은 무언가가 들어갔습니다.'
+
+    ProjectExtraInformationUpdateError:
+      type: string
+      description: 'extra_information 이 어떠한 이유로 실패했는지'
+      example: '유효하지 않은 무언가가 들어갔습니다.'
+
     ProjectApplicationReply:
       type: string
       enum: ['ACCEPT', 'DENY']
       example: 'ACCEPT'
 
-    ProjectDuration:
-      type: string
-      enum: ['1_2', '3_4', '5_6']
-      example: '1_2'
-
-    ProjectEngagementLevelType:
-      type: string
-      enum: ['MEDIUM', 'HIGH']
-      example: 'HIGH'
-
     ProjectNextCursor:
       type: string
+      nullable: true
       description: |
         다음 데이터를 가져오기 위한 token (정렬은 rearrangement_time, id 최신순으로 합니다)<br>
         next_cursor 의 값은 rearrangement_time, id 의 값을 json 후 base64 url-safe 인코딩 합니다.
@@ -2269,8 +2421,14 @@ components:
 
     ProjectCurrentRecruitStatus:
       type: string
-      enum: ['RECRUITING', 'ADDITIONAL_RECRUITING']
+      enum: ['RECRUITING', 'ADDITIONAL_RECRUITING', 'RECRUITED']
       description: 프로젝트 상태가 모집중, 진행중(추가 모집)
+      example: 'RECRUITING'
+
+    ProjectMainLisFilterCurrentRecruitStatus:
+      type: string
+      enum: ['RECRUITING', 'RECRUITED']
+      description: 프로젝트 상태가 모집중
       example: 'RECRUITING'
 
     ProfileBlock:
@@ -2310,6 +2468,7 @@ components:
             required:
               - id
               - display_name
+              - name
             properties:
               id:
                 type: integer
@@ -2331,6 +2490,7 @@ components:
               - id
               - display_name
               - year
+              - month
             properties:
               id:
                 type: integer
@@ -2344,6 +2504,10 @@ components:
                 type: integer
                 description: '연차'
                 example: 2
+              month:
+                type: integer
+                description: '개월'
+                example: 4
         project_info:
           type: object
           required:
@@ -2366,6 +2530,7 @@ components:
         link:
           type: string
           description: '링크'
+          nullable: true
           example: 'github.com/extra'
 
 
@@ -2374,13 +2539,34 @@ components:
       enum: ['ALL', 'ONLY_EXPERIENCE']
       example: 'ONLY_EXPERIENCE'
 
+    ProjectJobOperator:
+      type: string
+      enum: ['OR', 'AND']
+      example: 'OR'
+
     MainProjectListItem:
       type: object
+      required:
+        - id
+        - title
+        - simple_description
+        - jobs
+        - experience
+        - hours_per_week
+        - current_recruit_status
+        - image
+        - is_bookmarked
+        - bookmark_count
+        - recent_recruited_at
       properties:
         id:
           type: integer
           description: '아이템의 고유 ID'
           example: 1
+        category_display_name:
+          type: string
+          description: '카테고리 이름'
+          example: '재미 / 커뮤니티'
         title:
           type: string
           description: '프로젝트 title'
@@ -2393,6 +2579,10 @@ components:
           type: array
           items:
             type: object
+            required:
+              - id
+              - display_name
+              - is_available
             properties:
               id:
                 type: integer
@@ -2402,36 +2592,46 @@ components:
                 type: string
                 description: '사용자에게 보여주는 정보'
                 example: '프론트엔드'
-              is_avaliable:
+              is_available:
                 type: boolean
                 description: '직무의 마감 여부 / 직무 마감시 비활성화 표시'
                 example: True
         experience:
           $ref: '#/components/schemas/ProjectExperienceType'
-        engagement_level:
-          $ref: '#/components/schemas/ProjectEngagementLevelType'
+        hours_per_week:
+          type: integer
+          example: 1
         current_recruit_status:
           $ref: '#/components/schemas/ProjectCurrentRecruitStatus'
         image:
           type: string
           description: '이미지 사진'
           example: 'https://이미지.이미지'
+          nullable: true
         is_bookmarked:
           type: boolean
           description: '북마크 설정 여부'
           example: false
+        bookmark_count:
+          type: integer
+          description: '북마크 개수'
+          example: 40
+        recent_recruited_at:
+          type: string
+          description: '마지막 공고 일자'
+          example: '2024-01-01T00:00:00Z'
 
     ExtraRecruitPayload:
       type: object
       required:
         - jobs
       properties:
-        data:
+        jobs:
           type: array
           items:
-            $ref: '#/components/schemas/ExtraRecruitData'
+            $ref: '#/components/schemas/ExtraRecruitJobData'
 
-    ExtraRecruitData:
+    ExtraRecruitJobData:
       type: object
       required:
         - id
@@ -2540,11 +2740,12 @@ components:
       type: object
       required:
         - id
+        - category_display_name
         - title
         - simple_description
         - jobs
         - experience
-        - engagement_level
+        - hours_per_week
         - current_recruit_status
         - image
         - is_bookmarked
@@ -2552,11 +2753,17 @@ components:
         - is_editable
         - is_member_manageable
         - is_resume_manageable
+        - bookmark_count
+        - recent_recruited_at
       properties:
         id:
           type: integer
           description: '프로젝트 고유 ID'
           example: 1
+        category_display_name:
+          type: string
+          description: '카테고리 이름'
+          example: '재미 / 커뮤니티'
         title:
           type: string
           description: '프로젝트 title'
@@ -2569,6 +2776,10 @@ components:
           type: array
           items:
             type: object
+            required:
+              - id
+              - display_name
+              - is_available
             properties:
               id:
                 type: integer
@@ -2578,19 +2789,22 @@ components:
                 type: string
                 description: '사용자에게 보여주는 정보'
                 example: '프론트엔드'
-              is_avaliable:
+              is_available:
                 type: boolean
                 description: '직무의 마감 여부 / 직무 마감시 비활성화 표시'
                 example: True
         experience:
           $ref: '#/components/schemas/ProjectExperienceType'
-        engagement_level:
-          $ref: '#/components/schemas/ProjectEngagementLevelType'
+        hours_per_week:
+          type: integer
+          description: '주 N 시간'
+          example: 14
         current_recruit_status:
           $ref: '#/components/schemas/ProjectCurrentRecruitStatus'
         image:
           type: string
           description: '이미지 사진'
+          nullable: true
           example: 'https://이미지.이미지'
         is_bookmarked:
           type: boolean
@@ -2612,6 +2826,14 @@ components:
           type: boolean
           description: '프로젝트 지원서 관리 가능 여부'
           example: true
+        bookmark_count:
+          type: integer
+          description: '북마크 개수'
+          example: 40
+        recent_recruited_at:
+          type: string
+          description: '마지막 공고 일자'
+          example: '2024-01-01T00:00:00Z'
 
     MyBookmarkProjectItemsResponse:
       type: object
@@ -2627,21 +2849,28 @@ components:
       type: object
       required:
         - id
+        - category_display_name
         - title
         - simple_description
         - jobs
         - experience
-        - engagement_level
+        - hours_per_week
         - project_result_status
         - image
         - is_bookmarked
         - is_leader
         - is_member_manageable
+        - bookmark_count
+        - recent_recruited_at
       properties:
         id:
           type: integer
           description: '프로젝트 고유 ID'
           example: 1
+        category_display_name:
+          type: string
+          description: '카테고리 이름'
+          example: '재미 / 커뮤니티'
         title:
           type: string
           description: '프로젝트 title'
@@ -2654,6 +2883,10 @@ components:
           type: array
           items:
             type: object
+            required:
+              - id
+              - display_name
+              - is_available
             properties:
               id:
                 type: integer
@@ -2663,19 +2896,22 @@ components:
                 type: string
                 description: '사용자에게 보여주는 정보'
                 example: '프론트엔드'
-              is_avaliable:
+              is_available:
                 type: boolean
                 description: '직무의 마감 여부 / 직무 마감시 비활성화 표시'
                 example: True
         experience:
           $ref: '#/components/schemas/ProjectExperienceType'
-        engagement_level:
-          $ref: '#/components/schemas/ProjectEngagementLevelType'
+        hours_per_week:
+          type: integer
+          description: '주 N 시간'
+          example: 14
         project_result_status:
           $ref: '#/components/schemas/ProjectResultStatus'
         image:
           type: string
           description: '이미지 사진'
+          nullable: true
           example: 'https://이미지.이미지'
         is_bookmarked:
           type: boolean
@@ -2689,6 +2925,14 @@ components:
           type: boolean
           description: '프로젝트 팀원 관리 가능 여부'
           example: true
+        bookmark_count:
+          type: integer
+          description: '북마크 개수'
+          example: 40
+        recent_recruited_at:
+          type: string
+          description: '마지막 공고 일자'
+          example: '2024-01-01T00:00:00Z'
 
     MyDoingProjectItemsResponse:
       type: object
@@ -2704,22 +2948,29 @@ components:
       type: object
       required:
         - id
+        - category_display_name
         - title
         - simple_description
         - jobs
         - experience
-        - engagement_level
+        - hours_per_week
         - project_result_status
         - image
         - is_bookmarked
         - is_leader
         - is_member_manageable
         - is_member_evaluatable
+        - bookmark_count
+        - recent_recruited_at
       properties:
         id:
           type: integer
           description: '프로젝트 고유 ID'
           example: 1
+        category_display_name:
+          type: string
+          description: '카테고리 이름'
+          example: '재미 / 커뮤니티'
         title:
           type: string
           description: '프로젝트 title'
@@ -2732,6 +2983,10 @@ components:
           type: array
           items:
             type: object
+            required:
+              - id
+              - display_name
+              - is_available
             properties:
               id:
                 type: integer
@@ -2741,19 +2996,22 @@ components:
                 type: string
                 description: '사용자에게 보여주는 정보'
                 example: '프론트엔드'
-              is_avaliable:
+              is_available:
                 type: boolean
                 description: '직무의 마감 여부 / 직무 마감시 비활성화 표시'
                 example: True
         experience:
           $ref: '#/components/schemas/ProjectExperienceType'
-        engagement_level:
-          $ref: '#/components/schemas/ProjectEngagementLevelType'
+        hours_per_week:
+          type: integer
+          description: '주 N 시간'
+          example: 14
         project_result_status:
           $ref: '#/components/schemas/ProjectResultStatus'
         image:
           type: string
           description: '이미지 사진'
+          nullable: true
           example: 'https://이미지.이미지'
         is_bookmarked:
           type: boolean
@@ -2771,6 +3029,14 @@ components:
           type: boolean
           description: '프로젝트 팀원 평가 가능 여부'
           example: true
+        bookmark_count:
+          type: integer
+          description: '북마크 개수'
+          example: 40
+        recent_recruited_at:
+          type: string
+          description: '마지막 공고 일자'
+          example: '2024-01-01T00:00:00Z'
 
     MyProjectItemsResponse:
       type: object
@@ -2832,15 +3098,18 @@ components:
         - application_id
         - application_description
         - application_status
+        - category_display_name
         - application_job_display_name
         - title
         - simple_description
         - jobs
         - experience
-        - engagement_level
+        - hours_per_week
         - current_project_status
         - image
         - is_bookmarked
+        - bookmark_count
+        - recent_recruited_at
       properties:
         project_id:
           type: integer
@@ -2859,6 +3128,10 @@ components:
           description: '지원 상태'
           enum: ['IN_REVIEW', 'ACCEPTED', 'REJECTED']
           example: 'IN_REVIEW'
+        category_display_name:
+          type: string
+          description: '카테고리 이름'
+          example: '재미 / 커뮤니티'
         application_job_display_name:
           type: string
           description: '지원 직무'
@@ -2875,6 +3148,10 @@ components:
           type: array
           items:
             type: object
+            required:
+              - id
+              - display_name
+              - is_available
             properties:
               id:
                 type: integer
@@ -2884,14 +3161,16 @@ components:
                 type: string
                 description: '사용자에게 보여주는 정보'
                 example: '프론트엔드'
-              is_avaliable:
+              is_available:
                 type: boolean
                 description: '직무의 마감 여부 / 직무 마감시 비활성화 표시'
                 example: True
         experience:
           $ref: '#/components/schemas/ProjectExperienceType'
-        engagement_level:
-          $ref: '#/components/schemas/ProjectEngagementLevelType'
+        hours_per_week:
+          type: integer
+          description: '주 N 시간'
+          example: 14
         current_project_status:
           type: string
           description: '진행중인지'
@@ -2900,11 +3179,20 @@ components:
         image:
           type: string
           description: '이미지 사진'
+          nullable: true
           example: 'https://이미지.이미지'
         is_bookmarked:
           type: boolean
           description: '북마크 설정 여부'
           example: false
+        bookmark_count:
+          type: integer
+          description: '북마크 개수'
+          example: 40
+        recent_recruited_at:
+          type: string
+          description: '마지막 공고 일자'
+          example: '2024-01-01T00:00:00Z'
 
     GiveAttributeTeamMemberPayload:
       type: object
@@ -2959,22 +3247,29 @@ components:
       type: object
       required:
         - id
+        - category_display_name
         - title
         - description
-        - duration_display_name
-        - engagement_level
+        - duration_month
+        - hours_per_week
         - extra_information
         - jobs
         - experience
         - status_display_name
         - image
         - leader_info
-        - created_at
+        - bookmark_count
+        - first_recruited_at
+        - recent_recruited_at
       properties:
         id:
           type: integer
           description: '아이템의 고유 ID'
           example: 1
+        category_display_name:
+          type: string
+          description: '카테고리 이름'
+          example: '재미 / 커뮤니티'
         title:
           type: string
           description: '프로젝트 title'
@@ -2983,12 +3278,14 @@ components:
           type: string
           description: '프로젝트 description (100글자 정도 컷?)'
           example: '오버워치 전적 공유 사이트 만듭시다! 어이어이 ~'
-        duration_display_name:
-          type: string
-          description: '프로젝트 기간'
-          example: '1~2개월'
-        engagement_level:
-          $ref: '#/components/schemas/ProjectEngagementLevelType'
+        duration_month:
+          type: integer
+          description: '프로젝트 진행 기간'
+          example: 2
+        hours_per_week:
+          type: integer
+          description: '주 N 시간'
+          example: 14
         extra_information:
           type: string
           description: '오카방 정보 및 핸드폰 정보'
@@ -2997,6 +3294,10 @@ components:
           type: array
           items:
             type: object
+            required:
+              - id
+              - display_name
+              - is_available
             properties:
               id:
                 type: integer
@@ -3006,7 +3307,7 @@ components:
                 type: string
                 description: '사용자에게 보여주는 정보'
                 example: '프론트엔드'
-              is_avaliable:
+              is_available:
                 type: boolean
                 description: |
                   '직무의 마감 여부 / 직무 마감시 비활성화 표시 (혹은 경력 입력 안된 사람 지원 불가)'
@@ -3022,10 +3323,18 @@ components:
           example: 'https://이미지.이미지'
         leader_info:
           $ref: '#/components/schemas/ProfileBlock'
-        created_at:
+        bookmark_count:
+          type: integer
+          description: '북마크 개수'
+          example: 40
+        recent_recruited_at:
           type: string
-          description: '생성 시간'
-          example: '2024-04-01T00:00:00'
+          description: '마지막 공고 일자'
+          example: '2024-05-01T00:00:00Z'
+        first_recruited_at:
+          type: string
+          description: '처음 공고 일자'
+          example: '2024-04-01T00:00:00Z'
 
     ProjectResultStatus:
       type: string
