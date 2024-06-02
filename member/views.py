@@ -44,6 +44,7 @@ from member.exceptions import (
     InvalidRefreshTokenErrorException,
     InvalidValueForSignUpFieldErrorException,
     NormalLoginFailedException,
+    SignUpEmailTokenErrorException,
 )
 from member.models import (
     Guest,
@@ -159,7 +160,7 @@ class SignUpEmailTokenSendView(APIView):
                 )
             )
             return Response({'message': '인증번호를 이메일로 전송했습니다.'}, 200)
-        return Response({'message': '인증번호를 이메일로 전송하지 못했습니다.'}, 400)
+        raise SignUpEmailTokenErrorException()
 
 
 class SignUpEmailTokenValidationEndView(APIView):

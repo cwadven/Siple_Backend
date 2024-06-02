@@ -33,6 +33,12 @@ class InvalidValueForSignUpFieldErrorException(CommonAPIException):
     default_code = 'invalid-sign-up-field-value'
 
 
+class SignUpEmailTokenErrorException(CommonAPIException):
+    status_code = 400
+    default_detail = '인증번호를 이메일로 전송하지 못했습니다.'
+    default_code = 'sending-email-token-error'
+
+
 class BlackMemberException(CommonAPIException):
     status_code = 400
     default_detail = '정지된 유저입니다.'
