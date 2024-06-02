@@ -109,6 +109,7 @@ class LoginViewTestCase(TestCase):
 
         # Check the response data for expected keys
         self.assertEqual(response.data['message'], '아이디 및 비밀번호 정보가 일치하지 않습니다.')
+        self.assertEqual(response.data['error_code'], 'invalid-username-or-password')
 
 
 class RefreshTokenViewViewTestCase(TestCase):

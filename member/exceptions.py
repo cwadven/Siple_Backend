@@ -1,10 +1,19 @@
-from common.common_exceptions import ResponseException
+from common.common_exceptions import (
+    CommonAPIException,
+    ResponseException,
+)
 
 
 class LoginFailedException(ResponseException):
     status_code = 400
     default_detail = '로그인에 실패했습니다.'
     default_code = 'login-error'
+
+
+class NormalLoginFailedException(CommonAPIException):
+    status_code = 400
+    default_detail = '아이디 및 비밀번호 정보가 일치하지 않습니다.'
+    default_code = 'invalid-username-or-password'
 
 
 class SocialLoginTokenErrorException(ResponseException):

@@ -40,6 +40,7 @@ from member.dtos.response_dtos import (
     RefreshTokenResponse,
     SocialLoginResponse,
 )
+from member.exceptions import NormalLoginFailedException
 from member.models import (
     Guest,
     Member,
@@ -68,7 +69,7 @@ class LoginView(APIView):
             password=normal_login_request.password
         )
         if not member:
-            return Response({'message': '아이디 및 비밀번호 정보가 일치하지 않습니다.'}, status=400)
+            raise NormalLoginFailedException()
 
         normal_login_response = NormalLoginResponse(
             access_token=get_jwt_login_token(member),
