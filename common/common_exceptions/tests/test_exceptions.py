@@ -135,3 +135,14 @@ class CommonAPIExceptionTest(TestCase):
         self.assertEqual(exception.default_detail, error_summary)
         self.assertEqual(exception.default_code, error_code)
         self.assertIsNone(exception.errors)
+
+    def test_common_api_exception_none_value(self):
+        # Given:
+        # When
+        exception = CommonAPIException()
+
+        # Then
+        self.assertEqual(exception.status_code, CommonAPIException.status_code)
+        self.assertEqual(exception.default_detail, CommonAPIException.default_detail)
+        self.assertEqual(exception.default_code, CommonAPIException.default_code)
+        self.assertIsNone(exception.errors)
