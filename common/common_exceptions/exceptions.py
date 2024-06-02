@@ -1,5 +1,6 @@
 from collections import defaultdict
 from typing import (
+    Dict,
     List,
     Optional,
 )
@@ -20,6 +21,18 @@ class ResponseException(APIException):
         return {
             'message': cls.default_detail,
         }
+
+
+class CommonAPIException(APIException):
+    status_code = 500
+    default_detail = '예상치 못한 에러가 발생했습니다.'
+    default_code = 'unexpected-error'
+
+    def __init__(self, status_code: int, error_summary: str, error_code: str, errors: Dict[str, List[str]] = None):
+        self.status_code = status_code
+        self.default_detail = error_summary
+        self.default_code = error_code
+        self.errors = errors
 
 
 class MissingMandatoryParameterException(APIException):
@@ -46,13 +59,16 @@ class CodeInvalidateException(APIException):
         }
 
 
-class PydanticAPIException(APIException):
-    def __init__(self, status_code: int, detail: str = None, code: str = None, errors: List[dict] = None):
+class PydanticAPIException(CommonAPIException):
+    def __init__(self, status_code: int, error_summary: str = None, error_code: str = None, errors: List[dict] = None):
+        """
+        'errors' parameter Structure is different from CommonAPIException
+        """
         self.status_code = status_code
-        self.default_detail = detail
-        self.default_code = code
+        self.default_detail = error_summary
+        self.default_code = error_code
         self.errors = self.format_errors(errors)
-        self.detail = _get_error_details(detail, code)
+        self.detail = _get_error_details(error_summary, error_code)
 
     @staticmethod
     def format_errors(errors: Optional[List[dict]]):
