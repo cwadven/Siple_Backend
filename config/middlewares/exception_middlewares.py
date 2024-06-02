@@ -55,12 +55,7 @@ def custom_exception_handler(exc, context):
         response.data['message'] = message
         response.data['error_code'] = error_code
         response.data['errors'] = errors
-
-        try:
-            del response.data['detail']
-        except KeyError:
-            pass
-
+        response.data.pop('detail', None)
         return response
     else:
         return response
