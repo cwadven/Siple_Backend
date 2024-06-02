@@ -39,6 +39,30 @@ class SignUpEmailTokenErrorException(CommonAPIException):
     default_code = 'sending-email-token-error'
 
 
+class SignUpEmailTokenExpiredErrorException(CommonAPIException):
+    status_code = 400
+    default_detail = '이메일 인증번호를 다시 요청하세요.'
+    default_code = 'email-token-expired'
+
+
+class SignUpEmailTokenInvalidErrorException(CommonAPIException):
+    status_code = 400
+    default_detail = '인증번호가 다릅니다.'
+    default_code = 'invalid-email-token'
+
+
+class SignUpEmailTokenMacroErrorException(CommonAPIException):
+    status_code = 400
+    default_detail = '{}회 이상 인증번호를 틀리셨습니다. 현 이메일은 {}시간 동안 인증할 수 없습니다.'
+    default_code = 'email-token-macro-error'
+
+
+class MemberCreationErrorException(CommonAPIException):
+    status_code = 400
+    default_detail = '회원가입에 실패했습니다.'
+    default_code = 'member-creation-fail'
+
+
 class BlackMemberException(CommonAPIException):
     status_code = 400
     default_detail = '정지된 유저입니다.'
