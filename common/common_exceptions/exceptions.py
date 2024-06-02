@@ -36,18 +36,13 @@ class CommonAPIException(APIException):
         if error_code:
             self.default_code = error_code
         self.errors = errors
+        self.detail = self.default_detail
 
 
-class MissingMandatoryParameterException(APIException):
+class MissingMandatoryParameterException(CommonAPIException):
     status_code = 400
     default_detail = '입력값을 다시 확인해주세요.'
     default_code = 'missing-mandatory-parameter'
-
-    @classmethod
-    def to_message(cls):
-        return {
-            'message': cls.default_detail,
-        }
 
 
 class CodeInvalidateException(APIException):

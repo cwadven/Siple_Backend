@@ -1,4 +1,4 @@
-from common.common_exceptions import PydanticAPIException
+from common.common_exceptions import CommonAPIException
 from config.settings.base import logger
 from rest_framework import exceptions
 from rest_framework.views import exception_handler
@@ -14,32 +14,43 @@ def custom_exception_handler(exc, context):
         error_code = 'unexpected-error'
         errors = None
         if isinstance(exc, exceptions.ParseError):
-            message = exc.detail
+            message = exc.default_detail
+            error_code = exc.default_code
         elif isinstance(exc, exceptions.AuthenticationFailed):
-            message = exc.detail
+            message = exc.default_detail
+            error_code = exc.default_code
         elif isinstance(exc, exceptions.NotAuthenticated):
             message = 'No Auth'
+            error_code = exc.default_code
         elif isinstance(exc, exceptions.PermissionDenied):
-            message = exc.detail
+            message = exc.default_detail
+            error_code = exc.default_code
         elif isinstance(exc, exceptions.NotFound):
-            message = exc.detail
+            message = exc.default_detail
+            error_code = exc.default_code
         elif isinstance(exc, exceptions.MethodNotAllowed):
-            message = exc.detail
+            message = exc.default_detail
+            error_code = exc.default_code
         elif isinstance(exc, exceptions.NotAcceptable):
-            message = exc.detail
+            message = exc.default_detail
+            error_code = exc.default_code
         elif isinstance(exc, exceptions.UnsupportedMediaType):
-            message = exc.detail
+            message = exc.default_detail
+            error_code = exc.default_code
         elif isinstance(exc, exceptions.Throttled):
-            message = exc.detail
+            message = exc.default_detail
+            error_code = exc.default_code
         elif isinstance(exc, exceptions.ValidationError):
-            message = exc.detail
-        elif isinstance(exc, PydanticAPIException):
-            message = exc.detail
+            message = exc.default_detail
+            error_code = exc.default_code
+        elif isinstance(exc, CommonAPIException):
+            message = exc.default_detail
             error_code = exc.default_code
             errors = exc.errors
         elif isinstance(exc, exceptions.APIException):
-            message = exc.detail
+            message = exc.default_detail
             error_code = exc.default_code
+            errors = None
 
         response.data['message'] = message
         response.data['error_code'] = error_code

@@ -24,8 +24,8 @@ class HomeProjectListAPIView(APIView):
         except ValidationError as e:
             raise PydanticAPIException(
                 status_code=400,
-                detail=InvalidInputResponseErrorStatus.INVALID_INPUT_HOME_LIST_PARAM_ERROR_400.label,
-                code=InvalidInputResponseErrorStatus.INVALID_INPUT_HOME_LIST_PARAM_ERROR_400.value,
+                error_summary=InvalidInputResponseErrorStatus.INVALID_INPUT_HOME_LIST_PARAM_ERROR_400.label,
+                error_code=InvalidInputResponseErrorStatus.INVALID_INPUT_HOME_LIST_PARAM_ERROR_400.value,
                 errors=e.errors(),
             )
 
