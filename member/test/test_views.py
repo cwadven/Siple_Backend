@@ -305,6 +305,10 @@ class SignUpEmailTokenValidationEndViewTestCase(TestCase):
             response.data['message'],
             '인증번호가 다릅니다.',
         )
+        self.assertEqual(
+            response.data['errors']['one_time_token'][0],
+            '인증번호가 다릅니다.',
+        )
 
     @patch('member.views.increase_cache_int_value_by_key')
     @patch('member.views.get_cache_value_by_key')

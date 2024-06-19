@@ -192,7 +192,9 @@ class SignUpEmailTokenValidationEndView(APIView):
             raise SignUpEmailTokenExpiredErrorException()
 
         if not value.get('one_time_token') or value.get('one_time_token') != payload.one_time_token:
-            raise SignUpEmailTokenInvalidErrorException()
+            raise SignUpEmailTokenInvalidErrorException(
+                errors={'one_time_token': ['인증번호가 다릅니다.']}
+            )
 
         if check_username_exists(value['username']):
             raise MemberCreationErrorException(
