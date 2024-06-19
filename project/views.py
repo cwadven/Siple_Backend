@@ -90,3 +90,11 @@ class HomeProjectListAPIView(APIView):
             ).model_dump(),
             status=200
         )
+
+
+class CreateProjectAPIView(APIView):
+    def post(self, request):
+        return Response(
+            {},
+            status=200
+        )
