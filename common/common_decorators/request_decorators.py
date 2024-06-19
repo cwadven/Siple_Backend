@@ -1,3 +1,4 @@
+from collections import defaultdict
 from functools import wraps
 from types import FunctionType
 from typing import Type
@@ -23,6 +24,7 @@ def mandatories(*keys):
             if request is None:
                 raise CodeInvalidateException()
             mandatory = dict()
+            error_dict = defaultdict(list)
             for key in keys:
                 try:
                     if request.method == 'GET':
@@ -30,16 +32,23 @@ def mandatories(*keys):
                     else:
                         data = request.POST[key]
                     if data in ['', None]:
-                        raise MissingMandatoryParameterException()
+                        error_dict[key].append(f'{key} 입력값을 확인해주세요.')
+                        continue
                 except KeyError:
                     try:
                         json_body = request.data
                         data = json_body[key]
                         if data in ['', None]:
-                            raise MissingMandatoryParameterException()
+                            error_dict[key].append(f'{key} 입력값을 확인해주세요.')
+                            continue
                     except Exception:
-                        raise MissingMandatoryParameterException()
+                        error_dict[key].append(f'{key} 입력값을 확인해주세요.')
+                        continue
                 mandatory[key] = data
+            if error_dict:
+                raise MissingMandatoryParameterException(
+                    errors=error_dict
+                )
             return func(m=mandatory, *args, **kwargs)
         return wrapper
 

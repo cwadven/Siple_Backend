@@ -109,6 +109,7 @@ class LoginViewTestCase(TestCase):
 
         # Check the response data for expected keys
         self.assertEqual(response.data['message'], '아이디 및 비밀번호 정보가 일치하지 않습니다.')
+        self.assertEqual(response.data['error_code'], 'invalid-username-or-password')
 
 
 class RefreshTokenViewViewTestCase(TestCase):
@@ -304,6 +305,10 @@ class SignUpEmailTokenValidationEndViewTestCase(TestCase):
             response.data['message'],
             '인증번호가 다릅니다.',
         )
+        self.assertEqual(
+            response.data['errors']['one_time_token'][0],
+            '인증번호가 다릅니다.',
+        )
 
     @patch('member.views.increase_cache_int_value_by_key')
     @patch('member.views.get_cache_value_by_key')
@@ -477,7 +482,7 @@ class SignUpValidationTestCase(TestCase):
 
         # Then: email 문제로 에러 반환
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['email'][0], MemberCreationExceptionMessage.EMAIL_REG_EXP_INVALID.label)
+        self.assertEqual(response.data['errors']['email'][0], MemberCreationExceptionMessage.EMAIL_REG_EXP_INVALID.label)
 
     def test_sign_up_validation_should_fail_when_username_length_is_invalid(self):
         # Given: username 길이 설정
@@ -489,7 +494,7 @@ class SignUpValidationTestCase(TestCase):
         # Then: username 길이 문제로 에러 반환
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.data['username'][0],
+            response.data['errors']['username'][0],
             MemberCreationExceptionMessage.USERNAME_LENGTH_INVALID.label.format(
                 USERNAME_MIN_LENGTH,
                 USERNAME_MAX_LENGTH,
@@ -507,7 +512,7 @@ class SignUpValidationTestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn(
             MemberCreationExceptionMessage.USERNAME_REG_EXP_INVALID.label,
-            response.data['username'],
+            response.data['errors']['username'],
         )
 
     def test_sign_up_validation_should_fail_when_nickname_length_is_invalid(self):
@@ -520,7 +525,7 @@ class SignUpValidationTestCase(TestCase):
         # Then: nickname 길이 문제로 에러 반환
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.data['nickname'][0],
+            response.data['errors']['nickname'][0],
             MemberCreationExceptionMessage.NICKNAME_LENGTH_INVALID.label.format(
                 NICKNAME_MIN_LENGTH,
                 NICKNAME_MAX_LENGTH,
@@ -538,7 +543,7 @@ class SignUpValidationTestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn(
             MemberCreationExceptionMessage.NICKNAME_REG_EXP_INVALID.label,
-            response.data['nickname'],
+            response.data['errors']['nickname'],
         )
 
     def test_sign_up_validation_should_fail_when_username_already_exists(self):
@@ -552,7 +557,7 @@ class SignUpValidationTestCase(TestCase):
 
         # Then: username 중복 에러 반환
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['username'][0], MemberCreationExceptionMessage.USERNAME_EXISTS.label)
+        self.assertEqual(response.data['errors']['username'][0], MemberCreationExceptionMessage.USERNAME_EXISTS.label)
 
     def test_sign_up_validation_should_fail_when_nickname_already_exists(self):
         # Given: 유저를 생성
@@ -565,7 +570,7 @@ class SignUpValidationTestCase(TestCase):
 
         # Then: nickname 중복 에러 반환
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['nickname'][0], MemberCreationExceptionMessage.NICKNAME_EXISTS.label)
+        self.assertEqual(response.data['errors']['nickname'][0], MemberCreationExceptionMessage.NICKNAME_EXISTS.label)
 
     def test_sign_up_validation_should_fail_when_email_already_exists(self):
         # Given: 유저를 생성
@@ -578,7 +583,7 @@ class SignUpValidationTestCase(TestCase):
 
         # Then: nickname 중복 에러 반환
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['email'][0], MemberCreationExceptionMessage.EMAIL_EXISTS.label)
+        self.assertEqual(response.data['errors']['email'][0], MemberCreationExceptionMessage.EMAIL_EXISTS.label)
 
     def test_sign_up_validation_should_fail_when_password_wrong(self):
         # Given: 비밀번호 다르게 설정
@@ -589,7 +594,7 @@ class SignUpValidationTestCase(TestCase):
 
         # Then: password 확인 에러 반환
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['password2'][0], MemberCreationExceptionMessage.CHECK_PASSWORD.label)
+        self.assertEqual(response.data['errors']['password2'][0], MemberCreationExceptionMessage.CHECK_PASSWORD.label)
 
     def test_sign_up_validation_should_fail_when_password_length_is_invalid(self):
         # Given: password1 길이 설정
@@ -601,7 +606,7 @@ class SignUpValidationTestCase(TestCase):
         # Then: password1 길이 문제로 에러 반환
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.data['password1'][0],
+            response.data['errors']['password1'][0],
             MemberCreationExceptionMessage.PASSWORD_LENGTH_INVALID.label.format(
                 PASSWORD_MIN_LENGTH,
                 PASSWORD_MAX_LENGTH,

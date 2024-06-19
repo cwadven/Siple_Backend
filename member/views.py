@@ -40,6 +40,16 @@ from member.dtos.response_dtos import (
     RefreshTokenResponse,
     SocialLoginResponse,
 )
+from member.exceptions import (
+    InvalidRefreshTokenErrorException,
+    InvalidValueForSignUpFieldErrorException,
+    MemberCreationErrorException,
+    NormalLoginFailedException,
+    SignUpEmailTokenErrorException,
+    SignUpEmailTokenExpiredErrorException,
+    SignUpEmailTokenInvalidErrorException,
+    SignUpEmailTokenMacroErrorException,
+)
 from member.models import (
     Guest,
     Member,
@@ -68,7 +78,7 @@ class LoginView(APIView):
             password=normal_login_request.password
         )
         if not member:
-            return Response({'message': '아이디 및 비밀번호 정보가 일치하지 않습니다.'}, status=400)
+            raise NormalLoginFailedException()
 
         normal_login_response = NormalLoginResponse(
             access_token=get_jwt_login_token(member),
@@ -121,7 +131,7 @@ class RefreshTokenView(APIView):
                 refresh_token=get_jwt_refresh_token(member.guest),
             )
         except (Member.DoesNotExist, jwt.InvalidTokenError):
-            return Response({'message': '잘못된 리프레시 토큰입니다.'}, status=401)
+            raise InvalidRefreshTokenErrorException()
         return Response(refresh_token_response.model_dump(), status=200)
 
 
@@ -154,7 +164,7 @@ class SignUpEmailTokenSendView(APIView):
                 )
             )
             return Response({'message': '인증번호를 이메일로 전송했습니다.'}, 200)
-        return Response({'message': '인증번호를 이메일로 전송하지 못했습니다.'}, 400)
+        raise SignUpEmailTokenErrorException()
 
 
 class SignUpEmailTokenValidationEndView(APIView):
@@ -169,30 +179,35 @@ class SignUpEmailTokenValidationEndView(APIView):
             key=SIGNUP_MACRO_VALIDATION_KEY.format(payload.email),
         )
         if macro_count >= SIGNUP_MACRO_COUNT:
-            return Response(
-                data={
-                    'message': '{}회 이상 인증번호를 틀리셨습니다. 현 이메일은 {}시간 동안 인증할 수 없습니다.'.format(
-                        SIGNUP_MACRO_COUNT,
-                        24
-                    )
-                },
-                status=400,
+            raise SignUpEmailTokenMacroErrorException(
+                error_summary=SignUpEmailTokenMacroErrorException.default_detail.format(
+                    SIGNUP_MACRO_COUNT,
+                    24
+                )
             )
 
         value = get_cache_value_by_key(payload.email)
 
         if not value:
-            return Response({'message': '이메일 인증번호를 다시 요청하세요.'}, 400)
+            raise SignUpEmailTokenExpiredErrorException()
 
         if not value.get('one_time_token') or value.get('one_time_token') != payload.one_time_token:
-            return Response({'message': '인증번호가 다릅니다.'}, 400)
+            raise SignUpEmailTokenInvalidErrorException(
+                errors={'one_time_token': ['인증번호가 다릅니다.']}
+            )
 
         if check_username_exists(value['username']):
-            return Response({'message': MemberCreationExceptionMessage.USERNAME_EXISTS.label}, 400)
+            raise MemberCreationErrorException(
+                error_summary=MemberCreationExceptionMessage.USERNAME_EXISTS.label
+            )
         if check_nickname_exists(value['nickname']):
-            return Response({'message': MemberCreationExceptionMessage.NICKNAME_EXISTS.label}, 400)
+            raise MemberCreationErrorException(
+                error_summary=MemberCreationExceptionMessage.NICKNAME_EXISTS.label
+            )
         if check_email_exists(value['email']):
-            return Response({'message': MemberCreationExceptionMessage.EMAIL_EXISTS.label}, 400)
+            raise MemberCreationErrorException(
+                error_summary=MemberCreationExceptionMessage.EMAIL_EXISTS.label
+            )
 
         member = Member.objects.create_user(
             username=value['username'],
@@ -227,7 +242,7 @@ class SignUpValidationView(APIView):
         payload_validator = SignUpPayloadValidator(payload.model_dump())
         error_dict = payload_validator.validate()
         if error_dict:
-            return Response(error_dict, 400)
+            raise InvalidValueForSignUpFieldErrorException(errors=error_dict)
         return Response({'message': 'success'}, 200)
 
 
