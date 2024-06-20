@@ -2,6 +2,7 @@ from common.common_exceptions import (
     CommonAPIException,
     PydanticAPIException,
 )
+from common.common_pydantic.custom_error_messages import ERROR_MESSAGE_CONVERSION
 from django.test import TestCase
 from rest_framework.exceptions import ErrorDetail
 
@@ -28,6 +29,29 @@ class PydanticAPIExceptionTest(TestCase):
             'experience': ['None is not a valid ProjectJobExperienceType']
         }
         self.assertEqual(formatted_errors, expected_errors)
+
+    def test_format_errors_custom_error_message_mapper(self):
+        # Given: valid errors
+        for key, value in ERROR_MESSAGE_CONVERSION.items():
+            errors = [
+                {
+                    'type': 'value_error',
+                    'loc': ('experience',),
+                    'msg': f'Value error, {key}',
+                    'input': None,
+                    'ctx': {'error': ValueError('None is not a valid ProjectJobExperienceType')},
+                    'url': 'https://errors.pydantic.dev/2.4/v/value_error'
+                }
+            ]
+
+            # When: format_errors 함수 실행
+            formatted_errors = PydanticAPIException.format_errors(errors)
+
+            # Then: 정상적으로 포맷팅된 에러 반환
+            expected_errors = {
+                'experience': [value]
+            }
+            self.assertEqual(formatted_errors, expected_errors)
 
     def test_format_errors_with_no_errors(self):
         # Given: no errors

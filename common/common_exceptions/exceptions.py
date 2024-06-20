@@ -5,6 +5,7 @@ from typing import (
     Optional,
 )
 
+from common.common_pydantic.custom_error_messages import ERROR_MESSAGE_CONVERSION
 from rest_framework.exceptions import (
     APIException,
     _get_error_details,
@@ -58,5 +59,5 @@ class PydanticAPIException(CommonAPIException):
         for error in errors:
             field = error['loc'][0]
             message = error['msg'].split(',', 1)[-1].strip()
-            formatted_errors[field].append(message)
+            formatted_errors[field].append(ERROR_MESSAGE_CONVERSION.get(message, message))
         return formatted_errors
