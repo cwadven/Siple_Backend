@@ -43,22 +43,18 @@ paths:
                     type: string
                     example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJndWVzdF9pZCI6MSwibWVtYmVyX2lkIjoxLCJleHAiOjE3MDczOTA5MTJ9.8l9dcqj63c1RJfE8Bkb2X_eqs4TCn7qcAxI3PvjeqP4"
         '400':
-          description: Login failed
+          description: | 
+            Login failed<br>
+            [ error_code ENUM ]<br>
+            missing-mandatory-parameter<br>
+            invalid-username-or-password<br>
+            [ errors ENUM ]<br>
+            username<br>
+            password<br>
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "아이디 및 비밀번호 정보가 일치하지 않습니다."
-              examples:
-                bad-username-or-password:
-                  value:
-                    message: "아이디 및 비밀번호 정보가 일치하지 않습니다."
-                mandatory-missing:
-                  value:
-                    message: "입력값을 다시 확인해주세요."
+                $ref: '#/components/schemas/ErrorResponse'
 
   /v1/member/social-login:
     post:
@@ -101,22 +97,18 @@ paths:
                     type: boolean
                     example: true
         '400':
-          description: Login failed
+          description: | 
+            Social Login failed<br>
+            [ error_code ENUM ]<br>
+            missing-mandatory-parameter<br>
+            social-token-error<br>
+            [ errors ENUM ]<br>
+            provider<br>
+            token<br>
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "아이디 및 비밀번호 정보가 일치하지 않습니다."
-              examples:
-                bad-token:
-                  value:
-                    message: "소셜 로그인에 발급된 토큰에 문제가 있습니다."
-                mandatory-missing:
-                  value:
-                    message: "입력값을 다시 확인해주세요."
+                $ref: '#/components/schemas/ErrorResponse'
 
   /v1/member/refresh-token:
     post:
@@ -151,21 +143,27 @@ paths:
                     type: string
                     example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJndWVzdF9pZCI6MSwibWVtYmVyX2lkIjoxLCJleHAiOjE3MDczOTI1NTZ9.PVuMlaXns3mUW9QYWuD1qa0Et66i1A0RgLby78hs90c"
         '400':
-          description: Bad request - Invalid or missing refresh token
+          description: | 
+            Refresh Token failed<br>
+            [ error_code ENUM ]<br>
+            missing-mandatory-parameter<br>
+            [ errors ENUM ]<br>
+            refresh_token<br>
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-              examples:
-                invalid-token:
-                  value:
-                    message: "잘못된 리프레시 토큰입니다."
-                missing-value:
-                  value:
-                    message: "입력값을 다시 확인해주세요."
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '401':
+          description: | 
+            Social Login failed<br>
+            [ error_code ENUM ]<br>
+            invalid-refresh-token<br>
+            [ errors ENUM ]<br>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /v1/member/guest-token:
     post:
@@ -235,25 +233,21 @@ paths:
                     type: string
                     example: "success"
         '400':
-          description: Validation failed - Errors in the provided information
+          description: | 
+            SignUp Validation failed<br>
+            [ error_code ENUM ]<br>
+            missing-mandatory-parameter<br>
+            invalid-sign-up-field-value<br>
+            [ errors ENUM ]<br>
+            username<br>
+            email<br>
+            nickname<br>
+            password1<br>
+            password2<br>
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties:
-                  type: array
-                  items:
-                    type: string
-              examples:
-                multiple_errors:
-                  value:
-                    username: ["이미 사용중인 아이디입니다."]  # UsernameSignUpErrors
-                    email: ["이미 가입한 이메일입니다."]  # EmailSignUpErrors
-                    nickname: ["이미 사용중인 닉네임입니다."]  # NicknameSignUpErrors
-                    password2: ["비밀번호와 비밀번호 확인이 동일하지 않습니다."]  # PasswordSignUpErrors
-                missing-value:
-                  value:
-                    message: "입력값을 다시 확인해주세요."
+                $ref: '#/components/schemas/ErrorResponse'
 
   /v1/member/sign-up-check:
     post:
@@ -297,22 +291,22 @@ paths:
                   message:
                     type: string
                     example: "인증번호를 이메일로 전송했습니다."
+
         '400':
-          description: Error sending verification code or invalid input
+          description: | 
+            Error sending verification code or invalid input<br>
+            [ error_code ENUM ]<br>
+            missing-mandatory-parameter<br>
+            sending-email-token-error<br>
+            [ errors ENUM ]<br>
+            email<br>
+            username<br>
+            nickname<br>
+            password1<br>
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-              examples:
-                send_failure:
-                  value:
-                    message: "인증번호를 이메일로 전송하지 못했습니다."
-                input_error:
-                  value:
-                    message: "입력값을 다시 확인해주세요."
+                $ref: '#/components/schemas/ErrorResponse'
 
   /v1/member/sign-up-validate-token:
     post:
@@ -349,43 +343,30 @@ paths:
                     type: string
                     example: "회원가입에 성공했습니다."
         '400':
-          description: Validation error or registration failure
+          description: | 
+            Validation error or registration failure<br>
+            [ error_code ENUM ]<br>
+            missing-mandatory-parameter<br>
+            member-creation-fail<br>
+            email-token-macro-error<br>
+            invalid-email-token<br>
+            email-token-expired<br>
+            [ errors ENUM ]<br>
+            email<br>
+            one_time_token<br>
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-              examples:
-                input_error:
-                  value:
-                    message: "입력값을 다시 확인해주세요."
-                request_new_token:
-                  value:
-                    message: "이메일 인증번호를 다시 요청하세요."
-                incorrect_token:
-                  value:
-                    message: "인증번호가 다릅니다."
-                username_exists:
-                  value:
-                    message: "이미 사용중인 아이디입니다."
-                nickname_exists:
-                  value:
-                    message: "이미 사용중인 닉네임입니다."
-                email_registered:
-                  value:
-                    message: "이미 가입한 이메일입니다."
-                token_attempts_exceeded:
-                  value:
-                    message: "{}회 이상 인증번호를 틀리셨습니다. 현 이메일은 {}시간 동안 인증할 수 없습니다."
+                $ref: '#/components/schemas/ErrorResponse'
 
   /v1/member/sign-up/job:
     post:
       tags:
         - Member
       summary: Get member's Job info when sign up
-      description: Get member's Job info
+      description: |
+        Get member's Job info.<br>
+        This API is under development and not yet completed ![Under Construction](https://via.placeholder.com/150x30?text=Under+Construction)
       requestBody:
         required: true
         content:
@@ -426,7 +407,9 @@ paths:
       tags:
         - Member
       summary: Get My profile info
-      description: Get My profile info
+      description: |
+        Get My profile info<br>
+        This API is under development and not yet completed ![Under Construction](https://via.placeholder.com/150x30?text=Under+Construction)
       responses:
         '200':
           description: Success
@@ -445,7 +428,9 @@ paths:
       tags:
         - Member
       summary: Update My profile info
-      description: Update My profile info
+      description: |
+        Update My profile info<br>
+        This API is under development and not yet completed ![Under Construction](https://via.placeholder.com/150x30?text=Under+Construction)
       requestBody:
         required: true
         content:
@@ -776,7 +761,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: ['PROJECT_IMAGE', 'MEMBER_IMAGE']
+            enum: ['project-image', 'member-image']
           description: Type of constance_type
         - in: path
           name: pk
@@ -808,19 +793,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotUserAuthPermission'
 
+  /v1/common/job/type:
+    get:
+      tags:
+        - Common
+      summary: Get Job datas
+      description: Get Job datas
+      responses:
+        '200':
+          description: Health Check successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobConstanceTypeItemsResponse'
+
   /v1/common/{constance_type}/type:
     get:
       tags:
         - Common
       summary: Get constance type
-      description: To check health check
+      description: Get constance type
       parameters:
         - in: path
           name: constance_type
           required: true
           schema:
             type: string
-            enum: ['JOB', 'MEMBER_ATTRIBUTE', 'PROJECT_CATEGORY']
+            enum: ['job-category', 'member-attribute', 'project-category']
           description: Type of constance_type
       responses:
         '200':
@@ -1085,6 +1084,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MainProjectPaginatedItemsResponse'
+        '400':
+          description: List Searching Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectHomeErrorResponse'
 
   /v1/project:
     post:
@@ -1188,7 +1193,7 @@ paths:
                     type: object
                     description: '에러 key value 에 맞춰서 대응'
                     properties:
-                      categord_id:
+                      category_id:
                         type: array
                         items:
                           $ref: '#/components/schemas/ProjectCategoryIdCreationError'
@@ -2601,6 +2606,7 @@ components:
         hours_per_week:
           type: integer
           example: 1
+          nullable: true
         current_recruit_status:
           $ref: '#/components/schemas/ProjectCurrentRecruitStatus'
         image:
@@ -2687,6 +2693,46 @@ components:
           type: boolean
           description: '재직중'
           example: true
+
+    JobConstanceTypeItemsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobConstanceTypeItem'
+
+    JobConstanceTypeItem:
+      type: object
+      required:
+        - id
+        - name
+        - display_name
+        - category_id
+        - category_name
+      properties:
+        id:
+          type: integer
+          description: type pk
+          example: 1
+        name:
+          type: string
+          description: searching for wording
+          example: Frontend
+        display_name:
+          type: string
+          description: What user will see
+          example: '프론트엔더'
+        category_id:
+          type: integer
+          description: Job category id for search
+          example: 1
+        category_name:
+          type: string
+          description: Job category what user will see
+          example: '개발'
 
     CommonConstanceTypeItemsResponse:
       type: object
@@ -2799,6 +2845,7 @@ components:
           type: integer
           description: '주 N 시간'
           example: 14
+          nullable: true
         current_recruit_status:
           $ref: '#/components/schemas/ProjectCurrentRecruitStatus'
         image:
@@ -2906,6 +2953,7 @@ components:
           type: integer
           description: '주 N 시간'
           example: 14
+          nullable: true
         project_result_status:
           $ref: '#/components/schemas/ProjectResultStatus'
         image:
@@ -3006,6 +3054,7 @@ components:
           type: integer
           description: '주 N 시간'
           example: 14
+          nullable: true
         project_result_status:
           $ref: '#/components/schemas/ProjectResultStatus'
         image:
@@ -3171,6 +3220,7 @@ components:
           type: integer
           description: '주 N 시간'
           example: 14
+          nullable: true
         current_project_status:
           type: string
           description: '진행중인지'
@@ -3286,6 +3336,7 @@ components:
           type: integer
           description: '주 N 시간'
           example: 14
+          nullable: true
         extra_information:
           type: string
           description: '오카방 정보 및 핸드폰 정보'
@@ -3344,6 +3395,65 @@ components:
       type: string
       enum: ['모집중', '진행중', '완료', '실패', '삭제']
       example: '진행중'
+
+    ProjectHomeErrorResponse:
+      type: object
+      required:
+        - message
+        - error_code
+        - errors
+      properties:
+        message:
+          type: string
+          description: "큰 에러 범주"
+          example: "유효하지 않은 입력값입니다."
+        error_code:
+          type: string
+          description: "큰 에러 코드"
+          example: "400-invalid_home_list_input_error-00001"
+        errors:
+          type: object
+          nullable: true
+          description: "에러의 디테일한 문제 점"
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            min_hours_per_week:
+              - "min_hours_per_week 값은 max_hours_per_week 보다 작아야합니다."
+            max_hours_per_week:
+              - "max_hours_per_week 값은 min_hours_per_week 보다 커야합니다."
+
+    ErrorResponse:
+      type: object
+      required:
+        - message
+        - error_code
+        - errors
+      properties:
+        message:
+          type: string
+          description: "큰 에러 범주"
+          example: "유효하지 않은 입력값입니다."
+        error_code:
+          type: string
+          description: "큰 에러 코드"
+          example: "invalid-username-or-password"
+        errors:
+          type: object
+          nullable: true
+          description: |
+            "에러의 디테일한 문제점<br>"
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            어떠한필드정보1:
+              - "어떠한 필드1 입력값을 확인해주세요."
+            어떠한필드정보2:
+              - "어떠한 필드2 입력값을 확인해주세요."
 
     UsernameSignUpErrors:
       type: string
