@@ -191,3 +191,49 @@ class HomeProjectListRequest(BaseModel):
             max_duration_month=request.get('max_duration_month'),
             current_recruit_status=request.get('current_recruit_status'),
         )
+
+
+class CreateProjectJob(BaseModel):
+    job_id: int = Field(description='프로젝트 직군 ID')
+    total_limit: int = Field(description='프로젝트 직군 요구 인원 수')
+
+
+class CreateProjectRequest(BaseModel):
+    title: str = Field(description='프로젝트 제목')
+    description: str = Field(description='프로젝트 설명')
+    category_id: int = Field(description='프로젝트 카테고리 ID 리스트')
+    hours_per_week: int = Field(description='주당 작업 시간')
+    duration_month: int = Field(description='프로젝트 기간(개월)')
+    experience: str = Field(description='프로젝트 경력 수준')
+    extra_information: Optional[str] = Field(description='추가 정보')
+    image: Optional[str] = Field(description='프로젝트 대표 이미지')
+    jobs: List[CreateProjectJob] = Field(description='프로젝트 직군 ID 리스트 및 요구 인원 수')
+
+    @field_validator(
+        'experience',
+        mode='before'
+    )
+    def check_experience_value(cls, v):
+        try:
+            return ProjectJobExperienceType(v).value
+        except ValueError:
+            raise ValueError(ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
+
+    @field_validator(
+        'jobs',
+        mode='before'
+    )
+    def check_jobs_value(cls, v):
+        if not len(v):
+            raise ValueError(ErrorMessage.INVALID_MINIMUM_ITEM_SIZE.label.format(1))
+
+        for job_info in v:
+            if set(job_info.keys()) != {'job_id', 'total_limit'}:
+                raise ValueError(ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label)
+        return v
+
+    @classmethod
+    def of(cls, request: QueryDict):
+        return cls(
+            **request,
+        )
