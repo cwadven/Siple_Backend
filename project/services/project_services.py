@@ -15,12 +15,14 @@ from project.consts import (
     ProjectManagementPermissionBehavior,
     ProjectManagementPermissionStatus,
 )
+from project.dtos.request_dtos import CreateProjectJob
 from project.models import (
     Project,
     ProjectManagementPermission,
     ProjectMemberManagement,
     ProjectRecruitApplication,
     ProjectRecruitment,
+    ProjectRecruitmentJob,
 )
 
 
@@ -139,3 +141,18 @@ def create_project_recruitment(project: Project, member_id: int) -> ProjectRecru
         times_project_recruit=get_maximum_project_recruit_times(project) + 1,
         created_member_id=member_id
     )
+
+
+def create_project_recruitment_jobs(job_infos: List[CreateProjectJob],
+                                    project_recruitment: ProjectRecruitment,
+                                    created_member_id: int) -> List[ProjectRecruitmentJob]:
+    project_recruitment_jobs = [
+        ProjectRecruitmentJob(
+            project_recruitment=project_recruitment,
+            job_id=job_info.job_id,
+            total_limit=job_info.total_limit,
+            created_member_id=created_member_id
+        )
+        for job_info in job_infos
+    ]
+    return ProjectRecruitmentJob.objects.bulk_create(project_recruitment_jobs)

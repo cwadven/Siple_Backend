@@ -8,6 +8,7 @@ from project.consts import (
     ProjectJobSearchOperator,
     ProjectManagementPermissionBehavior,
 )
+from project.dtos.request_dtos import CreateProjectJob
 from project.models import (
     Project,
     ProjectCategory,
@@ -20,6 +21,7 @@ from project.services.project_services import (
     create_project_management_permissions,
     create_project_member_management,
     create_project_recruitment,
+    create_project_recruitment_jobs,
     get_filtered_project_qs,
     get_maximum_project_recruit_times,
 )
@@ -669,3 +671,55 @@ class CreateProjectRecruitmentTest(TestCase):
 
         # Given: times_project_recruit should be 4
         self.assertEqual(project_recruitment.times_project_recruit, 4)
+
+
+class CreateProjectRecruitmentJobsTest(TestCase):
+    def setUp(self):
+        self.member = Member.objects.create_user(username='test', nickname='test')
+        self.project = Project.objects.create(
+            title='Project',
+            created_member_id=self.member.id,
+        )
+        self.project_recruitment = ProjectRecruitment.objects.create(
+            project=self.project,
+            times_project_recruit=1,
+            created_member_id=self.member.id,
+        )
+
+    def test_create_project_recruitment_jobs(self):
+        # Given: jobs
+        job_backend = create_job_for_testcase('backend')
+        job_frontend = create_job_for_testcase('frontend')
+        # And: Delete ProjectRecruitmentJob
+        ProjectRecruitmentJob.objects.all().delete()
+
+        # When: create_project_recruitment_jobs
+        create_project_recruitment_jobs(
+            [
+                CreateProjectJob(job_id=job_backend.id, total_limit=10),
+                CreateProjectJob(job_id=job_frontend.id, total_limit=20),
+            ],
+            self.project_recruitment,
+            self.member.id,
+        )
+
+        # Then: project_recruitment_jobs should be created
+        self.assertEqual(
+            ProjectRecruitmentJob.objects.filter(project_recruitment=self.project_recruitment).count(),
+            2,
+        )
+        # And: project_recruitment_jobs should be created with total_limit 10, 20
+        self.assertEqual(
+            ProjectRecruitmentJob.objects.get(
+                project_recruitment=self.project_recruitment,
+                job=job_backend
+            ).total_limit,
+            10,
+        )
+        self.assertEqual(
+            ProjectRecruitmentJob.objects.get(
+                project_recruitment=self.project_recruitment,
+                job=job_frontend
+            ).total_limit,
+            20,
+        )
