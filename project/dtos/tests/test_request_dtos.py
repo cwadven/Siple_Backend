@@ -6,7 +6,10 @@ from project.consts import (
     ProjectJobExperienceType,
     ProjectJobSearchOperator,
 )
-from project.dtos.request_dtos import HomeProjectListRequest
+from project.dtos.request_dtos import (
+    CreateProjectRequest,
+    HomeProjectListRequest,
+)
 from pydantic import ValidationError
 
 
@@ -269,3 +272,81 @@ class HomeProjectListRequestTest(TestCase):
         self.assertEqual(result.min_duration_month, 6)
         self.assertEqual(result.max_duration_month, 12)
         self.assertEqual(result.current_recruit_status, ProjectCurrentRecruitStatus.RECRUITING.value)
+
+
+class CreateProjectRequestTest(TestCase):
+    def setUp(self):
+        self.payload = {
+            'title': 'Project Title',
+            'description': 'Project Description',
+            'category_id': 1,
+            'hours_per_week': 10,
+            'duration_month': 3,
+            'experience': ProjectJobExperienceType.ALL.value,
+            'extra_information': 'Extra Information',
+            'image': 'Image URL',
+            'jobs': [
+                {
+                    'job_id': 1,
+                    'total_limit': 5,
+                },
+                {
+                    'job_id': 2,
+                    'total_limit': 10,
+                },
+            ],
+        }
+
+    def test_check_experience_value_should_raise_error_when_invalid_type(self):
+        # Given:
+        self.payload['experience'] = 'INVALID_TYPE'
+
+        # When: Expecting a ValidationError to be raised
+        with self.assertRaises(ValidationError) as context:
+            CreateProjectRequest.of(self.payload)
+
+        # Then: Validate the error details
+        errors = context.exception.errors()
+        self.assertEqual(len(errors), 1)
+        self.assertEqual(errors[0]['loc'], ('experience',))
+        self.assertEqual(
+            errors[0]['msg'].split(',')[1].strip(),
+            ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label,
+        )
+
+    def test_check_jobs_value_should_raise_error_when_invalid_length(self):
+        # Given: jobs length is 0
+        self.payload['jobs'] = []
+
+        # When: Expecting a ValidationError to be raised
+        with self.assertRaises(ValidationError) as context:
+            CreateProjectRequest.of(self.payload)
+
+        # Then: Validate the error details
+        errors = context.exception.errors()
+        self.assertEqual(len(errors), 1)
+        self.assertEqual(errors[0]['loc'], ('jobs',))
+        self.assertEqual(
+            errors[0]['msg'].split(',')[1].strip(),
+            ErrorMessage.INVALID_MINIMUM_ITEM_SIZE.label.format(1),
+        )
+
+    def test_check_jobs_value_should_raise_error_when_invalid_values(self):
+        # Given: jobs invalid keys
+        self.payload['jobs'] = [
+            {'invalid': 10},
+            {'invalid': 10},
+        ]
+
+        # When: Expecting a ValidationError to be raised
+        with self.assertRaises(ValidationError) as context:
+            CreateProjectRequest.of(self.payload)
+
+        # Then: Validate the error details
+        errors = context.exception.errors()
+        self.assertEqual(len(errors), 1)
+        self.assertEqual(errors[0]['loc'], ('jobs',))
+        self.assertEqual(
+            errors[0]['msg'].split(',')[1].strip(),
+            ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label,
+        )

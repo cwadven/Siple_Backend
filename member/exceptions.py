@@ -9,6 +9,12 @@ class LoginFailedException(CommonAPIException):
     default_code = 'login-error'
 
 
+class LoginRequiredException(CommonAPIException):
+    status_code = 401
+    default_detail = '로그인이 필요합니다.'
+    default_code = 'login-required'
+
+
 class NormalLoginFailedException(CommonAPIException):
     status_code = 400
     default_detail = '아이디 및 비밀번호 정보가 일치하지 않습니다.'

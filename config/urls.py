@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.urls import (
     include,
     path,
+    re_path,
 )
 from django.views.generic import TemplateView
 
@@ -18,7 +19,7 @@ urlpatterns = [
     path('v1/product/', include('product.urls.v1')),
     path('v1/payment/', include('payment.urls.v1')),
     path('v1/promotion/', include('promotion.urls.v1')),
-    path('v1/project/', include('project.urls.v1')),
+    re_path(r'^v1/project/?', include('project.urls.v1')),
     path('v1/job/', include('job.urls.v1')),
 ]
 

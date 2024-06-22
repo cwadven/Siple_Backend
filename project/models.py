@@ -375,13 +375,24 @@ class ProjectRecruitApplication(models.Model):
 
 
 class ProjectMemberManagement(models.Model):
+    project = models.ForeignKey(
+        Project,
+        null=True,
+        blank=True,
+        on_delete=models.DO_NOTHING,
+        help_text='프로젝트',
+    )
     project_recruit_application = models.ForeignKey(
         ProjectRecruitApplication,
+        null=True,
+        blank=True,
         on_delete=models.DO_NOTHING,
         help_text='프로젝트지원서',
     )
     job = models.ForeignKey(
         'job.Job',
+        null=True,
+        blank=True,
         on_delete=models.DO_NOTHING,
         help_text='프로젝트에서 맡고 있는 직무',
     )
