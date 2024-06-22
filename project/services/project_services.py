@@ -11,7 +11,11 @@ from project.consts import (
     ProjectCurrentRecruitStatus,
     ProjectJobSearchOperator,
 )
-from project.models import Project
+from project.models import (
+    Project,
+    ProjectMemberManagement,
+    ProjectRecruitApplication,
+)
 
 
 def get_active_project_qs() -> QuerySet[Project]:
@@ -88,3 +92,13 @@ def get_filtered_project_qs(title: Optional[str],
         qs = qs.prefetch_related('latest_project_recruitment_jobs').distinct()
 
     return qs.filter(q)
+
+
+def create_project_member_management(project: Project,
+                                     is_leader=False,
+                                     project_recruit_application: Optional[ProjectRecruitApplication] = None):
+    return ProjectMemberManagement.objects.create(
+        project=project,
+        project_recruit_application=project_recruit_application,
+        is_leader=is_leader,
+    )

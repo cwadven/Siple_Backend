@@ -1,3 +1,4 @@
+from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
 from django.test import TestCase
 from job.models import Job
 from member.models import Member
@@ -9,8 +10,14 @@ from project.consts import (
 from project.models import (
     Project,
     ProjectCategory,
+    ProjectRecruitApplication,
+    ProjectRecruitment,
+    ProjectRecruitmentJob,
 )
-from project.services.project_services import get_filtered_project_qs
+from project.services.project_services import (
+    create_project_member_management,
+    get_filtered_project_qs,
+)
 
 
 class ProjectFilterTestCase(TestCase):
@@ -491,3 +498,60 @@ class ProjectFilterTestCase(TestCase):
         # And: return project 1 due to duration_month is null
         # And: project 2 is 12 duration_month
         self.assertEqual(qs.first(), self.project1)
+
+
+class CreateProjectMemberManagementTest(TestCase):
+    def setUp(self):
+        self.member = Member.objects.create_user(username='test', nickname='test')
+        self.project = Project.objects.create(
+            title='Project',
+            created_member_id=self.member.id,
+        )
+        self.project_recruitment = ProjectRecruitment.objects.create(
+            project=self.project,
+            times_project_recruit=1,
+            created_member_id=self.member.id,
+        )
+        self.job_backend = create_job_for_testcase('backend')
+        self.project_recruitment_job = ProjectRecruitmentJob.objects.create(
+            project_recruitment=self.project_recruitment,
+            job=self.job_backend,
+            total_limit=10,
+            created_member_id=self.member.id,
+        )
+        self.project_recruit_application = ProjectRecruitApplication.objects.create(
+            project_recruitment_job=self.project_recruitment_job,
+            member_id=self.member.id,
+            request_message='Test',
+        )
+
+    def test_create_project_member_management_should_return_is_leader_true_when_param_is_true(self):
+        # Given: is_leader is True
+        # When:
+        project_member_management = create_project_member_management(self.project, is_leader=True)
+
+        # Then: is_leader should be True
+        self.assertEqual(project_member_management.project.id, self.project.id)
+        self.assertEqual(project_member_management.is_leader, True)
+
+    def test_create_project_member_management_should_return_project_recruit_application_none_when_param_not_exists(self):
+        # Given: project_recruit_application is not exists
+        # When:
+        project_member_management = create_project_member_management(self.project, is_leader=True)
+
+        # Then: project_recruit_application should be None
+        self.assertEqual(project_member_management.project.id, self.project.id)
+        self.assertEqual(project_member_management.project_recruit_application, None)
+
+    def test_create_project_member_management_should_return_project_recruit_application_when_param_exists(self):
+        # Given: project_recruit_application is exists
+        # When:
+        project_member_management = create_project_member_management(
+            self.project,
+            is_leader=False,
+            project_recruit_application=self.project_recruit_application
+        )
+
+        # Then: project_recruit_application should be exists
+        self.assertEqual(project_member_management.project.id, self.project.id)
+        self.assertEqual(project_member_management.project_recruit_application.id, self.project_recruit_application.id)
