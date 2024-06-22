@@ -19,7 +19,9 @@ from project.models import (
 from project.services.project_services import (
     create_project_management_permissions,
     create_project_member_management,
-    get_filtered_project_qs, get_maximum_project_recruit_times,
+    create_project_recruitment,
+    get_filtered_project_qs,
+    get_maximum_project_recruit_times,
 )
 
 
@@ -631,3 +633,39 @@ class TestGetMaximumProjectRecruitTimes(TestCase):
 
         # Then: max_times_project_recruit should be 3
         self.assertEqual(max_times_project_recruit, 3)
+
+
+class CreateProjectRecruitmentTest(TestCase):
+    def setUp(self):
+        self.member = Member.objects.create_user(username='test', nickname='test')
+        self.project = Project.objects.create(
+            title='Project',
+            created_member_id=self.member.id,
+        )
+
+    def test_create_project_recruitment_should_create_times_project_recruit_1_when_not_exists(self):
+        # Given: ProjectRecruitment not exists
+        ProjectRecruitment.objects.all().delete()
+
+        # When: create_project_recruitment
+        project_recruitment = create_project_recruitment(self.project, self.member.id)
+
+        # Given: times_project_recruit should be 1
+        self.assertEqual(project_recruitment.project.id, self.project.id)
+        self.assertEqual(project_recruitment.times_project_recruit, 1)
+        # And: created_member should be member
+        self.assertEqual(project_recruitment.created_member.id, self.member.id)
+
+    def test_create_project_recruitment_should_create_times_project_recruit_as_maximum_when_exists(self):
+        # Given: ProjectRecruitment exists
+        ProjectRecruitment.objects.create(
+            project=self.project,
+            times_project_recruit=3,
+            created_member_id=self.member.id,
+        )
+
+        # When: create_project_recruitment
+        project_recruitment = create_project_recruitment(self.project, self.member.id)
+
+        # Given: times_project_recruit should be 4
+        self.assertEqual(project_recruitment.times_project_recruit, 4)

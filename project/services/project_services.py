@@ -131,3 +131,11 @@ def get_maximum_project_recruit_times(project: Project) -> int:
     ).aggregate(
         max_times_project_recruit=Coalesce(Max('times_project_recruit'), 0)
     )['max_times_project_recruit']
+
+
+def create_project_recruitment(project: Project, member_id: int) -> ProjectRecruitment:
+    return ProjectRecruitment.objects.create(
+        project=project,
+        times_project_recruit=get_maximum_project_recruit_times(project) + 1,
+        created_member_id=member_id
+    )
