@@ -1,24 +1,35 @@
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import (
+    MagicMock,
+    patch,
+)
 
 from common.common_consts.common_error_messages import (
     ErrorMessage,
     InvalidInputResponseErrorStatus,
 )
 from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
+from common.common_utils.error_utils import generate_pydantic_error_detail
 from django.urls import reverse
 from job.dtos.model_dtos import ProjectJobRecruitInfo
+from member.exceptions import LoginRequiredException
 from member.models import Member
 from project.consts import (
     ProjectJobExperienceType,
     ProjectJobSearchOperator,
     ProjectRecruitmentStatus,
 )
+from project.dtos.request_dtos import (
+    CreateProjectJob,
+    CreateProjectRequest,
+)
+from project.dtos.service_dtos import ProjectCreationData
 from project.models import (
     Project,
     ProjectCategory,
     ProjectRecruitment,
 )
+from pydantic import ValidationError
 from rest_framework import status
 from rest_framework.test import (
     APIClient,
@@ -191,3 +202,128 @@ class HomeProjectListAPIViewTests(APITestCase):
                 }
             }
         )
+
+
+class CreateProjectAPIViewTests(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.url = reverse('project:project')
+        self.member = Member.objects.create_user(username='test1', nickname='test1')
+        self.category = ProjectCategory.objects.create(
+            display_name='카테고리 테스트',
+            name='category_test',
+        )
+        self.job1 = create_job_for_testcase('job1')
+        self.request_data = {
+            'title': 'Test Project',
+            'description': 'This is a test project.',
+            'category_id': self.category.id,
+            'extra_information': 'Extra',
+            'image': 'path/to/image.png',
+            'experience': 'ALL',
+            'hours_per_week': 40,
+            'duration_month': 6,
+            'jobs': [
+                {"job_id": self.job1.id, "total_limit": 5},
+            ]
+        }
+
+    def test_create_project_should_fail_due_to_not_logged_in(self):
+        # Given: Not logged in
+        self.client.logout()
+
+        # When: Make POST request
+        response = self.client.post(
+            self.url,
+            self.request_data,
+            format='json',
+        )
+
+        # Then: Error 401
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        # And: Error info
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': LoginRequiredException.default_detail,
+                'error_code': LoginRequiredException.default_code,
+                'errors': None,
+            }
+        )
+
+    @patch('project.views.CreateProjectRequest.of')
+    def test_create_project_should_fail_when_invalid_input(self, mock_of):
+        # Given: Login
+        self.client.force_login(self.member)
+        # And: Mock CreateProjectRequest.of
+        mock_of.side_effect = ValidationError.from_exception_data(
+            title=CreateProjectRequest.__name__,
+            line_errors=[
+                generate_pydantic_error_detail(
+                    'Error',
+                    '에러',
+                    'extra_information',
+                    'ALL',
+                )
+            ]
+        )
+
+        # When: Make POST request
+        response = self.client.post(
+            self.url,
+            self.request_data,
+            format='json',
+        )
+
+        # Then: Verify the response status
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data['message'],
+            InvalidInputResponseErrorStatus.INVALID_PROJECT_CREATION_INPUT_DATA_ERROR_400.label,
+        )
+        self.assertEqual(
+            response.data['error_code'],
+            InvalidInputResponseErrorStatus.INVALID_PROJECT_CREATION_INPUT_DATA_ERROR_400.value,
+        )
+        self.assertEqual(
+            response.data['errors']['extra_information'],
+            ['에러'],
+        )
+
+    @patch('project.views.ProjectCreationService')
+    def test_create_project_success(self, mock_project_creation_service):
+        # Given: Login
+        self.client.force_login(self.member)
+        # And: Mock ProjectCreationService
+        mock_service_instance = mock_project_creation_service.return_value
+        mock_project = MagicMock()
+        mock_project.id = 1
+        mock_service_instance.generate_project.return_value = mock_project
+
+        # When: Make POST request
+        response = self.client.post(
+            self.url,
+            self.request_data, format='json',
+        )
+
+        # Then: Verify the response status
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], mock_project.id)
+        mock_project_creation_service.assert_called_once_with(
+            self.member.id,
+            ProjectCreationData(
+                title=self.request_data['title'],
+                description=self.request_data['description'],
+                category_id=self.request_data['category_id'],
+                extra_information=self.request_data['extra_information'],
+                main_image=self.request_data['image'],
+                job_experience_type=self.request_data['experience'],
+                hours_per_week=self.request_data['hours_per_week'],
+                duration_month=self.request_data['duration_month'],
+                jobs=[
+                    CreateProjectJob(job_id=job_info['job_id'], total_limit=job_info['total_limit'])
+                    for job_info in self.request_data['jobs']
+                ]
+            )
+        )
+        mock_service_instance.generate_project.assert_called_once()

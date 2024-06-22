@@ -4,13 +4,25 @@ from common.common_exceptions import PydanticAPIException
 from common.common_paginations.cursor_pagination_helpers import get_objects_with_cursor_pagination
 from job.dtos.model_dtos import ProjectJobAvailabilities
 from job.services.project_job_services import get_current_active_project_job_recruitments
+from member.permissions import IsMemberLogin
 from project.cursor_criteria.cursor_criteria import HomeProjectListCursorCriteria
 from project.dtos.model_dtos import ProjectListItem
-from project.dtos.request_dtos import HomeProjectListRequest
-from project.dtos.response_dtos import HomeProjectListResponse
+from project.dtos.request_dtos import (
+    CreateProjectJob,
+    CreateProjectRequest,
+    HomeProjectListRequest,
+)
+from project.dtos.response_dtos import (
+    HomeProjectListResponse,
+    ProjectCreationResponse,
+)
+from project.dtos.service_dtos import ProjectCreationData
 from project.services.bookmark_services import get_member_bookmarked_project_ids
 from project.services.project_recruit_services import get_project_recent_recruited_at
-from project.services.project_services import get_filtered_project_qs
+from project.services.project_services import (
+    ProjectCreationService,
+    get_filtered_project_qs,
+)
 from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -93,8 +105,41 @@ class HomeProjectListAPIView(APIView):
 
 
 class CreateProjectAPIView(APIView):
+    permission_classes = [
+        IsMemberLogin,
+    ]
+
     def post(self, request):
+        try:
+            create_project_request = CreateProjectRequest.of(request.data)
+        except ValidationError as e:
+            raise PydanticAPIException(
+                status_code=400,
+                error_summary=InvalidInputResponseErrorStatus.INVALID_PROJECT_CREATION_INPUT_DATA_ERROR_400.label,
+                error_code=InvalidInputResponseErrorStatus.INVALID_PROJECT_CREATION_INPUT_DATA_ERROR_400.value,
+                errors=e.errors(),
+            )
+
+        project_creation_service = ProjectCreationService(
+            request.member.id,
+            ProjectCreationData(
+                title=create_project_request.title,
+                description=create_project_request.description,
+                category_id=create_project_request.category_id,
+                extra_information=create_project_request.extra_information,
+                main_image=create_project_request.image,
+                job_experience_type=create_project_request.experience,
+                hours_per_week=create_project_request.hours_per_week,
+                duration_month=create_project_request.duration_month,
+                jobs=[
+                    CreateProjectJob(job_id=job_info.job_id, total_limit=job_info.total_limit)
+                    for job_info in create_project_request.jobs
+                ]
+            )
+        )
+        project = project_creation_service.generate_project()
+
         return Response(
-            {},
+            ProjectCreationResponse(id=project.id).model_dump(),
             status=200
         )
