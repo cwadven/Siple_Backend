@@ -19,7 +19,7 @@ from project.models import (
 from project.services.project_services import (
     create_project_management_permissions,
     create_project_member_management,
-    get_filtered_project_qs,
+    get_filtered_project_qs, get_maximum_project_recruit_times,
 )
 
 
@@ -599,3 +599,35 @@ class CreateProjectManagementPermissionsTest(TestCase):
             ),
             set(permission.value for permission in permissions),
         )
+
+
+class TestGetMaximumProjectRecruitTimes(TestCase):
+    def setUp(self):
+        self.member = Member.objects.create_user(username='test', nickname='test')
+        self.project = Project.objects.create(
+            title='Project',
+            created_member_id=self.member.id,
+        )
+        self.project_recruitment1 = ProjectRecruitment.objects.create(
+            project=self.project,
+            times_project_recruit=1,
+            created_member_id=self.member.id,
+        )
+        self.project_recruitment2 = ProjectRecruitment.objects.create(
+            project=self.project,
+            times_project_recruit=2,
+            created_member_id=self.member.id,
+        )
+        self.project_recruitment3 = ProjectRecruitment.objects.create(
+            project=self.project,
+            times_project_recruit=3,
+            created_member_id=self.member.id,
+        )
+
+    def test_get_maximum_project_recruit_times(self):
+        # Given: project_recruitments with times_project_recruit 1, 2, 3
+        # When: get_maximum_project_recruit_times
+        max_times_project_recruit = get_maximum_project_recruit_times(self.project)
+
+        # Then: max_times_project_recruit should be 3
+        self.assertEqual(max_times_project_recruit, 3)

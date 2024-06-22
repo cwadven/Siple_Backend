@@ -4,9 +4,11 @@ from typing import (
 )
 
 from django.db.models import (
+    Max,
     Q,
     QuerySet
 )
+from django.db.models.functions import Coalesce
 from project.consts import (
     ProjectCurrentRecruitStatus,
     ProjectJobSearchOperator,
@@ -18,6 +20,7 @@ from project.models import (
     ProjectManagementPermission,
     ProjectMemberManagement,
     ProjectRecruitApplication,
+    ProjectRecruitment,
 )
 
 
@@ -120,3 +123,11 @@ def create_project_management_permissions(project: Project,
         for permission_behavior in permission_behaviors
     ]
     return ProjectManagementPermission.objects.bulk_create(project_management_permissions)
+
+
+def get_maximum_project_recruit_times(project: Project) -> int:
+    return ProjectRecruitment.objects.filter(
+        project=project
+    ).aggregate(
+        max_times_project_recruit=Coalesce(Max('times_project_recruit'), 0)
+    )['max_times_project_recruit']
