@@ -377,6 +377,8 @@ class ProjectRecruitApplication(models.Model):
 class ProjectMemberManagement(models.Model):
     project_recruit_application = models.ForeignKey(
         ProjectRecruitApplication,
+        null=True,
+        blank=True,
         on_delete=models.DO_NOTHING,
         help_text='프로젝트지원서',
     )
