@@ -1,4 +1,9 @@
+from unittest.mock import (
+    patch,
+)
+
 from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
+from django.db import DatabaseError
 from django.test import TestCase
 from job.models import Job
 from member.models import Member
@@ -9,6 +14,8 @@ from project.consts import (
     ProjectManagementPermissionBehavior,
 )
 from project.dtos.request_dtos import CreateProjectJob
+from project.dtos.service_dtos import ProjectCreationData
+from project.exceptions import ProjectDatabaseCreationErrorException
 from project.models import (
     Project,
     ProjectCategory,
@@ -18,6 +25,7 @@ from project.models import (
     ProjectRecruitmentJob,
 )
 from project.services.project_services import (
+    ProjectCreationService,
     create_project_management_permissions,
     create_project_member_management,
     create_project_recruitment_and_update_project,
@@ -726,4 +734,249 @@ class CreateProjectRecruitmentJobsTest(TestCase):
                 job=job_frontend
             ).total_limit,
             20,
+        )
+
+
+class ProjectCreationServiceTest(TestCase):
+    def setUp(self):
+        self.member = Member.objects.create_user(username='test', nickname='test')
+        self.backend = create_job_for_testcase('backend')
+        self.frontend = create_job_for_testcase('frontend')
+        self.category = ProjectCategory.objects.create(
+            display_name='카테고리 테스트',
+            name='category_test',
+        )
+        self.project_creation_data = ProjectCreationData(
+            title='테스트',
+            description='디스크립션',
+            category_id=self.category.id,
+            extra_information='으아엑스트라',
+            main_image=None,
+            job_experience_type='ALL',
+            hours_per_week=3,
+            duration_month=10,
+            jobs=[
+                CreateProjectJob(job_id=self.backend.id, total_limit=10),
+                CreateProjectJob(job_id=self.frontend.id, total_limit=20),
+            ]
+        )
+
+    def test_set_project(self):
+        # Given: project
+        project = Project.objects.create(
+            title='Project',
+            created_member_id=self.member.id,
+        )
+        project_creation_service = ProjectCreationService(self.member.id, self.project_creation_data)
+
+        # When: set_project
+        project_creation_service._set_project(project)
+
+        # Then: project should be set
+        self.assertEqual(project_creation_service.project, project)
+
+    def test_project_creation_service_initial(self):
+        # Given: member_id, project_creation_data
+        # When: ProjectCreationService is initialized
+        project_creation_service = ProjectCreationService(self.member.id, self.project_creation_data)
+
+        # Then: member_id, project_creation_data should be set
+        self.assertEqual(project_creation_service.member_id, self.member.id)
+        self.assertEqual(project_creation_service.project_creation_data, self.project_creation_data)
+
+    def test_project_creation_service_generate_project(self):
+        # Given: member_id, project_creation_data
+        project_creation_service = ProjectCreationService(self.member.id, self.project_creation_data)
+
+        # When: generate_project
+        project = project_creation_service.generate_project()
+
+        # Then: project should be created
+        self.assertEqual(project.title, self.project_creation_data.title)
+        self.assertEqual(project.description, self.project_creation_data.description)
+        self.assertEqual(project.category_id, self.project_creation_data.category_id)
+        self.assertEqual(project.extra_information, self.project_creation_data.extra_information)
+        self.assertEqual(project.main_image, self.project_creation_data.main_image)
+        self.assertEqual(project.job_experience_type, self.project_creation_data.job_experience_type)
+        self.assertEqual(project.hours_per_week, self.project_creation_data.hours_per_week)
+        self.assertEqual(project.duration_month, self.project_creation_data.duration_month)
+        self.assertEqual(project.created_member.id, self.member.id)
+        # And: latest_project_recruitment_jobs should be created
+        self.assertEqual(project.latest_project_recruitment_jobs.count(), 2)
+        self.assertEqual(
+            set(project.latest_project_recruitment_jobs.values_list('id', flat=True)),
+            {self.backend.id, self.frontend.id},
+        )
+        # And: project_recruitment_jobs should be created with total_limit 10, 20
+        self.assertEqual(
+            set(
+                ProjectRecruitmentJob.objects.filter(
+                    project_recruitment__project=project
+                ).values_list('job_id', flat=True)
+            ),
+            {self.backend.id, self.frontend.id},
+        )
+        self.assertEqual(
+            set(
+                ProjectRecruitmentJob.objects.filter(
+                    project_recruitment__project=project
+                ).values_list('total_limit', flat=True)
+            ),
+            {10, 20},
+        )
+        # And: project_recruitment created and updated to latest_project_recruitment
+        self.assertEqual(project.latest_project_recruitment.times_project_recruit, 1)
+        self.assertEqual(project.latest_project_recruitment.created_member.id, self.member.id)
+
+    @patch('project.services.project_services.Project.objects')
+    def test_create_project_method(self, mock_object):
+        # Given: member_id, project_creation_data
+        project_creation_service = ProjectCreationService(self.member.id, self.project_creation_data)
+
+        # When: create_project_recruitment_and_update_project
+        project_creation_service._create_project()
+
+        # Then: should be called expected
+        mock_object.create.assert_called_once_with(
+            title=self.project_creation_data.title,
+            description=self.project_creation_data.description,
+            category_id=self.project_creation_data.category_id,
+            extra_information=self.project_creation_data.extra_information,
+            main_image=self.project_creation_data.main_image,
+            job_experience_type=self.project_creation_data.job_experience_type,
+            hours_per_week=self.project_creation_data.hours_per_week,
+            duration_month=self.project_creation_data.duration_month,
+            created_member_id=self.member.id,
+        )
+
+    @patch('project.services.project_services.create_project_member_management')
+    def test_create_project_member_management(self, mock_create_project_member_management):
+        # Given: member_id, project_creation_data
+        project_creation_service = ProjectCreationService(self.member.id, self.project_creation_data)
+
+        # When: create_project_member_management
+        project_creation_service._create_project_member_management()
+
+        # Then: should be called expected
+        mock_create_project_member_management.assert_called_once_with(project_creation_service.project, is_leader=True)
+
+    @patch('project.services.project_services.create_project_management_permissions')
+    def test_create_management_permissions(self, mock_create_project_management_permissions):
+        # Given: member_id, project_creation_data
+        project_creation_service = ProjectCreationService(self.member.id, self.project_creation_data)
+
+        # When: create_management_permissions
+        project_creation_service._create_management_permissions()
+
+        # Then: should be called expected
+        mock_create_project_management_permissions.assert_called_once_with(
+            project_creation_service.project,
+            self.member.id,
+            [ProjectManagementPermissionBehavior(value) for value, _ in ProjectManagementPermissionBehavior.choices()],
+        )
+
+    @patch('project.services.project_services.create_project_recruitment_and_update_project')
+    def test_create_project_recruitment(self, mock_create_project_recruitment_and_update_project):
+        # Given: member_id, project_creation_data
+        project_creation_service = ProjectCreationService(self.member.id, self.project_creation_data)
+
+        # When: create_project_recruitment
+        project_creation_service._create_project_recruitment()
+
+        # Then: should be called expected
+        mock_create_project_recruitment_and_update_project.assert_called_once_with(
+            project_creation_service.project,
+            self.member.id,
+        )
+
+    @patch('project.services.project_services.create_project_recruitment_jobs')
+    def test_create_project_recruitment_jobs(self, mock_create_project_recruitment_jobs):
+        # Given: member_id, project_creation_data
+        project_creation_service = ProjectCreationService(self.member.id, self.project_creation_data)
+        # And: project_recruitment
+        project = Project.objects.create(
+            title='Project',
+            created_member_id=self.member.id,
+        )
+        project_recruitment = ProjectRecruitment.objects.create(
+            project=project,
+            times_project_recruit=1,
+            created_member_id=self.member.id,
+        )
+        project_creation_service.project = project
+
+        # When: create_project_recruitment_jobs
+        project_creation_service._create_project_recruitment_jobs(project_recruitment)
+
+        # Then: should be called expected
+        mock_create_project_recruitment_jobs.assert_called_once_with(
+            self.project_creation_data.jobs,
+            project_recruitment,
+            self.member.id,
+        )
+
+    def test_update_latest_project_recruitment_jobs(self):
+        # Given: member_id, project_creation_data
+        project_creation_service = ProjectCreationService(self.member.id, self.project_creation_data)
+        # And: project_recruitment
+        project = Project.objects.create(
+            title='Project',
+            created_member_id=self.member.id,
+        )
+        project_creation_service.project = project
+
+        # When: update_latest_project_recruitment_jobs
+        project_creation_service._update_latest_project_recruitment_jobs(
+            [self.backend.id, self.frontend.id]
+        )
+
+        # Then: should be updated latest_project_recruitment_jobs
+        self.assertEqual(project.latest_project_recruitment_jobs.count(), 2)
+        self.assertEqual(
+            set(project.latest_project_recruitment_jobs.values_list('id', flat=True)),
+            {self.backend.id, self.frontend.id},
+        )
+
+    @patch('project.services.project_services.ProjectCreationService._create_project')
+    @patch('project.services.project_services.ProjectCreationService._set_project')
+    @patch('project.services.project_services.ProjectCreationService._create_and_update_project_dependencies')
+    def test_generate_project(self,
+                              mock_create_project,
+                              mock_set_project,
+                              mock_create_and_update_project_dependencies):
+        # Given: member_id, project_creation_data
+        project_creation_service = ProjectCreationService(self.member.id, self.project_creation_data)
+
+        # When: generate_project
+        project_creation_service.generate_project()
+
+        # Then: should be called expected
+        mock_create_project.assert_called_once()
+        mock_set_project.assert_called_once()
+        mock_create_and_update_project_dependencies.assert_called_once()
+
+    @patch('project.services.project_services.ProjectCreationService._create_project')
+    @patch('project.services.project_services.ProjectCreationService._set_project')
+    @patch('project.services.project_services.ProjectCreationService._create_and_update_project_dependencies')
+    def test_generate_project_should_raise_error(self,
+                                                 mock_create_project,
+                                                 mock_set_project,
+                                                 mock_create_and_update_project_dependencies):
+        # Given: member_id, project_creation_data
+        project_creation_service = ProjectCreationService(self.member.id, self.project_creation_data)
+        # And: raise error
+        mock_create_project.side_effect = DatabaseError('Error')
+
+        # When: generate_project
+        with self.assertRaises(ProjectDatabaseCreationErrorException) as e:
+            project_creation_service.generate_project()
+
+        # Then: should be called expected
+        self.assertEqual(
+            e.exception.detail,
+            ProjectDatabaseCreationErrorException.default_detail,
+        )
+        self.assertEqual(
+            e.exception.errors,
+            {'project': ['Error']},
         )

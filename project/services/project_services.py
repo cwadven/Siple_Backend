@@ -1,8 +1,13 @@
 from typing import (
     List,
     Optional,
+    Type,
 )
 
+from django.db import (
+    DatabaseError,
+    transaction
+)
 from django.db.models import (
     Max,
     Q,
@@ -16,6 +21,8 @@ from project.consts import (
     ProjectManagementPermissionStatus,
 )
 from project.dtos.request_dtos import CreateProjectJob
+from project.dtos.service_dtos import ProjectCreationData
+from project.exceptions import ProjectDatabaseCreationErrorException
 from project.models import (
     Project,
     ProjectManagementPermission,
@@ -159,3 +166,71 @@ def create_project_recruitment_jobs(job_infos: List[CreateProjectJob],
         for job_info in job_infos
     ]
     return ProjectRecruitmentJob.objects.bulk_create(project_recruitment_jobs)
+
+
+class ProjectCreationService(object):
+    def __init__(self, member_id: int, project_creation_data: ProjectCreationData):
+        self.project = None
+        self.member_id = member_id
+        self.project_creation_data = project_creation_data
+
+    def _set_project(self, project: Project):
+        self.project = project
+
+    def generate_project(self):
+        try:
+            with transaction.atomic():
+                project = self._create_project()
+                self._set_project(project)
+                self._create_and_update_project_dependencies()
+        except DatabaseError as e:
+            raise ProjectDatabaseCreationErrorException(errors={'project': [str(e)]})
+        return self.project
+
+    def _create_project(self):
+        self.project = Project.objects.create(
+            title=self.project_creation_data.title,
+            description=self.project_creation_data.description,
+            category_id=self.project_creation_data.category_id,
+            extra_information=self.project_creation_data.extra_information,
+            main_image=self.project_creation_data.main_image,
+            job_experience_type=self.project_creation_data.job_experience_type,
+            hours_per_week=self.project_creation_data.hours_per_week,
+            duration_month=self.project_creation_data.duration_month,
+            created_member_id=self.member_id,
+        )
+        return self.project
+
+    def _create_and_update_project_dependencies(self):
+        if self.project:
+            self._create_project_member_management()
+            self._create_management_permissions()
+            project_recruitment = self._create_project_recruitment()
+            project_recruitment_jobs = self._create_project_recruitment_jobs(project_recruitment)
+            self._update_latest_project_recruitment_jobs(
+                [project_recruitment_job.job_id
+                 for project_recruitment_job in project_recruitment_jobs]
+            )
+
+    def _create_project_member_management(self):
+        return create_project_member_management(self.project, is_leader=True)
+
+    def _create_management_permissions(self) -> None:
+        create_project_management_permissions(
+            self.project,
+            self.member_id,
+            [ProjectManagementPermissionBehavior(value) for value, _ in ProjectManagementPermissionBehavior.choices()]
+        )
+
+    def _create_project_recruitment(self) -> ProjectRecruitment:
+        return create_project_recruitment_and_update_project(self.project, self.member_id)
+
+    def _create_project_recruitment_jobs(self, project_recruitment: ProjectRecruitment) -> List[ProjectRecruitmentJob]:
+        return create_project_recruitment_jobs(
+            self.project_creation_data.jobs,
+            project_recruitment,
+            self.member_id,
+        )
+
+    def _update_latest_project_recruitment_jobs(self, job_ids: List[Type[int]]) -> None:
+        self.project.latest_project_recruitment_jobs.add(*job_ids)
