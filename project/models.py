@@ -384,6 +384,8 @@ class ProjectMemberManagement(models.Model):
     )
     job = models.ForeignKey(
         'job.Job',
+        null=True,
+        blank=True,
         on_delete=models.DO_NOTHING,
         help_text='프로젝트에서 맡고 있는 직무',
     )
