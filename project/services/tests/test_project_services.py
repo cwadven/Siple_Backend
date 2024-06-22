@@ -20,7 +20,7 @@ from project.models import (
 from project.services.project_services import (
     create_project_management_permissions,
     create_project_member_management,
-    create_project_recruitment,
+    create_project_recruitment_and_update_project,
     create_project_recruitment_jobs,
     get_filtered_project_qs,
     get_maximum_project_recruit_times,
@@ -650,13 +650,15 @@ class CreateProjectRecruitmentTest(TestCase):
         ProjectRecruitment.objects.all().delete()
 
         # When: create_project_recruitment
-        project_recruitment = create_project_recruitment(self.project, self.member.id)
+        project_recruitment = create_project_recruitment_and_update_project(self.project, self.member.id)
 
         # Given: times_project_recruit should be 1
         self.assertEqual(project_recruitment.project.id, self.project.id)
         self.assertEqual(project_recruitment.times_project_recruit, 1)
         # And: created_member should be member
         self.assertEqual(project_recruitment.created_member.id, self.member.id)
+        # And: project latest_project_recruitment should be project_recruitment
+        self.assertEqual(self.project.latest_project_recruitment.id, project_recruitment.id)
 
     def test_create_project_recruitment_should_create_times_project_recruit_as_maximum_when_exists(self):
         # Given: ProjectRecruitment exists
@@ -667,10 +669,12 @@ class CreateProjectRecruitmentTest(TestCase):
         )
 
         # When: create_project_recruitment
-        project_recruitment = create_project_recruitment(self.project, self.member.id)
+        project_recruitment = create_project_recruitment_and_update_project(self.project, self.member.id)
 
         # Given: times_project_recruit should be 4
         self.assertEqual(project_recruitment.times_project_recruit, 4)
+        # And: project latest_project_recruitment should be project_recruitment
+        self.assertEqual(self.project.latest_project_recruitment.id, project_recruitment.id)
 
 
 class CreateProjectRecruitmentJobsTest(TestCase):

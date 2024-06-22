@@ -135,12 +135,15 @@ def get_maximum_project_recruit_times(project: Project) -> int:
     )['max_times_project_recruit']
 
 
-def create_project_recruitment(project: Project, member_id: int) -> ProjectRecruitment:
-    return ProjectRecruitment.objects.create(
+def create_project_recruitment_and_update_project(project: Project, member_id: int) -> ProjectRecruitment:
+    project_recruitment = ProjectRecruitment.objects.create(
         project=project,
         times_project_recruit=get_maximum_project_recruit_times(project) + 1,
         created_member_id=member_id
     )
+    project.latest_project_recruitment = project_recruitment
+    project.save(update_fields=['latest_project_recruitment'])
+    return project_recruitment
 
 
 def create_project_recruitment_jobs(job_infos: List[CreateProjectJob],
