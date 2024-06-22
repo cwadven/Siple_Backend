@@ -10,9 +10,12 @@ from django.db.models import (
 from project.consts import (
     ProjectCurrentRecruitStatus,
     ProjectJobSearchOperator,
+    ProjectManagementPermissionBehavior,
+    ProjectManagementPermissionStatus,
 )
 from project.models import (
     Project,
+    ProjectManagementPermission,
     ProjectMemberManagement,
     ProjectRecruitApplication,
 )
@@ -102,3 +105,18 @@ def create_project_member_management(project: Project,
         project_recruit_application=project_recruit_application,
         is_leader=is_leader,
     )
+
+
+def create_project_management_permissions(project: Project,
+                                          member_id: int,
+                                          permission_behaviors: List[ProjectManagementPermissionBehavior]):
+    project_management_permissions = [
+        ProjectManagementPermission(
+            project=project,
+            member_id=member_id,
+            permission=permission_behavior.value,
+            status=ProjectManagementPermissionStatus.ACTIVE.value,
+        )
+        for permission_behavior in permission_behaviors
+    ]
+    return ProjectManagementPermission.objects.bulk_create(project_management_permissions)

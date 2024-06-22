@@ -6,15 +6,18 @@ from project.consts import (
     ProjectCurrentRecruitStatus,
     ProjectJobExperienceType,
     ProjectJobSearchOperator,
+    ProjectManagementPermissionBehavior,
 )
 from project.models import (
     Project,
     ProjectCategory,
+    ProjectManagementPermission,
     ProjectRecruitApplication,
     ProjectRecruitment,
     ProjectRecruitmentJob,
 )
 from project.services.project_services import (
+    create_project_management_permissions,
     create_project_member_management,
     get_filtered_project_qs,
 )
@@ -555,3 +558,44 @@ class CreateProjectMemberManagementTest(TestCase):
         # Then: project_recruit_application should be exists
         self.assertEqual(project_member_management.project.id, self.project.id)
         self.assertEqual(project_member_management.project_recruit_application.id, self.project_recruit_application.id)
+
+
+class CreateProjectManagementPermissionsTest(TestCase):
+    def setUp(self):
+        self.member = Member.objects.create_user(username='test', nickname='test')
+        self.project = Project.objects.create(
+            title='Project',
+            created_member_id=self.member.id,
+        )
+
+    def test_create_project_management_permissions(self):
+        # Given: project_management_permissions
+        permissions = [
+            ProjectManagementPermissionBehavior(value)
+            for value, _ in ProjectManagementPermissionBehavior.choices()
+        ]
+
+        # When: create_project_management_permissions
+        create_project_management_permissions(
+            self.project,
+            self.member.id,
+            permissions,
+        )
+
+        # Then: project_management_permissions should be created
+        self.assertEqual(
+            ProjectManagementPermission.objects.filter(
+                project_id=self.project.id,
+                member_id=self.member.id,
+            ).count(),
+            len(permissions),
+        )
+        self.assertEqual(
+            set(
+                ProjectManagementPermission.objects.filter(
+                    project_id=self.project.id,
+                    member_id=self.member.id,
+                ).values_list('permission', flat=True)
+            ),
+            set(permission.value for permission in permissions),
+        )
