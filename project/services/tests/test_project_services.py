@@ -3,6 +3,7 @@ from unittest.mock import (
 )
 
 from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
+from common.common_testcase_helpers.project.testcase_helpers import create_project_category_for_testcase
 from django.db import DatabaseError
 from django.test import TestCase
 from job.models import Job, JobCategory
@@ -30,6 +31,7 @@ from project.services.project_services import (
     create_project_member_management,
     create_project_recruitment_and_update_project,
     create_project_recruitment_jobs,
+    get_active_project_categories,
     get_filtered_project_qs,
     get_maximum_project_recruit_times,
 )
@@ -1111,4 +1113,26 @@ class ProjectCreationServiceTest(TestCase):
         self.assertEqual(
             e.exception.errors,
             {'project': ['Error']},
+        )
+
+
+class GetActiveProjectCategoriesTest(TestCase):
+    def setUp(self):
+        self.category1 = create_project_category_for_testcase('category1')
+        self.category2 = create_project_category_for_testcase('category2')
+        self.category3 = create_project_category_for_testcase('category3')
+
+    def test_get_active_project_categories(self):
+        # Given: category3 is deleted
+        self.category3.is_deleted = True
+        self.category3.save()
+
+        # When: get_active_project_categories
+        active_project_categories = get_active_project_categories()
+
+        # Then: active_project_categories should be returned
+        self.assertEqual(len(active_project_categories), 2)
+        self.assertEqual(
+            set(active_project_category.id for active_project_category in active_project_categories),
+            {self.category1.id, self.category2.id},
         )

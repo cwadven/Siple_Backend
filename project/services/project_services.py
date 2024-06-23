@@ -25,6 +25,7 @@ from project.dtos.service_dtos import ProjectCreationData
 from project.exceptions import ProjectDatabaseCreationErrorException
 from project.models import (
     Project,
+    ProjectCategory,
     ProjectManagementPermission,
     ProjectMemberManagement,
     ProjectRecruitApplication,
@@ -247,3 +248,11 @@ class ProjectCreationService(object):
 
     def _update_latest_project_recruitment_jobs(self, job_ids: List[Type[int]]) -> None:
         self.project.latest_project_recruitment_jobs.add(*job_ids)
+
+
+def get_active_project_categories() -> List[ProjectCategory]:
+    return list(
+        ProjectCategory.objects.filter(
+            is_deleted=False,
+        )
+    )
