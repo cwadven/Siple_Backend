@@ -15,7 +15,6 @@ from job.dtos.model_dtos import ProjectJobRecruitInfo
 from member.exceptions import LoginRequiredException
 from member.models import Member
 from project.consts import (
-    ProjectJobExperienceType,
     ProjectJobSearchOperator,
     ProjectRecruitmentStatus,
 )
@@ -121,8 +120,9 @@ class HomeProjectListAPIViewTests(APITestCase):
             title=None,
             category_ids=[],
             job_ids=[],
+            job_category_ids=[],
             jobs_operator=ProjectJobSearchOperator.OR.value,
-            experience=ProjectJobExperienceType.ALL.value,
+            experience=None,
             min_hours_per_week=None,
             max_hours_per_week=None,
             min_duration_month=None,
