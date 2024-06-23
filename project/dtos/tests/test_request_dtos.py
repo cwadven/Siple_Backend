@@ -117,7 +117,7 @@ class HomeProjectListRequestTest(TestCase):
         experience_result = HomeProjectListRequest.check_experience_value(valid_experience)
 
         # Then: ALL 반환
-        self.assertEqual(experience_result, ProjectJobExperienceType.ALL.value)
+        self.assertEqual(experience_result, None)
 
     def test_check_experience_value_invalid(self):
         # Given: invalid experience

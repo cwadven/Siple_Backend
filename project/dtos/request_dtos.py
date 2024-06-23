@@ -86,7 +86,7 @@ class HomeProjectListRequest(BaseModel):
     )
     def check_experience_value(cls, v):
         if v is None:
-            return ProjectJobExperienceType.ALL.value
+            return
         try:
             return ProjectJobExperienceType(v).value
         except ValueError:
@@ -187,7 +187,7 @@ class HomeProjectListRequest(BaseModel):
             job_ids=string_to_list(request.get('job_ids', '')),
             job_category_ids=string_to_list(request.get('job_category_ids', '')),
             jobs_operator=request.get('jobs_operator', ProjectJobSearchOperator.OR.value),
-            experience=request.get('experience', ProjectJobExperienceType.ALL.value),
+            experience=request.get('experience'),
             min_hours_per_week=request.get('min_hours_per_week'),
             max_hours_per_week=request.get('max_hours_per_week'),
             min_duration_month=request.get('min_duration_month'),
