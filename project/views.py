@@ -45,6 +45,7 @@ class HomeProjectListAPIView(APIView):
             title=home_project_list_request.title,
             category_ids=home_project_list_request.category_ids,
             job_ids=home_project_list_request.job_ids,
+            job_category_ids=home_project_list_request.job_category_ids,
             jobs_operator=home_project_list_request.jobs_operator,
             experience=home_project_list_request.experience,
             min_hours_per_week=home_project_list_request.min_hours_per_week,

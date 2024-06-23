@@ -48,7 +48,8 @@ def get_filtered_project_qs(title: Optional[str],
                             max_hours_per_week: Optional[int],
                             min_duration_month: Optional[int],
                             max_duration_month: Optional[int],
-                            current_recruit_status: Optional[str]) -> QuerySet[Project]:
+                            current_recruit_status: Optional[str],
+                            job_category_ids: Optional[List[int]] = None) -> QuerySet[Project]:
     q = Q()
     qs = get_active_project_qs()
     if title:
@@ -56,15 +57,27 @@ def get_filtered_project_qs(title: Optional[str],
 
     if category_ids:
         q &= Q(category_id__in=category_ids)
-
-    if job_ids:
+    if job_ids and job_category_ids:
         if jobs_operator == ProjectJobSearchOperator.OR.value:
-            q &= Q(
-                latest_project_recruitment_jobs__in=job_ids,
-            )
+            q &= (Q(latest_project_recruitment_jobs__in=job_ids) | Q(latest_project_recruitment_jobs__category__in=job_category_ids))
         elif jobs_operator == ProjectJobSearchOperator.AND.value:
             for job_id in job_ids:
                 qs = qs.filter(latest_project_recruitment_jobs=job_id)
+            for job_category_id in job_category_ids:
+                qs = qs.filter(latest_project_recruitment_jobs__category=job_category_id)
+    else:
+        if job_ids:
+            if jobs_operator == ProjectJobSearchOperator.OR.value:
+                q &= Q(latest_project_recruitment_jobs__in=job_ids)
+            elif jobs_operator == ProjectJobSearchOperator.AND.value:
+                for job_id in job_ids:
+                    qs = qs.filter(latest_project_recruitment_jobs=job_id)
+        if job_category_ids:
+            if jobs_operator == ProjectJobSearchOperator.OR.value:
+                q &= Q(latest_project_recruitment_jobs__category__in=job_category_ids)
+            elif jobs_operator == ProjectJobSearchOperator.AND.value:
+                for job_category_id in job_category_ids:
+                    qs = qs.filter(latest_project_recruitment_jobs__category=job_category_id)
     if experience:
         q &= Q(job_experience_type=experience)
 
@@ -101,12 +114,12 @@ def get_filtered_project_qs(title: Optional[str],
         if max_duration_month:
             q &= (Q(duration_month__lte=max_duration_month) | Q(duration_month__isnull=True))
 
-    if category_ids:
-        qs = qs.select_related('category')
-    if job_ids:
+    if job_category_ids:
+        qs = qs.prefetch_related('latest_project_recruitment_jobs__category').distinct()
+    elif job_ids:
         qs = qs.prefetch_related('latest_project_recruitment_jobs').distinct()
 
-    return qs.filter(q)
+    return qs.select_related('category').filter(q)
 
 
 def create_project_member_management(project: Project,

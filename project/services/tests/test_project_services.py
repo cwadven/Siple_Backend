@@ -5,7 +5,7 @@ from unittest.mock import (
 from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
 from django.db import DatabaseError
 from django.test import TestCase
-from job.models import Job
+from job.models import Job, JobCategory
 from member.models import Member
 from project.consts import (
     ProjectCurrentRecruitStatus,
@@ -50,16 +50,29 @@ class ProjectFilterTestCase(TestCase):
         # Create some Member
         self.member = Member.objects.create_user(username='test')
 
+        # Create job categories
+        self.web_job_categories = JobCategory.objects.create(
+            display_name='웹',
+            name='Web',
+        )
+        self.infra_categories = JobCategory.objects.create(
+            display_name='인프라',
+            name='Infra',
+        )
+
         # Create some jobs
         self.backend_job = Job.objects.create(
+            category=self.web_job_categories,
             display_name='백엔드',
             name='backend',
         )
         self.frontend_job = Job.objects.create(
+            category=self.web_job_categories,
             display_name='프론트엔드',
             name='frontend',
         )
         self.devops_job = Job.objects.create(
+            category=self.infra_categories,
             display_name='데브옵스',
             name='devops',
         )
@@ -178,6 +191,125 @@ class ProjectFilterTestCase(TestCase):
         # Then: Projects that match any of the job IDs should be returned
         self.assertEqual(qs.count(), 1)
         self.assertEqual(qs.first(), self.project1)
+
+    def test_filter_by_job_category_id_by_or(self):
+        # Given: Job category ID filter with OR operator
+        job_category_ids = [self.web_job_categories.id, self.infra_categories.id]
+        jobs_operator = ProjectJobSearchOperator.OR.value
+
+        # When: Filtering projects
+        qs = get_filtered_project_qs(
+            title=None,
+            category_ids=None,
+            job_ids=None,
+            job_category_ids=job_category_ids,
+            jobs_operator=jobs_operator,
+            experience=None,
+            min_hours_per_week=None,
+            max_hours_per_week=None,
+            min_duration_month=None,
+            max_duration_month=None,
+            current_recruit_status=None
+        )
+
+        # Then: Projects that match any of the job IDs should be returned
+        self.assertEqual(qs.count(), 2)
+        self.assertEqual(qs.first(), self.project1)
+
+    def test_filter_by_job_category_id_by_and(self):
+        # Given: Job category ID filter with AND operator
+        job_category_ids = [self.web_job_categories.id, self.infra_categories.id]
+        jobs_operator = ProjectJobSearchOperator.AND.value
+
+        # When: Filtering projects
+        qs = get_filtered_project_qs(
+            title=None,
+            category_ids=None,
+            job_ids=None,
+            job_category_ids=job_category_ids,
+            jobs_operator=jobs_operator,
+            experience=None,
+            min_hours_per_week=None,
+            max_hours_per_week=None,
+            min_duration_month=None,
+            max_duration_month=None,
+            current_recruit_status=None
+        )
+
+        # Then: Projects that match any of the job IDs should be returned
+        self.assertEqual(qs.count(), 1)
+        self.assertEqual(qs.first(), self.project1)
+
+    def test_filter_by_job_category_id_with_job_ids_by_and(self):
+        # Given: Job category ID and Job ID filter with AND operator
+        job_category_ids = [self.infra_categories.id]
+        job_ids = [self.backend_job]
+        jobs_operator = ProjectJobSearchOperator.AND.value
+
+        # When: Filtering projects
+        qs = get_filtered_project_qs(
+            title=None,
+            category_ids=None,
+            job_ids=job_ids,
+            job_category_ids=job_category_ids,
+            jobs_operator=jobs_operator,
+            experience=None,
+            min_hours_per_week=None,
+            max_hours_per_week=None,
+            min_duration_month=None,
+            max_duration_month=None,
+            current_recruit_status=None
+        )
+
+        # Then: Projects that match any of the job IDs should be returned
+        self.assertEqual(qs.count(), 1)
+        self.assertEqual(qs.first(), self.project1)
+
+    def test_filter_by_job_category_id_with_job_ids_by_or(self):
+        # Given: Create another job
+        nothing_job = Job.objects.create(
+            category=self.web_job_categories,
+            display_name='프론트엔드',
+            name='frontend',
+        )
+        # And: Create another project
+        project3 = Project.objects.create(
+            title='Another Project',
+            category=self.category2,
+            job_experience_type=ProjectJobExperienceType.ALL.value,
+            current_recruit_status=ProjectCurrentRecruitStatus.RECRUITED.value,
+            hours_per_week=20,
+            duration_month=12,
+            created_member=self.member,
+            is_deleted=False,
+        )
+        project3.latest_project_recruitment_jobs.set([nothing_job])
+        # And: Job category ID and Job ID filter with OR operator
+        job_category_ids = [self.infra_categories.id]
+        job_ids = [nothing_job.id]
+        jobs_operator = ProjectJobSearchOperator.OR.value
+
+        # When: Filtering projects
+        qs = get_filtered_project_qs(
+            title=None,
+            category_ids=None,
+            job_ids=job_ids,
+            job_category_ids=job_category_ids,
+            jobs_operator=jobs_operator,
+            experience=None,
+            min_hours_per_week=None,
+            max_hours_per_week=None,
+            min_duration_month=None,
+            max_duration_month=None,
+            current_recruit_status=None
+        )
+
+        # Then: Projects that match any of the job IDs should be returned
+        self.assertEqual(qs.count(), 2)
+        self.assertEqual(
+            set(qs.values_list('id', flat=True)),
+            {self.project1.id, project3.id}
+        )
 
     def test_filter_by_experience(self):
         # Given: Experience filter

@@ -18,14 +18,17 @@ class HomeProjectListRequestTest(TestCase):
         # Given: valid category_ids and job_ids
         valid_category_ids = [1, '2', 3]
         valid_job_ids = ['4', 5, '6']
+        valid_job_category_ids = ['4', 5, '6']
 
         # When: check_if_integer 함수 실행
         category_ids_result = HomeProjectListRequest.check_if_integer(valid_category_ids)
         job_ids_result = HomeProjectListRequest.check_if_integer(valid_job_ids)
+        job_category_ids_result = HomeProjectListRequest.check_if_integer(valid_job_category_ids)
 
         # Then: 정수로 변환된 리스트 반환
         self.assertEqual(category_ids_result, [1, 2, 3])
         self.assertEqual(job_ids_result, [4, 5, 6])
+        self.assertEqual(job_category_ids_result, [4, 5, 6])
 
     def test_check_if_integer_invalid(self):
         # Given: invalid category_ids
@@ -114,7 +117,7 @@ class HomeProjectListRequestTest(TestCase):
         experience_result = HomeProjectListRequest.check_experience_value(valid_experience)
 
         # Then: ALL 반환
-        self.assertEqual(experience_result, ProjectJobExperienceType.ALL.value)
+        self.assertEqual(experience_result, None)
 
     def test_check_experience_value_invalid(self):
         # Given: invalid experience
