@@ -1020,6 +1020,13 @@ paths:
             type: string
           description: 직무별 아이디
           example: '1,2,3'
+        - name: job_category_ids
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 직무 카테고리 별 아이디
+          example: '1,2,3'
         - name: category_ids
           in: query
           required: false
