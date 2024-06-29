@@ -180,6 +180,116 @@ class HomeProjectListAPIViewTests(APITestCase):
             }
         )
 
+    @patch('project.views.get_current_active_project_job_recruitments')
+    @patch('project.views.get_objects_with_cursor_pagination')
+    @patch('project.views.get_member_bookmarked_project_ids')
+    @patch('project.views.get_filtered_project_qs')
+    def test_get_projects_when_job_total_limit_is_null(self,
+                                                       mock_get_filtered_project_qs,
+                                                       mock_get_member_bookmarked_project_ids,
+                                                       mock_get_objects_with_cursor_pagination,
+                                                       mock_get_current_active_project_job_recruitments):
+        # Given: Setup return values for mocked filtered project qs
+        mock_get_filtered_project_qs.return_value = [self.project3, self.project2]
+        # And: Setup return values for mocked services
+        mock_get_objects_with_cursor_pagination.return_value = (
+            [self.project3, self.project2],
+            True,
+            'next_cursor_encoded'
+        )
+        mock_get_current_active_project_job_recruitments.return_value = {
+            self.project3.id: [
+                ProjectJobRecruitInfo(
+                    job_id=self.job1.id,
+                    job_name=self.job1.name,
+                    job_display_name=self.job1.display_name,
+                    total_limit=None,
+                    current_recruited=2,
+                    recruit_status=ProjectRecruitmentStatus.RECRUITING.value,
+                )
+            ],
+            self.project2.id: [
+                ProjectJobRecruitInfo(
+                    job_id=self.job1.id,
+                    job_name=self.job1.name,
+                    job_display_name=self.job1.display_name,
+                    total_limit=None,
+                    current_recruited=5,
+                    recruit_status=ProjectRecruitmentStatus.RECRUIT_FINISH.value,
+                )
+            ],
+        }
+        # And: project3 is bookmarked
+        mock_get_member_bookmarked_project_ids.return_value = {self.project3.id}
+
+        # When: Make GET request with size 2
+        response = self.client.get(self.url, {'size': 2})
+
+        # Then: Verify the mocked services are called
+        mock_get_filtered_project_qs.assert_called_once_with(
+            title=None,
+            category_ids=[],
+            job_ids=[],
+            job_category_ids=[],
+            jobs_operator=ProjectJobSearchOperator.OR.value,
+            experience=None,
+            min_hours_per_week=None,
+            max_hours_per_week=None,
+            min_duration_month=None,
+            max_duration_month=None,
+            current_recruit_status=None,
+        )
+        # And: Verify the response status
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # And: Verify the response data project3 has is_bookmarked True
+        self.assertDictEqual(
+            response.json(),
+            {
+                'data': [
+                    {
+                        'id': self.project3.id,
+                        'title': self.project3.title,
+                        'category_display_name': self.category.display_name,
+                        'simple_description': self.project3.description[:100],
+                        'jobs': [
+                            {
+                                'id': self.job1.id,
+                                'display_name': self.job1.display_name,
+                                'is_available': True,
+                            }
+                        ],
+                        'experience': self.project3.job_experience_type,
+                        'hours_per_week': 10,
+                        'current_recruit_status': self.project3.current_recruit_status,
+                        'image': self.project3.main_image,
+                        'is_bookmarked': True,
+                        'recent_recruited_at': '2021-01-01T01:00:00Z',
+                    },
+                    {
+                        'id': self.project2.id,
+                        'category_display_name': None,
+                        'title': self.project2.title,
+                        'simple_description': self.project2.description[:100],
+                        'jobs': [
+                            {
+                                'id': self.job1.id,
+                                'display_name': self.job1.display_name,
+                                'is_available': True,
+                            }
+                        ],
+                        'experience': self.project2.job_experience_type,
+                        'hours_per_week': None,
+                        'current_recruit_status': self.project2.current_recruit_status,
+                        'image': self.project2.main_image,
+                        'is_bookmarked': False,
+                        'recent_recruited_at': None,
+                    },
+                ],
+                'next_cursor': 'next_cursor_encoded',
+                'has_more': True,
+            }
+        )
+
     def test_get_projects_should_raise_error_when_request_param_is_invalid(self):
         # Given: Invalid Param error
         data = {

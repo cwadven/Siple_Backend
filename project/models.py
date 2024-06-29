@@ -293,6 +293,8 @@ class ProjectRecruitmentJob(models.Model):
     total_limit = models.PositiveIntegerField(
         help_text='총 제한 인원',
         db_index=True,
+        null=True,
+        blank=True,
     )
     current_recruited = models.PositiveIntegerField(
         help_text='현재 모집 인원',
