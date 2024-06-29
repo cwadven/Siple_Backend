@@ -198,7 +198,7 @@ class HomeProjectListRequest(BaseModel):
 
 class CreateProjectJob(BaseModel):
     job_id: int = Field(description='프로젝트 직군 ID')
-    total_limit: int = Field(description='프로젝트 직군 요구 인원 수')
+    total_limit: Optional[int] = Field(description='프로젝트 직군 요구 인원 수, none 이면 무제한')
 
 
 class CreateProjectRequest(BaseModel):
