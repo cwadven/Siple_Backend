@@ -3,7 +3,10 @@ from typing import (
     Optional,
 )
 
-from common.dtos.helper_dtos import ConstanceType
+from common.dtos.helper_dtos import (
+    ConstanceDetailType,
+    ConstanceType,
+)
 from pydantic import (
     BaseModel,
     Field,
@@ -16,6 +19,10 @@ class HealthCheckResponse(BaseModel):
 
 class ConstanceTypeResponse(BaseModel):
     data: List[ConstanceType] = Field(default_factory=list, description='Constance type list')
+
+
+class ConstanceDetailTypeResponse(BaseModel):
+    data: List[ConstanceDetailType] = Field(default_factory=list, description='Constance type detail list')
 
 
 class CursorPaginatorResponse(BaseModel):
