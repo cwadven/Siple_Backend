@@ -1,4 +1,7 @@
-from common.dtos.helper_dtos import ConstanceType
+from common.dtos.helper_dtos import (
+    ConstanceDetailType,
+    ConstanceType,
+)
 from job.models import JobCategory
 from job.services.project_job_services import get_active_job_categories
 from project.models import ProjectCategory
@@ -46,3 +49,8 @@ CONSTANCE_TYPE_HELPER_MAPPER = {
     'job-category': ConstanceJobCategoryTypeHelper(),
     'project-category': ConstanceProjectCategoryTypeHelper(),
 }
+
+
+class ConstanceDetailTypeHelper(object):
+    def get_constance_detail_types(self) -> list[ConstanceDetailType]:
+        raise NotImplementedError
