@@ -2,8 +2,14 @@ from common.dtos.helper_dtos import (
     ConstanceDetailType,
     ConstanceType,
 )
-from job.models import JobCategory
-from job.services.project_job_services import get_active_job_categories
+from job.models import (
+    Job,
+    JobCategory,
+)
+from job.services.project_job_services import (
+    get_active_job_categories,
+    get_active_jobs,
+)
 from project.models import ProjectCategory
 from project.services.project_services import get_active_project_categories
 
@@ -54,3 +60,22 @@ CONSTANCE_TYPE_HELPER_MAPPER = {
 class ConstanceDetailTypeHelper(object):
     def get_constance_detail_types(self) -> list[ConstanceDetailType]:
         raise NotImplementedError
+
+
+class ConstanceJobDetailTypeHelper(ConstanceDetailTypeHelper):
+    @staticmethod
+    def get_jobs() -> list[Job]:
+        return get_active_jobs()
+
+    def get_constance_detail_types(self) -> list[ConstanceDetailType]:
+        return [
+            ConstanceDetailType(
+                id=job.id,
+                name=job.name,
+                display_name=job.display_name,
+                parent_id=job.category_id,
+                parent_name=getattr(job.category, 'name', None),
+                parent_display_name=getattr(job.category, 'display_name', None),
+            )
+            for job in self.get_jobs()
+        ]

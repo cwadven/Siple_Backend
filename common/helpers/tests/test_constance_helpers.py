@@ -1,12 +1,19 @@
 from unittest.mock import patch
 
-from common.common_testcase_helpers.job.testcase_helpers import create_job_category_for_testcase
+from common.common_testcase_helpers.job.testcase_helpers import (
+    create_job_category_for_testcase,
+    create_job_for_testcase,
+)
 from common.common_testcase_helpers.project.testcase_helpers import create_project_category_for_testcase
-from common.dtos.helper_dtos import ConstanceType
+from common.dtos.helper_dtos import (
+    ConstanceDetailType,
+    ConstanceType,
+)
 from common.helpers.constance_helpers import (
     CONSTANCE_TYPE_HELPER_MAPPER,
     ConstanceDetailTypeHelper,
     ConstanceJobCategoryTypeHelper,
+    ConstanceJobDetailTypeHelper,
     ConstanceProjectCategoryTypeHelper,
     ConstanceTypeHelper,
 )
@@ -117,3 +124,64 @@ class ConstanceDetailTypeHelperTest(TestCase):
         # Expected: Assert the result
         with self.assertRaises(NotImplementedError):
             ConstanceDetailTypeHelper().get_constance_detail_types()
+
+
+class ConstanceJobDetailTypeHelperTest(TestCase):
+    def setUp(self):
+        self.job_category1 = create_job_category_for_testcase('job_category1')
+        self.job_category2 = create_job_category_for_testcase('job_category2')
+        self.backend = create_job_for_testcase('backend')
+        self.backend.category = self.job_category1
+        self.backend.save()
+        self.frontend = create_job_for_testcase('frontend')
+        self.frontend.category = self.job_category2
+        self.frontend.save()
+        self.none_job = create_job_for_testcase('none_job')
+
+    @patch('common.helpers.constance_helpers.get_active_jobs')
+    def test_get_jobs(self, mock_get_active_jobs):
+        # Given: Set up the test data
+        mock_get_active_jobs.return_value = [self.backend, self.frontend, self.none_job]
+
+        # When: Call the function
+        jobs = ConstanceJobDetailTypeHelper().get_jobs()
+
+        # Then: Assert the result
+        self.assertEqual(jobs, [self.backend, self.frontend, self.none_job])
+        mock_get_active_jobs.assert_called_once()
+
+    def test_get_constance_detail_types(self):
+        # Given: Set up the test data
+        # When: Call the function
+        constance_types = ConstanceJobDetailTypeHelper().get_constance_detail_types()
+
+        # Then: Assert the result
+        self.assertEqual(
+            constance_types,
+            [
+                ConstanceDetailType(
+                    id=self.backend.id,
+                    name=self.backend.name,
+                    display_name=self.backend.display_name,
+                    parent_id=self.backend.category.id,
+                    parent_name=self.backend.category.name,
+                    parent_display_name=self.backend.category.display_name,
+                ),
+                ConstanceDetailType(
+                    id=self.frontend.id,
+                    name=self.frontend.name,
+                    display_name=self.frontend.display_name,
+                    parent_id=self.frontend.category.id,
+                    parent_name=self.frontend.category.name,
+                    parent_display_name=self.frontend.category.display_name,
+                ),
+                ConstanceDetailType(
+                    id=self.none_job.id,
+                    name=self.none_job.name,
+                    display_name=self.none_job.display_name,
+                    parent_id=None,
+                    parent_name=None,
+                    parent_display_name=None,
+                ),
+            ],
+        )
