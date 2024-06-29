@@ -1,4 +1,5 @@
 from common.dtos.response_dtos import (
+    ConstanceDetailTypeResponse,
     ConstanceTypeResponse,
     HealthCheckResponse,
 )
@@ -20,7 +21,7 @@ class ConstanceJobTypeView(APIView):
     def get(self, request):
         constance_job_detail_type_helper = ConstanceJobDetailTypeHelper()
         return Response(
-            ConstanceTypeResponse(data=constance_job_detail_type_helper.get_constance_detail_types()).model_dump(),
+            ConstanceDetailTypeResponse(data=constance_job_detail_type_helper.get_constance_detail_types()).model_dump(),
             status=200,
         )
 
