@@ -5,6 +5,7 @@ from common.common_testcase_helpers.project.testcase_helpers import create_proje
 from common.dtos.helper_dtos import ConstanceType
 from common.helpers.constance_helpers import (
     CONSTANCE_TYPE_HELPER_MAPPER,
+    ConstanceDetailTypeHelper,
     ConstanceJobCategoryTypeHelper,
     ConstanceProjectCategoryTypeHelper,
     ConstanceTypeHelper,
@@ -108,3 +109,11 @@ class ConstanceTypeMapperTest(TestCase):
 
         # Then: Assert the result
         self.assertIsInstance(constance_type_helper, ConstanceProjectCategoryTypeHelper)
+
+
+class ConstanceDetailTypeHelperTest(TestCase):
+    def test_constance_detail_type_helper(self):
+        # Given: Set up the test data
+        # Expected: Assert the result
+        with self.assertRaises(NotImplementedError):
+            ConstanceDetailTypeHelper().get_constance_detail_types()
