@@ -1,4 +1,5 @@
 from common.common_testcase_helpers.job.testcase_helpers import (
+    create_job_category_for_testcase,
     create_job_for_testcase,
 )
 from common.common_testcase_helpers.project.testcase_helpers import (
@@ -11,6 +12,8 @@ from job.dtos.model_dtos import (
     ProjectJobRecruitInfo,
 )
 from job.services.project_job_services import (
+    get_active_job_categories,
+    get_active_jobs,
     get_current_active_project_job_recruitments,
 )
 from member.models import (
@@ -121,3 +124,43 @@ class ProjectJobRecruitmentTestCase(TestCase):
 
         # Then: We should get an empty dictionary
         self.assertEqual(result, {})
+
+
+class GetActiveJobCategoriesTest(TestCase):
+    def setUp(self):
+        self.valid_category = create_job_category_for_testcase('valid')
+        self.hidden_category = create_job_category_for_testcase('hidden')
+        self.hidden_category.is_hidden = True
+        self.hidden_category.save()
+        self.deleted_category = create_job_category_for_testcase('deleted')
+        self.deleted_category.is_deleted = True
+        self.deleted_category.save()
+
+    def test_get_active_job_categories(self):
+        # When: We call the function
+        result = get_active_job_categories()
+
+        # Then: We should get a list of active job categories
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].id, self.valid_category.id)
+        self.assertEqual(result[0].name, 'valid')
+
+
+class GetActiveJobs(TestCase):
+    def setUp(self):
+        self.valid_job = create_job_for_testcase('valid')
+        self.hidden_job = create_job_for_testcase('hidden')
+        self.hidden_job.is_hidden = True
+        self.hidden_job.save()
+        self.deleted_job = create_job_for_testcase('deleted')
+        self.deleted_job.is_deleted = True
+        self.deleted_job.save()
+
+    def test_get_active_jobs(self):
+        # When: We call the function
+        result = get_active_jobs()
+
+        # Then: We should get a list of active jobs
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].id, self.valid_job.id)
+        self.assertEqual(result[0].name, 'valid')

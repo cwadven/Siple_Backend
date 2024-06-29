@@ -8,6 +8,10 @@ from typing import (
 from job.dtos.model_dtos import (
     ProjectJobRecruitInfo,
 )
+from job.models import (
+    Job,
+    JobCategory,
+)
 from project.consts import (
     ProjectRecruitmentStatus,
 )
@@ -43,3 +47,23 @@ def get_current_active_project_job_recruitments(project_ids: list[int]) -> dict[
         )
 
     return project_recruitment_jobs_by_project_id
+
+
+def get_active_job_categories() -> list[JobCategory]:
+    return list(
+        JobCategory.objects.filter(
+            is_deleted=False,
+            is_hidden=False,
+        )
+    )
+
+
+def get_active_jobs() -> list[Job]:
+    return list(
+        Job.objects.select_related(
+            'category',
+        ).filter(
+            is_deleted=False,
+            is_hidden=False,
+        )
+    )
