@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from common.common_testcase_helpers.job.testcase_helpers import create_job_category_for_testcase
 from common.exceptions import InvalidPathParameterException
 from django.test import TestCase
@@ -65,3 +67,19 @@ class ConstanceTypeViewTest(TestCase):
             {data['name'] for data in response.json()['data']},
             {web_category1.name, web_category2.name},
         )
+
+
+class ConstanceJobTypeViewTest(TestCase):
+    @patch('common.helpers.constance_helpers.ConstanceJobDetailTypeHelper.get_constance_detail_types')
+    def test_constance_job_type_should_return_job_detail_type_helper(self, mock_get_constance_detail_types):
+        # Given:
+        mock_get_constance_detail_types.return_value = []
+
+        # When:
+        response = self.client.get(reverse('common:constance_job_type'))
+
+        # Then:
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'data': []})
+        # And:
+        mock_get_constance_detail_types.assert_called_once()
