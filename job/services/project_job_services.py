@@ -60,7 +60,9 @@ def get_active_job_categories() -> list[JobCategory]:
 
 def get_active_jobs() -> list[Job]:
     return list(
-        Job.objects.filter(
+        Job.objects.select_related(
+            'category',
+        ).filter(
             is_deleted=False,
             is_hidden=False,
         )
