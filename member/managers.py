@@ -1,3 +1,5 @@
+from typing import Optional
+
 from common.common_utils import generate_random_string_digits
 from django.contrib.auth.models import UserManager
 from member.consts import (
@@ -24,3 +26,16 @@ class MemberManager(UserManager):
                 'nickname': data['nickname'] or f'Random{generate_random_string_digits(5)}',
             }
         )
+
+    def get_member_by_token(self, token: str, provider: int) -> Optional['Member']:  # noqa
+        data = SocialLoginHandler(
+            SocialLoginModuleSelector(int(provider)).selector()
+        ).validate(token)
+
+        try:
+            return self.get(
+                username=data['id'],
+                member_provider_id=provider,
+            )
+        except self.model.DoesNotExist:
+            return None
