@@ -1,5 +1,7 @@
 import jwt
+from common.common_consts.common_error_messages import InvalidInputResponseErrorStatus
 from common.common_decorators.request_decorators import mandatories
+from common.common_exceptions import PydanticAPIException
 from common.common_utils import (
     generate_random_string_digits,
     get_jwt_guest_token,
@@ -33,6 +35,7 @@ from member.dtos.request_dtos import (
     SignUpEmailTokenValidationEndRequest,
     SignUpValidationRequest,
     SocialLoginRequest,
+    SocialSignUpRequest,
 )
 from member.dtos.response_dtos import (
     GuestTokenGetOrCreateResponse,
@@ -41,6 +44,7 @@ from member.dtos.response_dtos import (
     SocialLoginResponse,
 )
 from member.exceptions import (
+    AlreadyMemberExistsErrorException,
     InvalidRefreshTokenErrorException,
     InvalidValueForSignUpFieldErrorException,
     LoginFailedException,
@@ -62,6 +66,7 @@ from member.services import (
 )
 from member.tasks import send_one_time_token_email
 from member.validators.sign_up_validators import SignUpPayloadValidator
+from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -103,6 +108,40 @@ class SocialLoginView(APIView):
         if not member:
             raise LoginFailedException()
         member.raise_if_inaccessible()
+
+        social_login_response = SocialLoginResponse(
+            access_token=get_jwt_login_token(member),
+            refresh_token=get_jwt_refresh_token(member.guest),
+        )
+        return Response(social_login_response.model_dump(), status=200)
+
+
+class SocialSignUpView(APIView):
+    @transaction.atomic
+    def post(self, request):
+        try:
+            social_sign_up_request = SocialSignUpRequest.of(request.data)
+        except ValidationError as e:
+            raise PydanticAPIException(
+                status_code=400,
+                error_summary=InvalidInputResponseErrorStatus.INVALID_SIGN_UP_INPUT_DATA_400.label,
+                error_code=InvalidInputResponseErrorStatus.INVALID_SIGN_UP_INPUT_DATA_400.value,
+                errors=e.errors(),
+            )
+
+        member, is_created = Member.objects.get_or_create_member_by_token(
+            social_sign_up_request.token,
+            social_sign_up_request.provider,
+        )
+        if is_created:
+            if not request.guest:
+                request.guest = Guest(ip=get_request_ip(request))
+            request.guest.temp_nickname = member.nickname
+            request.guest.email = member.email
+            request.guest.member = member
+            request.guest.save()
+        else:
+            raise AlreadyMemberExistsErrorException()
 
         social_login_response = SocialLoginResponse(
             access_token=get_jwt_login_token(member),

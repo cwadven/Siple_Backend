@@ -16,3 +16,6 @@ class InvalidInputResponseErrorStatus(StrValueLabel):
     INVALID_PROJECT_CREATION_INPUT_DATA_ERROR_400 = (
         '400-project_creation-00001', ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label
     )
+    INVALID_SIGN_UP_INPUT_DATA_400 = (
+        '400-invalid_sign_up_input_data-00001', ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label
+    )

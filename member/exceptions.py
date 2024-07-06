@@ -69,6 +69,12 @@ class MemberCreationErrorException(CommonAPIException):
     default_code = 'member-creation-fail'
 
 
+class AlreadyMemberExistsErrorException(CommonAPIException):
+    status_code = 400
+    default_detail = '이미 가입된 회원입니다.'
+    default_code = 'already-member-exists'
+
+
 class BlackMemberException(CommonAPIException):
     status_code = 400
     default_detail = '정지된 유저입니다.'
