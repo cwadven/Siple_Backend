@@ -295,24 +295,24 @@ class GetMembersMainAttributesWithSortTest(TestCase):
             {
                 self.member1.id: [
                     {
-                        'member_attribute_id': self.member_attribute_type_help.id,
+                        'member_attribute_type_id': self.member_attribute_type_help.id,
                         'display_name': 'help',
                         'value': 2,
                     },
                     {
-                        'member_attribute_id': self.member_attribute_type_kind.id,
+                        'member_attribute_type_id': self.member_attribute_type_kind.id,
                         'display_name': 'kind',
                         'value': 1,
                     },
                 ],
                 self.member2.id: [
                     {
-                        'member_attribute_id': self.member_attribute_type_kind.id,
+                        'member_attribute_type_id': self.member_attribute_type_kind.id,
                         'display_name': 'kind',
                         'value': 2,
                     },
                     {
-                        'member_attribute_id': self.member_attribute_type_help.id,
+                        'member_attribute_type_id': self.member_attribute_type_help.id,
                         'display_name': 'help',
                         'value': 1,
                     },

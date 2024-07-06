@@ -98,7 +98,7 @@ def get_members_main_attributes_with_sort(member_ids: List[int]) -> defaultdict[
     for member_attribute in member_attributes:
         member_main_attributes_results[member_attribute['member_id']].append(
             {
-                'member_attribute_id': member_attribute['member_attribute_type_id'],
+                'member_attribute_type_id': member_attribute['member_attribute_type_id'],
                 'display_name': member_attribute['member_attribute_type__display_name'],
                 'value': member_attribute['value'],
             }
