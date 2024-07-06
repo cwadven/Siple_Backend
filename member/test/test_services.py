@@ -1,11 +1,13 @@
 from datetime import date
 
 from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
+from common.common_testcase_helpers.member.testcase_helpers import create_member_attribute_type_for_testcase
 from common.models import BlackListWord
 from django.test import TestCase
 from member.dtos.model_dtos import JobExperience
 from member.models import (
     Member,
+    MemberAttribute,
     MemberJobExperience,
 )
 from member.services import (
@@ -16,6 +18,7 @@ from member.services import (
     check_only_alphanumeric,
     check_only_korean_english_alphanumeric,
     check_username_exists,
+    get_members_main_attributes_with_sort,
     get_members_project_ongoing_info,
 )
 from project.consts import (
@@ -249,5 +252,70 @@ class GetMembersProjectOngoingInfoTest(TestCase):
                 self.member1.id: {'success': 0, 'working': 0, 'leaved': 1},
                 self.member2.id: {'success': 1, 'working': 0, 'leaved': 0},
                 self.project_master.id: {'success': 1, 'working': 0, 'leaved': 0},
+            }
+        )
+
+
+class GetMembersMainAttributesWithSortTest(TestCase):
+    def setUp(self):
+        self.member1 = Member.objects.create_user(username='test1', nickname='test1')
+        self.member2 = Member.objects.create_user(username='test2', nickname='test2')
+        self.member_attribute_type_kind = create_member_attribute_type_for_testcase('kind')
+        self.member_attribute_type_help = create_member_attribute_type_for_testcase('help')
+
+    def test_get_members_main_attributes_with_sort(self):
+        # Given: Set MemberAttribute
+        MemberAttribute.objects.create(
+            member=self.member1,
+            member_attribute_type=self.member_attribute_type_kind,
+            value=1,
+        )
+        MemberAttribute.objects.create(
+            member=self.member1,
+            member_attribute_type=self.member_attribute_type_help,
+            value=2,
+        )
+        MemberAttribute.objects.create(
+            member=self.member2,
+            member_attribute_type=self.member_attribute_type_kind,
+            value=2,
+        )
+        MemberAttribute.objects.create(
+            member=self.member2,
+            member_attribute_type=self.member_attribute_type_help,
+            value=1,
+        )
+
+        # When: get_members_main_attributes_with_sort
+        result = get_members_main_attributes_with_sort([self.member1.id, self.member2.id])
+
+        # Then: 결과 검증
+        self.assertDictEqual(
+            result,
+            {
+                self.member1.id: [
+                    {
+                        'member_attribute_id': self.member_attribute_type_help.id,
+                        'display_name': 'help',
+                        'value': 2,
+                    },
+                    {
+                        'member_attribute_id': self.member_attribute_type_kind.id,
+                        'display_name': 'kind',
+                        'value': 1,
+                    },
+                ],
+                self.member2.id: [
+                    {
+                        'member_attribute_id': self.member_attribute_type_kind.id,
+                        'display_name': 'kind',
+                        'value': 2,
+                    },
+                    {
+                        'member_attribute_id': self.member_attribute_type_help.id,
+                        'display_name': 'help',
+                        'value': 1,
+                    },
+                ],
             }
         )

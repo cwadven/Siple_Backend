@@ -5,6 +5,7 @@ from datetime import (
     timedelta,
 )
 from typing import (
+    Any,
     List,
 )
 
@@ -14,6 +15,7 @@ from member.dtos.model_dtos import (
 )
 from member.models import (
     Member,
+    MemberAttribute,
     MemberJobExperience,
 )
 from project.consts import (
@@ -81,6 +83,29 @@ def add_member_job_experiences(member_id: int, job_experiences: List[JobExperien
         )
         current_datetime = current_datetime + timedelta(seconds=0.1)
     return MemberJobExperience.objects.bulk_create(member_job_experiences)
+
+
+def get_members_main_attributes_with_sort(member_ids: List[int]) -> defaultdict[int, list[dict[str, Any]]]:
+    member_attributes = MemberAttribute.objects.filter(
+        member_id__in=member_ids
+    ).values(
+        'member_id',
+        'member_attribute_type_id',
+        'member_attribute_type__display_name',
+        'value',
+    )
+    member_main_attributes_results = defaultdict(list)
+    for member_attribute in member_attributes:
+        member_main_attributes_results[member_attribute['member_id']].append(
+            {
+                'member_attribute_id': member_attribute['member_attribute_type_id'],
+                'display_name': member_attribute['member_attribute_type__display_name'],
+                'value': member_attribute['value'],
+            }
+        )
+    for member_id in member_main_attributes_results:
+        member_main_attributes_results[member_id].sort(key=lambda x: x['value'], reverse=True)
+    return member_main_attributes_results
 
 
 def get_members_project_ongoing_info(member_ids: List[int]) -> defaultdict[int, dict[str, int]]:
