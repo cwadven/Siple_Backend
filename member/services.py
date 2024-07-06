@@ -1,16 +1,28 @@
 import re
+from collections import defaultdict
 from datetime import (
     datetime,
     timedelta,
 )
-from typing import List
+from typing import (
+    Any,
+    List,
+)
 
 from common.models import BlackListWord
-from member.dtos.model_dtos import JobExperience
+from member.dtos.model_dtos import (
+    JobExperience,
+)
 from member.models import (
     Member,
     MemberJobExperience,
 )
+from project.consts import (
+    ProjectMemberManagementLeftStatus,
+    ProjectResultStatus,
+    ProjectStatus,
+)
+from project.models import ProjectMemberManagement
 
 
 def check_username_exists(username) -> bool:
@@ -70,3 +82,30 @@ def add_member_job_experiences(member_id: int, job_experiences: List[JobExperien
         )
         current_datetime = current_datetime + timedelta(seconds=0.1)
     return MemberJobExperience.objects.bulk_create(member_job_experiences)
+
+
+def get_members_project_ongoing_info(member_ids: List[int]) -> defaultdict[Any, dict[str, int]]:
+    project_members_project_results = ProjectMemberManagement.objects.filter(
+        member_id__in=member_ids
+    ).values(
+        'member_id',
+        'project__project_result_status',
+        'project__project_status',
+        'left_status',
+    )
+    project_member_project_results = defaultdict(lambda: {'success': 0, 'working': 0, 'leaved': 0})
+    for project_member_project_result in project_members_project_results:
+        if project_member_project_result['left_status'] == ProjectMemberManagementLeftStatus.LEFT.value:
+            project_member_project_results[project_member_project_result['member_id']][
+                'leaved'
+            ] += 1
+        elif project_member_project_result['project__project_status'] == ProjectStatus.WORKING.value:
+            project_member_project_results[project_member_project_result['member_id']][
+                'working'
+            ] += 1
+            continue
+        elif project_member_project_result['project__project_result_status'] == ProjectResultStatus.SUCCESS.value:
+            project_member_project_results[project_member_project_result['member_id']][
+                'success'
+            ] += 1
+    return project_member_project_results

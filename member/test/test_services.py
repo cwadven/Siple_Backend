@@ -16,6 +16,19 @@ from member.services import (
     check_only_alphanumeric,
     check_only_korean_english_alphanumeric,
     check_username_exists,
+    get_members_project_ongoing_info,
+)
+from project.consts import (
+    ProjectMemberManagementLeftStatus,
+    ProjectResultStatus,
+    ProjectStatus,
+)
+from project.models import (
+    Project,
+    ProjectMemberManagement,
+    ProjectRecruitApplication,
+    ProjectRecruitment,
+    ProjectRecruitmentJob,
 )
 
 
@@ -127,3 +140,114 @@ class AddMemberJobExperiencesTestCase(TestCase):
         # Then: 결과 검증
         self.assertEqual(len(created_experiences), 0)
         self.assertEqual(MemberJobExperience.objects.count(), 0)
+
+
+class GetMembersProjectOngoingInfoTest(TestCase):
+    def setUp(self):
+        self.project_master = Member.objects.create_user(username='testm', nickname='testm')
+        self.member1 = Member.objects.create_user(username='test1', nickname='test1')
+        self.member2 = Member.objects.create_user(username='test2', nickname='test2')
+        self.project = Project.objects.create(
+            title='Project',
+            created_member_id=self.project_master.id,
+        )
+        self.project_recruitment = ProjectRecruitment.objects.create(
+            project=self.project,
+            times_project_recruit=1,
+            created_member_id=self.project_master.id,
+        )
+        self.job_backend = create_job_for_testcase('backend')
+        self.project_recruitment_job = ProjectRecruitmentJob.objects.create(
+            project_recruitment=self.project_recruitment,
+            job=self.job_backend,
+            total_limit=10,
+            created_member_id=self.project_master.id,
+        )
+        self.project_recruit_application_member1 = ProjectRecruitApplication.objects.create(
+            project_recruitment_job=self.project_recruitment_job,
+            member_id=self.member1.id,
+            request_message='Test',
+        )
+        self.project_recruit_application_member2 = ProjectRecruitApplication.objects.create(
+            project_recruitment_job=self.project_recruitment_job,
+            member_id=self.member2.id,
+            request_message='Test',
+        )
+        self.project_member_management_member_master = ProjectMemberManagement.objects.create(
+            project=self.project,
+            member=self.project_master,
+            project_recruit_application=None,
+            job=None,
+            left_status=None,
+        )
+        self.project_member_management_member1 = ProjectMemberManagement.objects.create(
+            project=self.project,
+            member=self.member1,
+            project_recruit_application=self.project_recruit_application_member1,
+            job=self.job_backend,
+            left_status=None,
+        )
+        self.project_member_management_member2 = ProjectMemberManagement.objects.create(
+            project=self.project,
+            member=self.member2,
+            project_recruit_application=self.project_recruit_application_member1,
+            job=self.job_backend,
+            left_status=None,
+        )
+
+    def test_get_members_project_ongoing_info_should_have_only_working(self):
+        # Given: Set Working Project Status
+        self.project.project_status = ProjectStatus.WORKING.value
+        self.project.save()
+
+        # When: get_members_project_ongoing_info
+        result = get_members_project_ongoing_info([self.member1.id, self.member2.id, self.project_master.id])
+
+        # Then: 결과 검증
+        self.assertDictEqual(
+            result,
+            {
+                self.member1.id: {'success': 0, 'working': 1, 'leaved': 0},
+                self.member2.id: {'success': 0, 'working': 1, 'leaved': 0},
+                self.project_master.id: {'success': 0, 'working': 1, 'leaved': 0},
+            }
+        )
+
+    def test_get_members_project_ongoing_info_should_have_only_success(self):
+        # Given: Set Working  ProjectResultStatus Success
+        self.project.project_result_status = ProjectResultStatus.SUCCESS.value
+        self.project.save()
+
+        # When: get_members_project_ongoing_info
+        result = get_members_project_ongoing_info([self.member1.id, self.member2.id, self.project_master.id])
+
+        # Then: 결과 검증
+        self.assertDictEqual(
+            result,
+            {
+                self.member1.id: {'success': 1, 'working': 0, 'leaved': 0},
+                self.member2.id: {'success': 1, 'working': 0, 'leaved': 0},
+                self.project_master.id: {'success': 1, 'working': 0, 'leaved': 0},
+            }
+        )
+
+    def test_get_members_project_ongoing_info_should_have_left(self):
+        # Given: Set Working  ProjectResultStatus Success
+        self.project.project_result_status = ProjectResultStatus.SUCCESS.value
+        self.project.save()
+        # And: Set left
+        self.project_member_management_member1.left_status = ProjectMemberManagementLeftStatus.LEFT.value
+        self.project_member_management_member1.save()
+
+        # When: get_members_project_ongoing_info
+        result = get_members_project_ongoing_info([self.member1.id, self.member2.id, self.project_master.id])
+
+        # Then: 결과 검증
+        self.assertDictEqual(
+            result,
+            {
+                self.member1.id: {'success': 0, 'working': 0, 'leaved': 1},
+                self.member2.id: {'success': 1, 'working': 0, 'leaved': 0},
+                self.project_master.id: {'success': 1, 'working': 0, 'leaved': 0},
+            }
+        )
