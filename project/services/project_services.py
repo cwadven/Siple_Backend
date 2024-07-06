@@ -124,10 +124,12 @@ def get_filtered_project_qs(title: Optional[str],
 
 
 def create_project_member_management(project: Project,
+                                     member_id: int,
                                      is_leader=False,
                                      project_recruit_application: Optional[ProjectRecruitApplication] = None):
     return ProjectMemberManagement.objects.create(
         project=project,
+        member_id=member_id,
         project_recruit_application=project_recruit_application,
         is_leader=is_leader,
     )
@@ -227,7 +229,7 @@ class ProjectCreationService(object):
             )
 
     def _create_project_member_management(self):
-        return create_project_member_management(self.project, is_leader=True)
+        return create_project_member_management(self.project, self.member_id, is_leader=True)
 
     def _create_management_permissions(self) -> None:
         create_project_management_permissions(

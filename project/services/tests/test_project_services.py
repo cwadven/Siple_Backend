@@ -678,19 +678,21 @@ class CreateProjectMemberManagementTest(TestCase):
     def test_create_project_member_management_should_return_is_leader_true_when_param_is_true(self):
         # Given: is_leader is True
         # When:
-        project_member_management = create_project_member_management(self.project, is_leader=True)
+        project_member_management = create_project_member_management(self.project, self.member.id, is_leader=True)
 
         # Then: is_leader should be True
         self.assertEqual(project_member_management.project.id, self.project.id)
+        self.assertEqual(project_member_management.member.id, self.member.id)
         self.assertEqual(project_member_management.is_leader, True)
 
     def test_create_project_member_management_should_return_project_recruit_application_none_when_param_not_exists(self):
         # Given: project_recruit_application is not exists
         # When:
-        project_member_management = create_project_member_management(self.project, is_leader=True)
+        project_member_management = create_project_member_management(self.project, self.member.id, is_leader=True)
 
         # Then: project_recruit_application should be None
         self.assertEqual(project_member_management.project.id, self.project.id)
+        self.assertEqual(project_member_management.member.id, self.member.id)
         self.assertEqual(project_member_management.project_recruit_application, None)
 
     def test_create_project_member_management_should_return_project_recruit_application_when_param_exists(self):
@@ -698,12 +700,14 @@ class CreateProjectMemberManagementTest(TestCase):
         # When:
         project_member_management = create_project_member_management(
             self.project,
+            self.member.id,
             is_leader=False,
             project_recruit_application=self.project_recruit_application
         )
 
         # Then: project_recruit_application should be exists
         self.assertEqual(project_member_management.project.id, self.project.id)
+        self.assertEqual(project_member_management.member.id, self.member.id)
         self.assertEqual(project_member_management.project_recruit_application.id, self.project_recruit_application.id)
 
 
@@ -993,7 +997,11 @@ class ProjectCreationServiceTest(TestCase):
         project_creation_service._create_project_member_management()
 
         # Then: should be called expected
-        mock_create_project_member_management.assert_called_once_with(project_creation_service.project, is_leader=True)
+        mock_create_project_member_management.assert_called_once_with(
+            project_creation_service.project,
+            self.member.id,
+            is_leader=True,
+        )
 
     @patch('project.services.project_services.create_project_management_permissions')
     def test_create_management_permissions(self, mock_create_project_management_permissions):
