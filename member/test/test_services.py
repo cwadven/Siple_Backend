@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 
 from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
 from common.models import BlackListWord
@@ -90,19 +90,16 @@ class AddMemberJobExperiencesTestCase(TestCase):
         self.member = Member.objects.create_user(username='test')
         self.job1 = create_job_for_testcase(name='Job 1')
         self.job2 = create_job_for_testcase(name='Job 2')
-        self._datetime = datetime(2024, 1, 1, 0, 0, 0, 0)
         self.job_experiences = [
             JobExperience(
                 job_id=self.job1.id,
                 start_date=date(2022, 1, 1),
                 end_date=date(2022, 12, 31),
-                created_at=self._datetime,
             ),
             JobExperience(
                 job_id=self.job2.id,
                 start_date=date(2023, 1, 1),
                 end_date=date(2023, 12, 31),
-                created_at=self._datetime,
             )
         ]
 

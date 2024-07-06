@@ -1,4 +1,8 @@
 import re
+from datetime import (
+    datetime,
+    timedelta,
+)
 from typing import List
 
 from common.models import BlackListWord
@@ -52,15 +56,17 @@ def check_email_reg_exp_valid(email) -> bool:
 def add_member_job_experiences(member_id: int, job_experiences: List[JobExperience]) -> List[MemberJobExperience]:
     if not job_experiences:
         return []
-
-    member_job_experiences = [
-        MemberJobExperience(
-            member_id=member_id,
-            job_id=job_experience.job_id,
-            start_date=job_experience.start_date,
-            end_date=job_experience.end_date,
-            created_at=job_experience.created_at,
+    current_datetime = datetime.now()
+    member_job_experiences = []
+    for job_experience in job_experiences:
+        member_job_experiences.append(
+            MemberJobExperience(
+                member_id=member_id,
+                job_id=job_experience.job_id,
+                start_date=job_experience.start_date,
+                end_date=job_experience.end_date,
+                created_at=current_datetime,
+            )
         )
-        for job_experience in job_experiences
-    ]
+        current_datetime = current_datetime + timedelta(seconds=0.1)
     return MemberJobExperience.objects.bulk_create(member_job_experiences)
