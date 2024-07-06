@@ -43,6 +43,7 @@ from member.dtos.response_dtos import (
 from member.exceptions import (
     InvalidRefreshTokenErrorException,
     InvalidValueForSignUpFieldErrorException,
+    LoginFailedException,
     MemberCreationErrorException,
     NormalLoginFailedException,
     SignUpEmailTokenErrorException,
@@ -95,24 +96,17 @@ class SocialLoginView(APIView):
             token=m['token'],
             provider=m['provider'],
         )
-        member, is_created = Member.objects.get_or_create_member_by_token(
+        member = Member.objects.get_member_by_token(
             social_login_request.token,
             social_login_request.provider,
         )
-        if is_created:
-            if not request.guest:
-                request.guest = Guest(ip=get_request_ip(request))
-            request.guest.temp_nickname = member.nickname
-            request.guest.email = member.email
-            request.guest.member = member
-            request.guest.save()
-
+        if not member:
+            raise LoginFailedException()
         member.raise_if_inaccessible()
 
         social_login_response = SocialLoginResponse(
             access_token=get_jwt_login_token(member),
             refresh_token=get_jwt_refresh_token(member.guest),
-            is_created=is_created,
         )
         return Response(social_login_response.model_dump(), status=200)
 
