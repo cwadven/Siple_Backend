@@ -39,5 +39,5 @@ class MemberInfoBlock(BaseModel):
     simple_description: Optional[str] = Field(description='Simple Description')
     link: Optional[str] = Field(description='Link')
     project_info: ProjectOngoingInfo = Field(description='User Project Ongoing Info')
-    member_main_attribute: Optional[List[MemberMainAttribute]] = Field(description='Member Main Attribute')
-    member_job_experience: Optional[List[MemberJobExperienceDuration]] = Field(description='Member Job Experience')
+    member_main_attributes: Optional[List[MemberMainAttribute]] = Field(description='Member Main Attribute')
+    member_job_experiences: Optional[List[MemberJobExperienceDuration]] = Field(description='Member Job Experience')
