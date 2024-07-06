@@ -260,7 +260,7 @@ def get_active_project_categories() -> List[ProjectCategory]:
 
 def get_active_project(project_id: int) -> Optional[Project]:
     try:
-        return Project.objects.get(
+        return Project.objects.select_related('category').get(
             id=project_id,
             is_deleted=False,
         )
