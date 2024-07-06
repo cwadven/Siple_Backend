@@ -53,9 +53,7 @@ class SocialSignUpRequest(BaseModel):
     @classmethod
     def of(cls, request: QueryDict):
         return cls(
-            token=request.get('token'),
-            provider=request.get('provider'),
-            jobs_info=request.get('jobs_info')
+            **request
         )
 
 
