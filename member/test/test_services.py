@@ -18,6 +18,7 @@ from member.services import (
     check_only_alphanumeric,
     check_only_korean_english_alphanumeric,
     check_username_exists,
+    get_members_job_experience_durations,
     get_members_main_attributes_with_sort,
     get_members_project_ongoing_info,
 )
@@ -318,4 +319,59 @@ class GetMembersMainAttributesWithSortTest(TestCase):
                     },
                 ],
             }
+        )
+
+
+class GetMembersJobExperienceDurationsTestCase(TestCase):
+
+    def setUp(self):
+        self.member1 = Member.objects.create_user(username='test1', nickname='test1')
+        self.member2 = Member.objects.create_user(username='test2', nickname='test2')
+        self.job1 = create_job_for_testcase('Developer')
+        self.job2 = create_job_for_testcase('Designer')
+        MemberJobExperience.objects.create(
+            member=self.member1,
+            job=self.job1,
+            start_date=date(2020, 1, 1),
+            end_date=date(2021, 1, 1),
+        )
+        MemberJobExperience.objects.create(
+            member=self.member1,
+            job=self.job1,
+            start_date=date(2021, 2, 1),
+            end_date=date(2022, 1, 1),
+        )
+        MemberJobExperience.objects.create(
+            member=self.member2,
+            job=self.job1,
+            start_date=date(2020, 1, 1),
+            end_date=date(2023, 1, 1),
+        )
+        MemberJobExperience.objects.create(
+            member=self.member2,
+            job=self.job2,
+            start_date=date(2020, 1, 1),
+            end_date=date(2023, 1, 1),
+        )
+
+    def test_get_members_job_experience_durations(self):
+        # Given:
+        member_ids = [self.member1.id, self.member2.id]
+        expected_result = {
+            self.member1.id: [
+                {'job_id': self.job1.id, 'display_name': self.job1.display_name, 'total_year': 1, 'total_month': 11},
+            ],
+            self.member2.id: [
+                {'job_id': self.job1.id, 'display_name': self.job1.display_name, 'total_year': 3, 'total_month': 0},
+                {'job_id': self.job2.id, 'display_name': self.job2.display_name, 'total_year': 3, 'total_month': 0},
+            ]
+        }
+
+        # When:
+        result = get_members_job_experience_durations(member_ids)
+
+        # Then:
+        self.assertDictEqual(
+            result,
+            expected_result,
         )

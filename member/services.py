@@ -9,6 +9,7 @@ from typing import (
     List,
 )
 
+from common.common_utils.datetime_utils import get_date_diff_year_and_month
 from common.models import BlackListWord
 from member.dtos.model_dtos import (
     JobExperience,
@@ -83,6 +84,37 @@ def add_member_job_experiences(member_id: int, job_experiences: List[JobExperien
         )
         current_datetime = current_datetime + timedelta(seconds=0.1)
     return MemberJobExperience.objects.bulk_create(member_job_experiences)
+
+
+def get_members_job_experience_durations(member_ids: List[int]) -> defaultdict[int, list[dict[str, Any]]]:
+    member_job_experiences = MemberJobExperience.objects.filter(
+        member_id__in=member_ids,
+        is_deleted=False,
+    ).values(
+        'member_id',
+        'job_id',
+        'job__display_name',
+        'start_date',
+        'end_date',
+    )
+    member_job_experience_durations = defaultdict(lambda: defaultdict(lambda: {'total_year': 0, 'total_month': 0, 'display_name': ''}))
+    for member_job_experience in member_job_experiences:
+        years, months = get_date_diff_year_and_month(member_job_experience['start_date'], member_job_experience['end_date'])
+        job_info = member_job_experience_durations[member_job_experience['member_id']][member_job_experience['job_id']]
+        job_info['total_year'] += years
+        job_info['total_month'] += months
+        job_info['display_name'] = member_job_experience['job__display_name']
+
+    final_member_job_experience_durations = defaultdict(list)
+    for member_id, jobs in member_job_experience_durations.items():
+        for job_id, durations in jobs.items():
+            final_member_job_experience_durations[member_id].append({
+                'job_id': job_id,
+                'display_name': durations['display_name'],
+                'total_year': durations['total_year'],
+                'total_month': durations['total_month'],
+            })
+    return final_member_job_experience_durations
 
 
 def get_members_main_attributes_with_sort(member_ids: List[int]) -> defaultdict[int, list[dict[str, Any]]]:
