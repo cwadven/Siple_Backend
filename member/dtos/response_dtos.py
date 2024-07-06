@@ -9,7 +9,6 @@ class NormalLoginResponse(BaseModel):
 class SocialLoginResponse(BaseModel):
     access_token: str = Field(...)
     refresh_token: str = Field(...)
-    is_created: bool = Field(...)
 
 
 class RefreshTokenResponse(BaseModel):
