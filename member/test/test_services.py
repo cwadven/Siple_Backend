@@ -1,7 +1,15 @@
+from datetime import date, datetime
+
+from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
 from common.models import BlackListWord
 from django.test import TestCase
-from member.models import Member
+from member.dtos.model_dtos import JobExperience
+from member.models import (
+    Member,
+    MemberJobExperience,
+)
 from member.services import (
+    add_member_job_experiences,
     check_email_exists,
     check_nickname_exists,
     check_nickname_valid,
@@ -74,3 +82,51 @@ class CheckRegexTestCase(TestCase):
         self.assertEqual(check_only_korean_english_alphanumeric("안녕abc123"), True)
         self.assertEqual(check_only_korean_english_alphanumeric("안녕abc@123"), False)
         self.assertEqual(check_only_korean_english_alphanumeric("가나다ABC123"), True)
+
+
+class AddMemberJobExperiencesTestCase(TestCase):
+    def setUp(self):
+        # Given: 테스트에 필요한 데이터 설정
+        self.member = Member.objects.create_user(username='test')
+        self.job1 = create_job_for_testcase(name='Job 1')
+        self.job2 = create_job_for_testcase(name='Job 2')
+        self._datetime = datetime(2024, 1, 1, 0, 0, 0, 0)
+        self.job_experiences = [
+            JobExperience(
+                job_id=self.job1.id,
+                start_date=date(2022, 1, 1),
+                end_date=date(2022, 12, 31),
+                created_at=self._datetime,
+            ),
+            JobExperience(
+                job_id=self.job2.id,
+                start_date=date(2023, 1, 1),
+                end_date=date(2023, 12, 31),
+                created_at=self._datetime,
+            )
+        ]
+
+    def test_add_member_job_experiences(self):
+        # Given:
+        # When: 함수 실행
+        created_experiences = add_member_job_experiences(self.member.id, self.job_experiences)
+
+        # Then: 결과 검증
+        self.assertEqual(len(created_experiences), 2)
+        self.assertEqual(MemberJobExperience.objects.count(), 2)
+
+        for exp, created_exp in zip(self.job_experiences, created_experiences):
+            self.assertEqual(created_exp.member_id, self.member.id)
+            self.assertEqual(created_exp.job_id, exp.job_id)
+            self.assertEqual(created_exp.start_date, exp.start_date)
+            self.assertEqual(created_exp.end_date, exp.end_date)
+            self.assertIsNotNone(created_exp.created_at)
+
+    def test_add_member_job_experiences_empty_list(self):
+        # Given: 빈 리스트로 테스트
+        # When: 함수 실행
+        created_experiences = add_member_job_experiences(self.member.id, [])
+
+        # Then: 결과 검증
+        self.assertEqual(len(created_experiences), 0)
+        self.assertEqual(MemberJobExperience.objects.count(), 0)
