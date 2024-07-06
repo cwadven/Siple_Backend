@@ -31,6 +31,7 @@ from project.services.project_services import (
     create_project_member_management,
     create_project_recruitment_and_update_project,
     create_project_recruitment_jobs,
+    get_active_project,
     get_active_project_categories,
     get_filtered_project_qs,
     get_maximum_project_recruit_times,
@@ -1136,3 +1137,39 @@ class GetActiveProjectCategoriesTest(TestCase):
             set(active_project_category.id for active_project_category in active_project_categories),
             {self.category1.id, self.category2.id},
         )
+
+
+class GetActiveProjectTest(TestCase):
+    def setUp(self):
+        self.member = Member.objects.create_user(username='test', nickname='test')
+        self.project = Project.objects.create(
+            title='Project',
+            created_member_id=self.member.id,
+        )
+
+    def test_get_active_project_should_success(self):
+        # Given: project
+        # When: get_active_project
+        active_project = get_active_project(self.project.id)
+
+        # Then: active_project should be returned
+        self.assertEqual(active_project.id, self.project.id)
+
+    def test_get_active_project_should_return_none_when_project_deleted(self):
+        # Given: project
+        self.project.is_deleted = True
+        self.project.save()
+
+        # When: get_active_project with deleted project
+        active_project = get_active_project(self.project.id)
+
+        # Then: should raise error
+        self.assertEqual(active_project, None)
+
+    def test_get_active_project_should_return_none_when_not_exists(self):
+        # Given: project
+        # When: get_active_project with not exists project id
+        active_project = get_active_project(0)
+
+        # Then: should raise error
+        self.assertEqual(active_project, None)

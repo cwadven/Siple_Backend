@@ -256,3 +256,13 @@ def get_active_project_categories() -> List[ProjectCategory]:
             is_deleted=False,
         )
     )
+
+
+def get_active_project(project_id: int) -> Optional[Project]:
+    try:
+        return Project.objects.get(
+            id=project_id,
+            is_deleted=False,
+        )
+    except Project.DoesNotExist:
+        pass
