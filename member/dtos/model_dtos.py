@@ -27,7 +27,7 @@ class MemberJobExperienceDuration(BaseModel):
 
 
 class MemberMainAttribute(BaseModel):
-    member_attribute_id: int = Field(description='Member Attribute ID')
+    member_attribute_type_id: int = Field(description='Member Attribute ID')
     name: str = Field(description='Member Attribute Name')
     display_name: str = Field(description='Member Attribute Display Name')
 
