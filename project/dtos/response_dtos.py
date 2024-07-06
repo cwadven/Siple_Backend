@@ -2,8 +2,8 @@ from typing import Optional
 
 from common.dtos.response_dtos import CursorPaginatorResponse
 from job.dtos.model_dtos import ProjectJobAvailabilities
+from member.dtos.model_dtos import MemberInfoBlock
 from project.dtos.model_dtos import (
-    MemberInfoBlock,
     ProjectListItem,
 )
 from pydantic import (
