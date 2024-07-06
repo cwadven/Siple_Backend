@@ -5,7 +5,6 @@ from datetime import (
     timedelta,
 )
 from typing import (
-    Any,
     List,
 )
 
@@ -84,7 +83,7 @@ def add_member_job_experiences(member_id: int, job_experiences: List[JobExperien
     return MemberJobExperience.objects.bulk_create(member_job_experiences)
 
 
-def get_members_project_ongoing_info(member_ids: List[int]) -> defaultdict[Any, dict[str, int]]:
+def get_members_project_ongoing_info(member_ids: List[int]) -> defaultdict[int, dict[str, int]]:
     project_members_project_results = ProjectMemberManagement.objects.filter(
         member_id__in=member_ids
     ).values(
