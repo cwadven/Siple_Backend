@@ -4,6 +4,7 @@ from unittest.mock import (
 )
 
 import jwt
+from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
 from common.common_utils.error_utils import generate_pydantic_error_detail
 from django.core.cache import cache
 from django.test import TestCase
@@ -22,6 +23,7 @@ from member.dtos.request_dtos import SocialSignUpRequest
 from member.models import (
     Guest,
     Member,
+    MemberJobExperience,
 )
 from pydantic import ValidationError
 
@@ -35,6 +37,7 @@ class SocialSignUpViewTestCase(TestCase):
             'token': 'test_token',
             'jobs_info': None,
         }
+        self.job1 = create_job_for_testcase('job1')
 
     @patch('member.views.Member.objects.get_or_create_member_by_token')
     @patch('member.views.get_jwt_login_token')
@@ -68,6 +71,57 @@ class SocialSignUpViewTestCase(TestCase):
         )
         mock_get_jwt_login_token.assert_called()
         mock_get_jwt_refresh_token.assert_called()
+
+    @patch('member.views.Member.objects.get_or_create_member_by_token')
+    @patch('member.views.get_jwt_login_token')
+    @patch('member.views.get_jwt_refresh_token')
+    def test_social_sign_up_should_success_with_job_info(self,
+                                                         mock_get_jwt_refresh_token,
+                                                         mock_get_jwt_login_token,
+                                                         mock_get_or_create_member_by_token):
+        # Given: test data
+        mock_get_jwt_login_token.return_value = 'test_access_token'
+        mock_get_jwt_refresh_token.return_value = 'test_refresh_token'
+        # And: self.data 에 job_info 추가
+        self.data['jobs_info'] = [
+            {
+                'job_id': self.job1.id,
+                'start_date': '2021-01-01',
+                'end_date': '2021-12-31',
+            },
+            {
+                'job_id': self.job1.id,
+                'start_date': '2022-01-01',
+                'end_date': None,
+            },
+        ]
+        mock_get_or_create_member_by_token.return_value = (self.member, True)
+
+        # When
+        response = self.client.post(self.url, self.data, content_type='application/json')
+
+        # Then
+        # Check the response status code
+        self.assertEqual(response.status_code, 200)
+
+        # Check the response data for expected keys
+        self.assertEqual(response.data['access_token'], 'test_access_token')
+        self.assertEqual(response.data['refresh_token'], 'test_refresh_token')
+        mock_get_or_create_member_by_token.assert_called_once_with(
+            self.data['token'],
+            self.data['provider'],
+        )
+        self.assertEqual(
+            Guest.objects.filter(member=self.member).exists(),
+            True
+        )
+        mock_get_jwt_login_token.assert_called()
+        mock_get_jwt_refresh_token.assert_called()
+        # And: job_info 가 잘 추가 되었는지 확인
+        self.assertEqual(
+            MemberJobExperience.objects.filter(member=self.member).count(),
+            2,
+        )
 
     @patch('member.views.Member.objects.get_or_create_member_by_token')
     @patch('member.views.get_jwt_login_token')

@@ -28,6 +28,7 @@ from member.consts import (
     SIGNUP_MACRO_COUNT,
     SIGNUP_MACRO_VALIDATION_KEY,
 )
+from member.dtos.model_dtos import JobExperience
 from member.dtos.request_dtos import (
     NormalLoginRequest,
     RefreshTokenRequest,
@@ -60,6 +61,7 @@ from member.models import (
     Member,
 )
 from member.services import (
+    add_member_job_experiences,
     check_email_exists,
     check_nickname_exists,
     check_username_exists,
@@ -140,6 +142,16 @@ class SocialSignUpView(APIView):
             request.guest.email = member.email
             request.guest.member = member
             request.guest.save()
+            add_member_job_experiences(
+                member.id,
+                [
+                    JobExperience(
+                        job_id=job_info.job_id,
+                        start_date=job_info.start_date,
+                        end_date=job_info.end_date,
+                    ) for job_info in social_sign_up_request.jobs_info
+                ]
+            )
         else:
             raise AlreadyMemberExistsErrorException()
 
