@@ -83,11 +83,8 @@ class HomeProjectListAPIView(APIView):
                         title=project.title,
                         simple_description=project.description[:100],
                         jobs=[
-                            ProjectJobAvailabilities(
-                                id=job_recruit.job_id,
-                                display_name=job_recruit.job_display_name,
-                                is_available=not bool(job_recruit.total_limit) or bool(job_recruit.total_limit > job_recruit.current_recruited),
-                            ) for job_recruit in job_recruits_by_project_id.get(project.id, [])
+                            ProjectJobAvailabilities.from_recruit_info(job_recruit)
+                            for job_recruit in job_recruits_by_project_id.get(project.id, [])
                         ],
                         experience=project.job_experience_type,
                         current_recruit_status=project.current_recruit_status,
