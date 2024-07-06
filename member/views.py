@@ -1,5 +1,7 @@
 import jwt
+from common.common_consts.common_error_messages import InvalidInputResponseErrorStatus
 from common.common_decorators.request_decorators import mandatories
+from common.common_exceptions import PydanticAPIException
 from common.common_utils import (
     generate_random_string_digits,
     get_jwt_guest_token,
@@ -26,6 +28,7 @@ from member.consts import (
     SIGNUP_MACRO_COUNT,
     SIGNUP_MACRO_VALIDATION_KEY,
 )
+from member.dtos.model_dtos import JobExperience
 from member.dtos.request_dtos import (
     NormalLoginRequest,
     RefreshTokenRequest,
@@ -33,6 +36,7 @@ from member.dtos.request_dtos import (
     SignUpEmailTokenValidationEndRequest,
     SignUpValidationRequest,
     SocialLoginRequest,
+    SocialSignUpRequest,
 )
 from member.dtos.response_dtos import (
     GuestTokenGetOrCreateResponse,
@@ -41,8 +45,10 @@ from member.dtos.response_dtos import (
     SocialLoginResponse,
 )
 from member.exceptions import (
+    AlreadyMemberExistsErrorException,
     InvalidRefreshTokenErrorException,
     InvalidValueForSignUpFieldErrorException,
+    LoginFailedException,
     MemberCreationErrorException,
     NormalLoginFailedException,
     SignUpEmailTokenErrorException,
@@ -55,12 +61,14 @@ from member.models import (
     Member,
 )
 from member.services import (
+    add_member_job_experiences,
     check_email_exists,
     check_nickname_exists,
     check_username_exists,
 )
 from member.tasks import send_one_time_token_email
 from member.validators.sign_up_validators import SignUpPayloadValidator
+from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -95,9 +103,37 @@ class SocialLoginView(APIView):
             token=m['token'],
             provider=m['provider'],
         )
-        member, is_created = Member.objects.get_or_create_member_by_token(
+        member = Member.objects.get_member_by_token(
             social_login_request.token,
             social_login_request.provider,
+        )
+        if not member:
+            raise LoginFailedException()
+        member.raise_if_inaccessible()
+
+        social_login_response = SocialLoginResponse(
+            access_token=get_jwt_login_token(member),
+            refresh_token=get_jwt_refresh_token(member.guest),
+        )
+        return Response(social_login_response.model_dump(), status=200)
+
+
+class SocialSignUpView(APIView):
+    @transaction.atomic
+    def post(self, request):
+        try:
+            social_sign_up_request = SocialSignUpRequest.of(request.data)
+        except ValidationError as e:
+            raise PydanticAPIException(
+                status_code=400,
+                error_summary=InvalidInputResponseErrorStatus.INVALID_SIGN_UP_INPUT_DATA_400.label,
+                error_code=InvalidInputResponseErrorStatus.INVALID_SIGN_UP_INPUT_DATA_400.value,
+                errors=e.errors(),
+            )
+
+        member, is_created = Member.objects.get_or_create_member_by_token(
+            social_sign_up_request.token,
+            social_sign_up_request.provider,
         )
         if is_created:
             if not request.guest:
@@ -106,13 +142,23 @@ class SocialLoginView(APIView):
             request.guest.email = member.email
             request.guest.member = member
             request.guest.save()
-
-        member.raise_if_inaccessible()
+            if social_sign_up_request.jobs_info:
+                add_member_job_experiences(
+                    member.id,
+                    [
+                        JobExperience(
+                            job_id=job_info.job_id,
+                            start_date=job_info.start_date,
+                            end_date=job_info.end_date,
+                        ) for job_info in social_sign_up_request.jobs_info
+                    ]
+                )
+        else:
+            raise AlreadyMemberExistsErrorException()
 
         social_login_response = SocialLoginResponse(
             access_token=get_jwt_login_token(member),
             refresh_token=get_jwt_refresh_token(member.guest),
-            is_created=is_created,
         )
         return Response(social_login_response.model_dump(), status=200)
 

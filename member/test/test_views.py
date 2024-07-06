@@ -4,6 +4,8 @@ from unittest.mock import (
 )
 
 import jwt
+from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
+from common.common_utils.error_utils import generate_pydantic_error_detail
 from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
@@ -17,22 +19,203 @@ from member.consts import (
     USERNAME_MAX_LENGTH,
     USERNAME_MIN_LENGTH,
 )
+from member.dtos.request_dtos import SocialSignUpRequest
 from member.models import (
     Guest,
     Member,
+    MemberJobExperience,
 )
+from pydantic import ValidationError
+
+
+class SocialSignUpViewTestCase(TestCase):
+    def setUp(self):
+        self.member = Member.objects.create_user(username='test', nickname='test')
+        self.url = reverse('member:social_sign_up')
+        self.data = {
+            'provider': 0,
+            'token': 'test_token',
+            'jobs_info': None,
+        }
+        self.job1 = create_job_for_testcase('job1')
+
+    @patch('member.views.add_member_job_experiences')
+    @patch('member.views.Member.objects.get_or_create_member_by_token')
+    @patch('member.views.get_jwt_login_token')
+    @patch('member.views.get_jwt_refresh_token')
+    def test_social_sign_up_should_success(self,
+                                           mock_get_jwt_refresh_token,
+                                           mock_get_jwt_login_token,
+                                           mock_get_or_create_member_by_token,
+                                           mock_add_member_job_experiences):
+        # Given: test data
+        mock_get_jwt_login_token.return_value = 'test_access_token'
+        mock_get_jwt_refresh_token.return_value = 'test_refresh_token'
+        mock_get_or_create_member_by_token.return_value = (self.member, True)
+
+        # When
+        response = self.client.post(self.url, self.data, content_type='application/json')
+
+        # Then
+        # Check the response status code
+        self.assertEqual(response.status_code, 200)
+
+        # Check the response data for expected keys
+        self.assertEqual(response.data['access_token'], 'test_access_token')
+        self.assertEqual(response.data['refresh_token'], 'test_refresh_token')
+        mock_get_or_create_member_by_token.assert_called_once_with(
+            self.data['token'],
+            self.data['provider'],
+        )
+        self.assertEqual(
+            Guest.objects.filter(member=self.member).exists(),
+            True
+        )
+        mock_get_jwt_login_token.assert_called()
+        mock_get_jwt_refresh_token.assert_called()
+        mock_add_member_job_experiences.assert_not_called()
+
+    @patch('member.views.Member.objects.get_or_create_member_by_token')
+    @patch('member.views.get_jwt_login_token')
+    @patch('member.views.get_jwt_refresh_token')
+    def test_social_sign_up_should_success_with_job_info(self,
+                                                         mock_get_jwt_refresh_token,
+                                                         mock_get_jwt_login_token,
+                                                         mock_get_or_create_member_by_token):
+        # Given: test data
+        mock_get_jwt_login_token.return_value = 'test_access_token'
+        mock_get_jwt_refresh_token.return_value = 'test_refresh_token'
+        # And: self.data 에 job_info 추가
+        self.data['jobs_info'] = [
+            {
+                'job_id': self.job1.id,
+                'start_date': '2021-01-01',
+                'end_date': '2021-12-31',
+            },
+            {
+                'job_id': self.job1.id,
+                'start_date': '2022-01-01',
+                'end_date': None,
+            },
+        ]
+        mock_get_or_create_member_by_token.return_value = (self.member, True)
+
+        # When
+        response = self.client.post(self.url, self.data, content_type='application/json')
+
+        # Then
+        # Check the response status code
+        self.assertEqual(response.status_code, 200)
+
+        # Check the response data for expected keys
+        self.assertEqual(response.data['access_token'], 'test_access_token')
+        self.assertEqual(response.data['refresh_token'], 'test_refresh_token')
+        mock_get_or_create_member_by_token.assert_called_once_with(
+            self.data['token'],
+            self.data['provider'],
+        )
+        self.assertEqual(
+            Guest.objects.filter(member=self.member).exists(),
+            True
+        )
+        mock_get_jwt_login_token.assert_called()
+        mock_get_jwt_refresh_token.assert_called()
+        # And: job_info 가 잘 추가 되었는지 확인
+        self.assertEqual(
+            MemberJobExperience.objects.filter(member=self.member).count(),
+            2,
+        )
+
+    @patch('member.views.Member.objects.get_or_create_member_by_token')
+    @patch('member.views.get_jwt_login_token')
+    @patch('member.views.get_jwt_refresh_token')
+    def test_social_sign_up_should_fail_when_already_exists_member(self,
+                                                                   mock_get_jwt_refresh_token,
+                                                                   mock_get_jwt_login_token,
+                                                                   mock_get_or_create_member_by_token):
+        # Given: test data
+        mock_get_jwt_login_token.return_value = 'test_access_token'
+        mock_get_jwt_refresh_token.return_value = 'test_refresh_token'
+        # And: set the mock member as already exists
+        mock_get_or_create_member_by_token.return_value = (self.member, False)
+
+        # When
+        response = self.client.post(self.url, self.data, content_type='application/json')
+
+        # Then
+        # Check the response status code
+        self.assertEqual(response.status_code, 400)
+
+        # Check the response data for expected keys
+        self.assertEqual(response.data['message'], '이미 가입된 회원입니다.')
+        self.assertEqual(response.data['error_code'], 'already-member-exists')
+        self.assertEqual(response.data['errors'], None)
+        mock_get_or_create_member_by_token.assert_called_once_with(
+            self.data['token'],
+            self.data['provider'],
+        )
+        mock_get_jwt_login_token.assert_not_called()
+        mock_get_jwt_refresh_token.assert_not_called()
+
+    @patch('member.views.Member.objects.get_or_create_member_by_token')
+    @patch('member.views.get_jwt_login_token')
+    @patch('member.views.get_jwt_refresh_token')
+    @patch('member.views.SocialSignUpRequest.of')
+    def test_social_sign_up_should_raise_error_when_pydantic_error(self,
+                                                                   mock_of,
+                                                                   mock_get_jwt_refresh_token,
+                                                                   mock_get_jwt_login_token,
+                                                                   mock_get_or_create_member_by_token):
+        # Given:
+        # And: Mock CreateProjectRequest.of to raise a Pydantic error
+        mock_of.side_effect = ValidationError.from_exception_data(
+            title=SocialSignUpRequest.__name__,
+            line_errors=[
+                generate_pydantic_error_detail(
+                    'Error',
+                    '에러',
+                    'extra_information',
+                    'ALL',
+                )
+            ]
+        )
+
+        # When
+        response = self.client.post(self.url, self.data, content_type='application/json')
+
+        # Then
+        # Check the response status code
+        self.assertEqual(response.status_code, 400)
+
+        # Check the response data for expected keys
+        self.assertEqual(response.data['message'], '유효하지 않은 입력값입니다.')
+        self.assertEqual(response.data['error_code'], '400-invalid_sign_up_input_data-00001')
+        self.assertEqual(response.data['errors']['extra_information'], ['에러'])
+        mock_get_or_create_member_by_token.assert_not_called()
+        mock_get_jwt_login_token.assert_not_called()
+        mock_get_jwt_refresh_token.assert_not_called()
 
 
 class SocialLoginViewTestCase(TestCase):
     def setUp(self):
         self.member = Member.objects.create_user(username='test', nickname='test')
+        self.guest = Guest.objects.create(
+            member=self.member,
+            temp_nickname='testsdfsdf',
+            ip='127.0.0.1',
+            email='test@test.com',
+        )
         self.url = reverse('member:social_login')
 
-    @patch('member.views.Member.objects.get_or_create_member_by_token')
+    @patch('member.views.Member.objects.get_member_by_token')
     @patch('member.views.Member.raise_if_inaccessible')
     @patch('member.views.get_jwt_login_token')
     @patch('member.views.get_jwt_refresh_token')
-    def test_social_login(self, mock_get_jwt_refresh_token, mock_get_jwt_login_token, mock_raise_if_inaccessible, mock_get_or_create_member_by_token):
+    def test_social_login(self,
+                          mock_get_jwt_refresh_token,
+                          mock_get_jwt_login_token,
+                          mock_raise_if_inaccessible,
+                          get_member_by_token):
         # Given: test data
         data = {
             'provider': 0,
@@ -40,7 +223,7 @@ class SocialLoginViewTestCase(TestCase):
         }
         mock_get_jwt_login_token.return_value = 'test_access_token'
         mock_get_jwt_refresh_token.return_value = 'test_refresh_token'
-        mock_get_or_create_member_by_token.return_value = (self.member, True)
+        get_member_by_token.return_value = self.member
 
         # When
         response = self.client.post(self.url, data, format='json')
@@ -53,11 +236,40 @@ class SocialLoginViewTestCase(TestCase):
         mock_raise_if_inaccessible.called_once()
         self.assertEqual(response.data['access_token'], 'test_access_token')
         self.assertEqual(response.data['refresh_token'], 'test_refresh_token')
-        self.assertEqual(response.data['is_created'], True)
         self.assertEqual(
             Guest.objects.filter(member=self.member).exists(),
             True
         )
+
+    @patch('member.views.Member.objects.get_member_by_token')
+    @patch('member.views.Member.raise_if_inaccessible')
+    @patch('member.views.get_jwt_login_token')
+    @patch('member.views.get_jwt_refresh_token')
+    def test_social_login_when_member_not_exists(self,
+                                                 mock_get_jwt_refresh_token,
+                                                 mock_get_jwt_login_token,
+                                                 mock_raise_if_inaccessible,
+                                                 get_member_by_token):
+        # Given: test data
+        data = {
+            'provider': 0,
+            'token': 'test_token',
+        }
+        mock_get_jwt_login_token.return_value = 'test_access_token'
+        mock_get_jwt_refresh_token.return_value = 'test_refresh_token'
+        get_member_by_token.return_value = None
+
+        # When
+        response = self.client.post(self.url, data, format='json')
+
+        # Then
+        # Check the response status code
+        self.assertEqual(response.status_code, 400)
+
+        # Check the response data for expected keys and values
+        self.assertEqual(response.data['message'], '로그인에 실패했습니다.')
+        self.assertEqual(response.data['error_code'], 'login-error')
+        self.assertEqual(response.data['errors'], None)
 
 
 class LoginViewTestCase(TestCase):
