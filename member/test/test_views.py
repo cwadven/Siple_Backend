@@ -39,13 +39,15 @@ class SocialSignUpViewTestCase(TestCase):
         }
         self.job1 = create_job_for_testcase('job1')
 
+    @patch('member.views.add_member_job_experiences')
     @patch('member.views.Member.objects.get_or_create_member_by_token')
     @patch('member.views.get_jwt_login_token')
     @patch('member.views.get_jwt_refresh_token')
     def test_social_sign_up_should_success(self,
                                            mock_get_jwt_refresh_token,
                                            mock_get_jwt_login_token,
-                                           mock_get_or_create_member_by_token):
+                                           mock_get_or_create_member_by_token,
+                                           mock_add_member_job_experiences):
         # Given: test data
         mock_get_jwt_login_token.return_value = 'test_access_token'
         mock_get_jwt_refresh_token.return_value = 'test_refresh_token'
@@ -71,6 +73,7 @@ class SocialSignUpViewTestCase(TestCase):
         )
         mock_get_jwt_login_token.assert_called()
         mock_get_jwt_refresh_token.assert_called()
+        mock_add_member_job_experiences.assert_not_called()
 
     @patch('member.views.Member.objects.get_or_create_member_by_token')
     @patch('member.views.get_jwt_login_token')
