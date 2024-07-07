@@ -29,7 +29,7 @@ class ProjectDetailResponse(BaseModel):
     description: str = Field(description='Project Description')
     duration_month: int = Field(description='Project Duration Month')
     hours_per_week: int = Field(description='Hours Per Week')
-    extra_information: str = Field(description='Extra Information')
+    extra_information: Optional[str] = Field(description='Extra Information')
     jobs: conlist(ProjectJobAvailabilities) = Field(description='Project Job Availabilities')
     experience: str = Field(description='Experience')
     status_display_name: str = Field(description='Status Display Name')
