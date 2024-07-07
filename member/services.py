@@ -17,6 +17,8 @@ from member.dtos.model_dtos import (
 from member.models import (
     Member,
     MemberAttribute,
+    MemberExtraLink,
+    MemberInformation,
     MemberJobExperience,
 )
 from project.consts import (
@@ -84,6 +86,14 @@ def add_member_job_experiences(member_id: int, job_experiences: List[JobExperien
         )
         current_datetime = current_datetime + timedelta(seconds=0.1)
     return MemberJobExperience.objects.bulk_create(member_job_experiences)
+
+
+def get_active_member_information_qs(member_id: int):
+    return MemberInformation.objects.filter(member_id=member_id, is_deleted=False)
+
+
+def get_active_member_extra_link_qa(member_id: int):
+    return MemberExtraLink.objects.filter(member_id=member_id, is_deleted=False)
 
 
 def get_members_job_experience_durations(member_ids: List[int]) -> defaultdict[int, list[dict[str, Any]]]:

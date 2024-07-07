@@ -1,4 +1,5 @@
 from datetime import date
+from unittest.mock import patch
 
 from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
 from common.common_testcase_helpers.member.testcase_helpers import create_member_attribute_type_for_testcase
@@ -8,6 +9,7 @@ from member.dtos.model_dtos import JobExperience
 from member.models import (
     Member,
     MemberAttribute,
+    MemberInformation,
     MemberJobExperience,
 )
 from member.services import (
@@ -18,6 +20,8 @@ from member.services import (
     check_only_alphanumeric,
     check_only_korean_english_alphanumeric,
     check_username_exists,
+    get_active_member_extra_link_qa,
+    get_active_member_information_qs,
     get_members_job_experience_durations,
     get_members_main_attributes_with_sort,
     get_members_project_ongoing_info,
@@ -374,4 +378,56 @@ class GetMembersJobExperienceDurationsTestCase(TestCase):
         self.assertDictEqual(
             result,
             expected_result,
+        )
+
+
+class GetActiveMemberInformationQuerySetTestCase(TestCase):
+
+    def setUp(self):
+        self.member1 = Member.objects.create_user(username='test1', nickname='test1')
+        self.member_information1 = MemberInformation.objects.create(
+            member=self.member1,
+            description='test1',
+        )
+        self.member_information2 = MemberInformation.objects.create(
+            member=self.member1,
+            description='test2',
+        )
+
+    @patch('member.services.MemberInformation.objects.filter')
+    def test_get_active_member_information_qs(self,
+                                              mock_filter):
+        # Given:
+        # When:
+        get_active_member_information_qs(self.member1.id)
+
+        # Then: Assert that MemberInformation.objects.filter is called with the correct data
+        mock_filter.assert_called_once_with(
+            member_id=self.member1.id, is_deleted=False
+        )
+
+
+class GetActiveMemberExtraLinkQuerySetTestCase(TestCase):
+
+    def setUp(self):
+        self.member1 = Member.objects.create_user(username='test1', nickname='test1')
+        self.member_information1 = MemberInformation.objects.create(
+            member=self.member1,
+            description='test1',
+        )
+        self.member_information2 = MemberInformation.objects.create(
+            member=self.member1,
+            description='test2',
+        )
+
+    @patch('member.services.MemberExtraLink.objects.filter')
+    def test_get_active_member_extra_link_qa(self,
+                                             mock_filter):
+        # Given:
+        # When:
+        get_active_member_extra_link_qa(self.member1.id)
+
+        # Then: Assert that MemberInformation.objects.filter is called with the correct data
+        mock_filter.assert_called_once_with(
+            member_id=self.member1.id, is_deleted=False
         )
