@@ -5,10 +5,16 @@ from common.common_testcase_helpers.job.testcase_helpers import create_job_for_t
 from common.common_testcase_helpers.member.testcase_helpers import create_member_attribute_type_for_testcase
 from common.models import BlackListWord
 from django.test import TestCase
-from member.dtos.model_dtos import JobExperience
+from member.dtos.model_dtos import (
+    JobExperience,
+    MemberInfoBlock,
+    MemberJobExperienceDuration,
+    MemberMainAttribute,
+)
 from member.models import (
     Member,
     MemberAttribute,
+    MemberExtraLink,
     MemberInformation,
     MemberJobExperience,
 )
@@ -22,6 +28,7 @@ from member.services import (
     check_username_exists,
     get_active_member_extra_link_qa,
     get_active_member_information_qs,
+    get_member_info_block,
     get_members_job_experience_durations,
     get_members_main_attributes_with_sort,
     get_members_project_ongoing_info,
@@ -31,6 +38,7 @@ from project.consts import (
     ProjectResultStatus,
     ProjectStatus,
 )
+from project.dtos.model_dtos import ProjectOngoingInfo
 from project.models import (
     Project,
     ProjectMemberManagement,
@@ -408,14 +416,13 @@ class GetActiveMemberInformationQuerySetTestCase(TestCase):
 
 
 class GetActiveMemberExtraLinkQuerySetTestCase(TestCase):
-
     def setUp(self):
         self.member1 = Member.objects.create_user(username='test1', nickname='test1')
-        self.member_information1 = MemberInformation.objects.create(
+        self.member_extra_link1 = MemberExtraLink.objects.create(
             member=self.member1,
             description='test1',
         )
-        self.member_information2 = MemberInformation.objects.create(
+        self.member_extra_link2 = MemberExtraLink.objects.create(
             member=self.member1,
             description='test2',
         )
@@ -430,4 +437,226 @@ class GetActiveMemberExtraLinkQuerySetTestCase(TestCase):
         # Then: Assert that MemberInformation.objects.filter is called with the correct data
         mock_filter.assert_called_once_with(
             member_id=self.member1.id, is_deleted=False
+        )
+
+
+class GetMemberInfoBlockTestCase(TestCase):
+    def setUp(self):
+        self.member1 = Member.objects.create_user(
+            username='test1',
+            nickname='test1',
+            profile_image_url='test1.jpg',
+        )
+        self.member_information1 = MemberInformation.objects.create(
+            member=self.member1,
+            description='test1',
+        )
+        self.member_information2 = MemberInformation.objects.create(
+            member=self.member1,
+            description='test2',
+        )
+        self.member_extra_link1 = MemberExtraLink.objects.create(
+            member=self.member1,
+            description='test1',
+            sequence=1,
+        )
+        self.member_extra_link2 = MemberExtraLink.objects.create(
+            member=self.member1,
+            description='test2',
+            sequence=2,
+        )
+        self.member_attribute_type_kind = create_member_attribute_type_for_testcase('kind')
+        self.member_attribute_type_help = create_member_attribute_type_for_testcase('help')
+        self.member_attribute1 = MemberAttribute.objects.create(
+            member=self.member1,
+            member_attribute_type=self.member_attribute_type_kind,
+            value=4,
+        )
+        self.member_attribute2 = MemberAttribute.objects.create(
+            member=self.member1,
+            member_attribute_type=self.member_attribute_type_help,
+            value=2,
+        )
+        self.job1 = create_job_for_testcase('Developer')
+        MemberJobExperience.objects.create(
+            member=self.member1,
+            job=self.job1,
+            start_date=date(2020, 1, 1),
+            end_date=date(2021, 1, 1),
+        )
+        MemberJobExperience.objects.create(
+            member=self.member1,
+            job=self.job1,
+            start_date=date(2021, 2, 1),
+            end_date=date(2022, 1, 1),
+        )
+        self.project = Project.objects.create(
+            title='Project',
+            created_member_id=self.member1.id,
+            project_result_status=ProjectResultStatus.SUCCESS.value,
+            project_status=ProjectStatus.FINISHED.value,
+        )
+        self.project_member_management_member_master = ProjectMemberManagement.objects.create(
+            project=self.project,
+            member=self.member1,
+            project_recruit_application=None,
+            job=None,
+            left_status=None,
+        )
+
+    @patch('member.services.get_members_project_ongoing_info')
+    @patch('member.services.get_members_job_experience_durations')
+    @patch('member.services.get_members_main_attributes_with_sort')
+    @patch('member.services.get_active_member_extra_link_qa')
+    @patch('member.services.get_active_member_information_qs')
+    def test_get_member_info_block(self,
+                                   mock_get_active_member_information_qs,
+                                   mock_get_active_member_extra_link_qa,
+                                   mock_get_members_main_attributes_with_sort,
+                                   mock_get_members_job_experience_durations,
+                                   mock_get_members_project_ongoing_info):
+        # Given: Mocking
+        mock_get_active_member_information_qs.return_value = MemberInformation.objects.filter(
+            member_id=self.member1.id,
+            is_deleted=False,
+        )
+        mock_get_active_member_extra_link_qa.return_value = MemberExtraLink.objects.filter(
+            member_id=self.member1.id,
+            is_deleted=False,
+        )
+        mock_get_members_main_attributes_with_sort.return_value = {
+            self.member1.id: [
+                {
+                    'member_attribute_type_id': self.member_attribute_type_kind.id,
+                    'display_name': self.member_attribute_type_kind.display_name,
+                    'value': 4,
+                },
+                {
+                    'member_attribute_type_id': self.member_attribute_type_help.id,
+                    'display_name': self.member_attribute_type_help.display_name,
+                    'value': 2,
+                },
+            ]
+        }
+        mock_get_members_job_experience_durations.return_value = {
+            self.member1.id: [
+                {'job_id': self.job1.id, 'display_name': self.job1.display_name, 'total_year': 1, 'total_month': 11},
+            ]
+        }
+        mock_get_members_project_ongoing_info.return_value = {
+            self.member1.id: {'success': 1, 'working': 0, 'leaved': 0},
+        }
+
+        # When:
+        member_info_block = get_member_info_block(self.member1.id)
+
+        # Then: Instance Check
+        self.assertIsInstance(member_info_block, MemberInfoBlock)
+        # And: Attribute Check
+        self.assertEqual(member_info_block.member_id, self.member1.id)
+        self.assertEqual(member_info_block.profile_image, self.member1.profile_image_url)
+        self.assertEqual(member_info_block.nickname, self.member1.nickname)
+        self.assertEqual(
+            member_info_block.simple_description,
+            self.member_information2.description,
+        )
+        self.assertEqual(member_info_block.link, self.member_extra_link1.url)
+        self.assertEqual(
+            member_info_block.project_info,
+            ProjectOngoingInfo(success=1, working=0, leaved=0),
+        )
+        self.assertEqual(
+            member_info_block.member_main_attributes,
+            [
+                MemberMainAttribute(
+                    member_attribute_type_id=self.member_attribute_type_kind.id,
+                    display_name=self.member_attribute_type_kind.display_name,
+                ),
+                MemberMainAttribute(
+                    member_attribute_type_id=self.member_attribute_type_help.id,
+                    display_name=self.member_attribute_type_help.display_name,
+                ),
+            ],
+        )
+        self.assertEqual(
+            member_info_block.member_job_experiences,
+            [
+                MemberJobExperienceDuration(
+                    job_id=self.job1.id,
+                    display_name=self.job1.display_name,
+                    total_year=1,
+                    total_month=11,
+                )
+            ],
+        )
+        # And: Mocking Check
+        mock_get_active_member_information_qs.assert_called_once_with(member_id=self.member1.id)
+        mock_get_active_member_extra_link_qa.assert_called_once_with(member_id=self.member1.id)
+        mock_get_members_main_attributes_with_sort.assert_called_once_with([self.member1.id])
+        mock_get_members_job_experience_durations.assert_called_once_with([self.member1.id])
+        mock_get_members_project_ongoing_info.assert_called_once_with([self.member1.id])
+
+    def test_get_member_info_block_when_member_information_is_none(self):
+        # Given: Mocking as Member Information is None
+        self.member_information1.is_deleted = True
+        self.member_information1.save()
+        self.member_information2.is_deleted = True
+        self.member_information2.save()
+
+        # When:
+        member_info_block = get_member_info_block(self.member1.id)
+
+        # Then: Instance Check
+        self.assertIsInstance(member_info_block, MemberInfoBlock)
+        # And: Attribute Check
+        self.assertEqual(
+            member_info_block.simple_description,
+            None,
+        )
+
+    def test_get_member_info_block_when_member_extra_link_is_none(self):
+        # Given: Mocking as Member Extra Link is None
+        self.member_extra_link1.is_deleted = True
+        self.member_extra_link1.save()
+        self.member_extra_link2.is_deleted = True
+        self.member_extra_link2.save()
+        # When:
+        member_info_block = get_member_info_block(self.member1.id)
+
+        # Then: Instance Check
+        self.assertIsInstance(member_info_block, MemberInfoBlock)
+        # And: Attribute Check
+        self.assertEqual(
+            member_info_block.link,
+            None,
+        )
+
+    def test_get_member_info_block_when_members_main_attributes_not_exists(self):
+        # Given: Mocking as Member Attribute Not Exists
+        MemberAttribute.objects.all().delete()
+
+        # When:
+        member_info_block = get_member_info_block(self.member1.id)
+
+        # Then: Instance Check
+        self.assertIsInstance(member_info_block, MemberInfoBlock)
+        # And: Attribute Check
+        self.assertEqual(
+            member_info_block.member_main_attributes,
+            None,
+        )
+
+    def test_get_member_info_block_when_member_job_experiences_not_exists(self):
+        # Given: Mocking as MemberJobExperience Not Exists
+        MemberJobExperience.objects.all().delete()
+
+        # When:
+        member_info_block = get_member_info_block(self.member1.id)
+
+        # Then: Instance Check
+        self.assertIsInstance(member_info_block, MemberInfoBlock)
+        # And: Attribute Check
+        self.assertEqual(
+            member_info_block.member_job_experiences,
+            None,
         )

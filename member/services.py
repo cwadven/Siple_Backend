@@ -13,6 +13,9 @@ from common.common_utils.datetime_utils import get_date_diff_year_and_month
 from common.models import BlackListWord
 from member.dtos.model_dtos import (
     JobExperience,
+    MemberInfoBlock,
+    MemberJobExperienceDuration,
+    MemberMainAttribute,
 )
 from member.models import (
     Member,
@@ -26,6 +29,7 @@ from project.consts import (
     ProjectResultStatus,
     ProjectStatus,
 )
+from project.dtos.model_dtos import ProjectOngoingInfo
 from project.models import ProjectMemberManagement
 
 
@@ -86,6 +90,46 @@ def add_member_job_experiences(member_id: int, job_experiences: List[JobExperien
         )
         current_datetime = current_datetime + timedelta(seconds=0.1)
     return MemberJobExperience.objects.bulk_create(member_job_experiences)
+
+
+def get_member_info_block(member_id: int) -> MemberInfoBlock:
+    member = Member.objects.get(id=member_id)
+    member_information = get_active_member_information_qs(member_id=member_id).last()
+    member_link = get_active_member_extra_link_qa(member_id=member_id).order_by('sequence').first()
+    members_main_attributes = [
+        MemberMainAttribute(
+            member_attribute_type_id=attribute['member_attribute_type_id'],
+            display_name=attribute['display_name'],
+        )
+        for attribute in get_members_main_attributes_with_sort([member.id])[member.id][:3]
+    ]
+    member_job_experiences = [
+        MemberJobExperienceDuration(
+            job_id=job['job_id'],
+            display_name=job['display_name'],
+            total_year=job['total_year'],
+            total_month=job['total_month'],
+        )
+        for job in get_members_job_experience_durations([member.id])[member.id]
+    ]
+    members_project_ongoing_info = next(
+        iter(get_members_project_ongoing_info([member.id]).values()),
+        {'success': 0, 'working': 0, 'leaved': 0},
+    )
+    return MemberInfoBlock(
+        member_id=member.id,
+        profile_image=member.profile_image_url,
+        nickname=member.nickname,
+        simple_description=(member_information.description if member_information else None),
+        link=(member_link.url if member_link else None),
+        project_info=ProjectOngoingInfo(
+            success=members_project_ongoing_info['success'],
+            working=members_project_ongoing_info['working'],
+            leaved=members_project_ongoing_info['leaved'],
+        ),
+        member_main_attributes=(members_main_attributes if members_main_attributes else None),
+        member_job_experiences=(member_job_experiences if member_job_experiences else None),
+    )
 
 
 def get_active_member_information_qs(member_id: int):
