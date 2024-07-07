@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from common.dtos.response_dtos import CursorPaginatorResponse
@@ -32,8 +33,8 @@ class ProjectDetailResponse(BaseModel):
     jobs: conlist(ProjectJobAvailabilities) = Field(description='Project Job Availabilities')
     experience: str = Field(description='Experience')
     status_display_name: str = Field(description='Status Display Name')
-    image: str = Field(description='Image')
+    image: Optional[str] = Field(description='Image')
     leader_info: MemberInfoBlock = Field(description='Leader Info')
     bookmark_count: int = Field(description='Bookmark Count')
-    recent_recruited_at: str = Field(description='Recent Recruited At')
-    first_recruited_at: str = Field(description='First Recruited At')
+    recent_recruited_at: datetime = Field(description='Recent Recruited At')
+    first_recruited_at: datetime = Field(description='First Recruited At')
