@@ -384,6 +384,13 @@ class ProjectMemberManagement(models.Model):
         on_delete=models.DO_NOTHING,
         help_text='프로젝트',
     )
+    member = models.ForeignKey(
+        Member,
+        null=True,
+        blank=True,
+        on_delete=models.DO_NOTHING,
+        help_text='멤버',
+    )
     project_recruit_application = models.ForeignKey(
         ProjectRecruitApplication,
         null=True,

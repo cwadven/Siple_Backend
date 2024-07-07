@@ -22,3 +22,9 @@ class ProjectListItem(BaseModel):
     image: Optional[str] = Field(None, description='프로젝트 이미지')
     is_bookmarked: bool = Field(..., description='북마크 여부')
     recent_recruited_at: Optional[str] = Field(None, description='최근 모집한 날짜')
+
+
+class ProjectOngoingInfo(BaseModel):
+    success: int = Field(description='Success')
+    working: int = Field(description='Working')
+    leaved: int = Field(description='Leaved')

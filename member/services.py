@@ -1,16 +1,36 @@
 import re
+from collections import defaultdict
 from datetime import (
     datetime,
     timedelta,
 )
-from typing import List
+from typing import (
+    Any,
+    List,
+)
 
+from common.common_utils.datetime_utils import get_date_diff_year_and_month
 from common.models import BlackListWord
-from member.dtos.model_dtos import JobExperience
+from member.dtos.model_dtos import (
+    JobExperience,
+    MemberInfoBlock,
+    MemberJobExperienceDuration,
+    MemberMainAttribute,
+)
 from member.models import (
     Member,
+    MemberAttribute,
+    MemberExtraLink,
+    MemberInformation,
     MemberJobExperience,
 )
+from project.consts import (
+    ProjectMemberManagementLeftStatus,
+    ProjectResultStatus,
+    ProjectStatus,
+)
+from project.dtos.model_dtos import ProjectOngoingInfo
+from project.models import ProjectMemberManagement
 
 
 def check_username_exists(username) -> bool:
@@ -70,3 +90,132 @@ def add_member_job_experiences(member_id: int, job_experiences: List[JobExperien
         )
         current_datetime = current_datetime + timedelta(seconds=0.1)
     return MemberJobExperience.objects.bulk_create(member_job_experiences)
+
+
+def get_member_info_block(member_id: int) -> MemberInfoBlock:
+    member = Member.objects.get(id=member_id)
+    member_information = get_active_member_information_qs(member_id=member_id).last()
+    member_link = get_active_member_extra_link_qa(member_id=member_id).order_by('sequence').first()
+    members_main_attributes = [
+        MemberMainAttribute(
+            member_attribute_type_id=attribute['member_attribute_type_id'],
+            display_name=attribute['display_name'],
+        )
+        for attribute in get_members_main_attributes_with_sort([member.id])[member.id][:3]
+    ]
+    member_job_experiences = [
+        MemberJobExperienceDuration(
+            job_id=job['job_id'],
+            display_name=job['display_name'],
+            total_year=job['total_year'],
+            total_month=job['total_month'],
+        )
+        for job in get_members_job_experience_durations([member.id])[member.id]
+    ]
+    members_project_ongoing_info = next(
+        iter(get_members_project_ongoing_info([member.id]).values()),
+        {'success': 0, 'working': 0, 'leaved': 0},
+    )
+    return MemberInfoBlock(
+        member_id=member.id,
+        profile_image=member.profile_image_url,
+        nickname=member.nickname,
+        simple_description=(member_information.description if member_information else None),
+        link=(member_link.url if member_link else None),
+        project_info=ProjectOngoingInfo(
+            success=members_project_ongoing_info['success'],
+            working=members_project_ongoing_info['working'],
+            leaved=members_project_ongoing_info['leaved'],
+        ),
+        member_main_attributes=(members_main_attributes if members_main_attributes else None),
+        member_job_experiences=(member_job_experiences if member_job_experiences else None),
+    )
+
+
+def get_active_member_information_qs(member_id: int):
+    return MemberInformation.objects.filter(member_id=member_id, is_deleted=False)
+
+
+def get_active_member_extra_link_qa(member_id: int):
+    return MemberExtraLink.objects.filter(member_id=member_id, is_deleted=False)
+
+
+def get_members_job_experience_durations(member_ids: List[int]) -> defaultdict[int, list[dict[str, Any]]]:
+    member_job_experiences = MemberJobExperience.objects.filter(
+        member_id__in=member_ids,
+        is_deleted=False,
+    ).values(
+        'member_id',
+        'job_id',
+        'job__display_name',
+        'start_date',
+        'end_date',
+    )
+    member_job_experience_durations = defaultdict(lambda: defaultdict(lambda: {'total_year': 0, 'total_month': 0, 'display_name': ''}))
+    for member_job_experience in member_job_experiences:
+        years, months = get_date_diff_year_and_month(member_job_experience['start_date'], member_job_experience['end_date'])
+        job_info = member_job_experience_durations[member_job_experience['member_id']][member_job_experience['job_id']]
+        job_info['total_year'] += years
+        job_info['total_month'] += months
+        job_info['display_name'] = member_job_experience['job__display_name']
+
+    final_member_job_experience_durations = defaultdict(list)
+    for member_id, jobs in member_job_experience_durations.items():
+        for job_id, durations in jobs.items():
+            final_member_job_experience_durations[member_id].append({
+                'job_id': job_id,
+                'display_name': durations['display_name'],
+                'total_year': durations['total_year'],
+                'total_month': durations['total_month'],
+            })
+    return final_member_job_experience_durations
+
+
+def get_members_main_attributes_with_sort(member_ids: List[int]) -> defaultdict[int, list[dict[str, Any]]]:
+    member_attributes = MemberAttribute.objects.filter(
+        member_id__in=member_ids
+    ).values(
+        'member_id',
+        'member_attribute_type_id',
+        'member_attribute_type__display_name',
+        'value',
+    )
+    member_main_attributes_results = defaultdict(list)
+    for member_attribute in member_attributes:
+        member_main_attributes_results[member_attribute['member_id']].append(
+            {
+                'member_attribute_type_id': member_attribute['member_attribute_type_id'],
+                'display_name': member_attribute['member_attribute_type__display_name'],
+                'value': member_attribute['value'],
+            }
+        )
+    for member_id in member_main_attributes_results:
+        member_main_attributes_results[member_id].sort(key=lambda x: x['value'], reverse=True)
+    return member_main_attributes_results
+
+
+def get_members_project_ongoing_info(member_ids: List[int]) -> defaultdict[int, dict[str, int]]:
+    project_members_project_results = ProjectMemberManagement.objects.filter(
+        member_id__in=member_ids
+    ).values(
+        'member_id',
+        'project__project_result_status',
+        'project__project_status',
+        'left_status',
+    )
+    project_member_project_results = defaultdict(lambda: {'success': 0, 'working': 0, 'leaved': 0})
+    for project_member_project_result in project_members_project_results:
+        if project_member_project_result['left_status'] == ProjectMemberManagementLeftStatus.LEFT.value:
+            project_member_project_results[project_member_project_result['member_id']][
+                'leaved'
+            ] += 1
+        elif project_member_project_result['project__project_status'] == ProjectStatus.WORKING.value:
+            project_member_project_results[project_member_project_result['member_id']][
+                'working'
+            ] += 1
+            continue
+        elif project_member_project_result['project__project_result_status'] == ProjectResultStatus.SUCCESS.value:
+            project_member_project_results[project_member_project_result['member_id']][
+                'success'
+            ] += 1
+    return project_member_project_results
