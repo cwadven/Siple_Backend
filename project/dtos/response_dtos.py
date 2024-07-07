@@ -32,7 +32,7 @@ class ProjectDetailResponse(BaseModel):
     extra_information: Optional[str] = Field(description='Extra Information')
     jobs: conlist(ProjectJobAvailabilities) = Field(description='Project Job Availabilities')
     experience: str = Field(description='Experience')
-    status_display_name: str = Field(description='Status Display Name')
+    detail_status: str = Field(description='Status Display Name')
     image: Optional[str] = Field(description='Image')
     leader_info: MemberInfoBlock = Field(description='Leader Info')
     bookmark_count: int = Field(description='Bookmark Count')
