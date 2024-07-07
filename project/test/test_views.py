@@ -9,15 +9,24 @@ from common.common_consts.common_error_messages import (
     InvalidInputResponseErrorStatus,
 )
 from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
+from common.common_utils import format_utc
 from common.common_utils.error_utils import generate_pydantic_error_detail
 from django.urls import reverse
-from job.dtos.model_dtos import ProjectJobRecruitInfo
+from freezegun import freeze_time
+from job.dtos.model_dtos import (
+    ProjectJobAvailabilities,
+    ProjectJobRecruitInfo,
+)
+from member.dtos.model_dtos import MemberInfoBlock
 from member.exceptions import LoginRequiredException
 from member.models import Member
 from project.consts import (
+    ProjectDetailStatus,
+    ProjectJobExperienceType,
     ProjectJobSearchOperator,
     ProjectRecruitmentStatus,
 )
+from project.dtos.model_dtos import ProjectOngoingInfo
 from project.dtos.request_dtos import (
     CreateProjectJob,
     CreateProjectRequest,
@@ -437,3 +446,249 @@ class CreateProjectAPIViewTests(APITestCase):
             )
         )
         mock_service_instance.generate_project.assert_called_once()
+
+
+class ProjectDetailAPIViewTests(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.member = Member.objects.create_user(username='test1', nickname='test1')
+        self.category = ProjectCategory.objects.create(
+            display_name='카테고리 테스트',
+            name='category_test',
+        )
+        self.job1 = create_job_for_testcase('job1')
+        self.project1 = Project.objects.create(
+            title='Project 1',
+            description='Testetstes',
+            created_member_id=self.member.id,
+            category=self.category,
+            extra_information='extra_information',
+            job_experience_type=ProjectJobExperienceType.ONLY_EXPERIENCE.value,
+            duration_month=10,
+            hours_per_week=4,
+        )
+
+    @staticmethod
+    def _get_url(project_id: int):
+        return reverse('project:project_detail', kwargs={'project_id': project_id})
+
+    @patch('project.views.ProjectDetailStatus.get_by_project')
+    @patch('project.views.ProjectJobAvailabilities.from_recruit_info')
+    @patch('project.views.get_member_info_block')
+    @patch('project.views.get_current_active_project_job_recruitments')
+    def test_get_should_success(self,
+                                mock_get_current_active_project_job_recruitments,
+                                mock_get_member_info_block,
+                                mock_from_recruit_info,
+                                mock_get_by_project):
+        # Given: Mock get_current_active_project_job_recruitments
+        mock_get_current_active_project_job_recruitments.return_value = {
+            self.project1.id: [
+                ProjectJobRecruitInfo(
+                    job_id=self.job1.id,
+                    job_name=self.job1.name,
+                    job_display_name=self.job1.display_name,
+                    total_limit=5,
+                    current_recruited=2,
+                    recruit_status=ProjectRecruitmentStatus.RECRUITING.value,
+                )
+            ]
+        }
+        mock_get_member_info_block.return_value = MemberInfoBlock(
+            member_id=self.member.id,
+            profile_image=self.member.profile_image_url,
+            nickname=self.member.nickname,
+            simple_description='test',
+            link='test_link',
+            project_info=ProjectOngoingInfo(
+                success=0,
+                working=0,
+                leaved=0,
+            ),
+            member_main_attributes=None,
+            member_job_experiences=None,
+        )
+        mock_from_recruit_info.return_value = ProjectJobAvailabilities(
+            id=self.job1.id,
+            display_name=self.job1.display_name,
+            is_available=True,
+        )
+        mock_get_by_project.return_value = ProjectDetailStatus('RECRUITING')
+
+        # When: Get request
+        response = self.client.get(self._get_url(self.project1.id))
+
+        # Then: Verify the response status
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # And: Info
+        self.assertDictEqual(
+            response.json(),
+            {
+                "id": self.project1.id,
+                "category_display_name": self.project1.category.display_name,
+                "title": self.project1.title,
+                "description": self.project1.description,
+                "duration_month": self.project1.duration_month,
+                "hours_per_week": self.project1.hours_per_week,
+                "extra_information": self.project1.extra_information,
+                "jobs": [
+                    {
+                        "id": self.job1.id,
+                        "display_name": self.job1.display_name,
+                        "is_available": True
+                    }
+                ],
+                "experience": self.project1.job_experience_type,
+                "detail_status": mock_get_by_project.return_value.value,
+                "image": self.project1.main_image,
+                "leader_info": {
+                    "member_id": mock_get_member_info_block.return_value.member_id,
+                    "profile_image": mock_get_member_info_block.return_value.profile_image,
+                    "nickname": mock_get_member_info_block.return_value.nickname,
+                    "simple_description": mock_get_member_info_block.return_value.simple_description,
+                    "link": mock_get_member_info_block.return_value.link,
+                    "project_info": {
+                        "success": mock_get_member_info_block.return_value.project_info.success,
+                        "working": mock_get_member_info_block.return_value.project_info.working,
+                        "leaved": mock_get_member_info_block.return_value.project_info.leaved,
+                    },
+                    "member_main_attributes": mock_get_member_info_block.return_value.member_main_attributes,
+                    "member_job_experiences": mock_get_member_info_block.return_value.member_job_experiences,
+                },
+                "bookmark_count": self.project1.bookmark_count,
+                "recent_recruited_at": format_utc(self.project1.created_at),
+                "first_recruited_at": format_utc(self.project1.created_at),
+            }
+        )
+        # And: Verify the mocked services are called
+        mock_get_current_active_project_job_recruitments.assert_called_once_with([self.project1.id])
+        mock_get_member_info_block.assert_called_once_with(self.member.id)
+        mock_from_recruit_info.assert_called_once_with(
+            mock_get_current_active_project_job_recruitments.return_value[self.project1.id][0]
+        )
+        mock_get_by_project.assert_called_once_with(self.project1)
+
+    @patch('project.views.ProjectDetailStatus.get_by_project')
+    @patch('project.views.ProjectJobAvailabilities.from_recruit_info')
+    @patch('project.views.get_member_info_block')
+    @patch('project.views.get_current_active_project_job_recruitments')
+    def test_get_should_success_with_recent_recruited_at(self,
+                                                         mock_get_current_active_project_job_recruitments,
+                                                         mock_get_member_info_block,
+                                                         mock_from_recruit_info,
+                                                         mock_get_by_project):
+        # Given: Mock get_current_active_project_job_recruitments
+        recruitment_datetime = datetime(2021, 1, 1, 10, 0, 0)
+        with freeze_time(recruitment_datetime):
+            project_recruitment = ProjectRecruitment.objects.create(
+                project=self.project1,
+                times_project_recruit=1,
+                created_member_id=self.member.id,
+            )
+        self.project1.latest_project_recruitment = project_recruitment
+        self.project1.save()
+        # And: Mock get_current_active_project_job_recruitments
+        mock_get_current_active_project_job_recruitments.return_value = {
+            self.project1.id: [
+                ProjectJobRecruitInfo(
+                    job_id=self.job1.id,
+                    job_name=self.job1.name,
+                    job_display_name=self.job1.display_name,
+                    total_limit=5,
+                    current_recruited=2,
+                    recruit_status=ProjectRecruitmentStatus.RECRUITING.value,
+                )
+            ]
+        }
+        mock_get_member_info_block.return_value = MemberInfoBlock(
+            member_id=self.member.id,
+            profile_image=self.member.profile_image_url,
+            nickname=self.member.nickname,
+            simple_description='test',
+            link='test_link',
+            project_info=ProjectOngoingInfo(
+                success=0,
+                working=0,
+                leaved=0,
+            ),
+            member_main_attributes=None,
+            member_job_experiences=None,
+        )
+        mock_from_recruit_info.return_value = ProjectJobAvailabilities(
+            id=self.job1.id,
+            display_name=self.job1.display_name,
+            is_available=True,
+        )
+        mock_get_by_project.return_value = ProjectDetailStatus('RECRUITING')
+
+        # When: Get request
+        response = self.client.get(self._get_url(self.project1.id))
+
+        # Then: Verify the response status
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # And: Info
+        self.assertDictEqual(
+            response.json(),
+            {
+                "id": self.project1.id,
+                "category_display_name": self.project1.category.display_name,
+                "title": self.project1.title,
+                "description": self.project1.description,
+                "duration_month": self.project1.duration_month,
+                "hours_per_week": self.project1.hours_per_week,
+                "extra_information": self.project1.extra_information,
+                "jobs": [
+                    {
+                        "id": self.job1.id,
+                        "display_name": self.job1.display_name,
+                        "is_available": True
+                    }
+                ],
+                "experience": self.project1.job_experience_type,
+                "detail_status": mock_get_by_project.return_value.value,
+                "image": self.project1.main_image,
+                "leader_info": {
+                    "member_id": mock_get_member_info_block.return_value.member_id,
+                    "profile_image": mock_get_member_info_block.return_value.profile_image,
+                    "nickname": mock_get_member_info_block.return_value.nickname,
+                    "simple_description": mock_get_member_info_block.return_value.simple_description,
+                    "link": mock_get_member_info_block.return_value.link,
+                    "project_info": {
+                        "success": mock_get_member_info_block.return_value.project_info.success,
+                        "working": mock_get_member_info_block.return_value.project_info.working,
+                        "leaved": mock_get_member_info_block.return_value.project_info.leaved,
+                    },
+                    "member_main_attributes": mock_get_member_info_block.return_value.member_main_attributes,
+                    "member_job_experiences": mock_get_member_info_block.return_value.member_job_experiences,
+                },
+                "bookmark_count": self.project1.bookmark_count,
+                "recent_recruited_at": format_utc(recruitment_datetime),
+                "first_recruited_at": format_utc(self.project1.created_at),
+            }
+        )
+        # And: Verify the mocked services are called
+        mock_get_current_active_project_job_recruitments.assert_called_once_with([self.project1.id])
+        mock_get_member_info_block.assert_called_once_with(self.member.id)
+        mock_from_recruit_info.assert_called_once_with(
+            mock_get_current_active_project_job_recruitments.return_value[self.project1.id][0]
+        )
+        mock_get_by_project.assert_called_once_with(self.project1)
+
+    def test_get_should_fail_when_project_not_exists(self):
+        # Given:
+        project_id = 0
+
+        # When: Get request
+        response = self.client.get(self._get_url(project_id))
+
+        # Then: Error 404
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        # And: Error info
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': '프로젝트가 존재하지 않습니다.',
+                'error_code': 'project-not-found-error',
+                'errors': None,
+            }
+        )
