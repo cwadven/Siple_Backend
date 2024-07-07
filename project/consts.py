@@ -19,6 +19,26 @@ class ProjectResultStatus(StrValueLabel):
     CANCEL = ('CANCEL', '취소')
 
 
+class ProjectDetailStatus(StrValueLabel):
+    RECRUITING = ('RECRUITING', '모집중')
+    WORKING = ('WORKING', '진행중')
+    DONE = ('DONE', '완료')
+    FAIL = ('FAIL', '실패')
+    UNKNOWN = ('UNKNOWN', '알 수 없음')
+
+    @classmethod
+    def get_by_project(cls, project: 'Project'):  # noqa
+        if project.current_recruit_status == ProjectCurrentRecruitStatus.RECRUITING.value:
+            return cls.RECRUITING
+        elif project.project_status == ProjectStatus.WORKING.value:
+            return cls.WORKING
+        elif project.project_result_status == ProjectResultStatus.FAIL.value:
+            return cls.FAIL
+        elif project.project_status == ProjectStatus.FINISHED.value:
+            return cls.DONE
+        return cls.UNKNOWN
+
+
 class ProjectJobExperienceType(StrValueLabel):
     ALL = ('ALL', '경력 무관')
     ONLY_EXPERIENCE = ('ONLY_EXPERIENCE', '경력만')
