@@ -210,7 +210,29 @@ class CreateProjectRequest(BaseModel):
     experience: str = Field(description='프로젝트 경력 수준')
     extra_information: Optional[str] = Field(description='추가 정보')
     image: Optional[str] = Field(description='프로젝트 대표 이미지')
+    create_auto_image: Optional[bool] = Field(description='대표이미지 자동 생성')
     jobs: List[CreateProjectJob] = Field(description='프로젝트 직군 ID 리스트 및 요구 인원 수')
+
+    @model_validator(mode='after')
+    def validate_create_auto_image_by_image(self) -> Self:
+        errors = []
+        if self.create_auto_image is True and self.image:
+            errors.append(
+                generate_pydantic_error_detail(
+                    ErrorMessage.INVALID_INPUT_DEPENDENCIES_ERROR.value,
+                    ErrorMessage.INVALID_INPUT_DEPENDENCIES_ERROR.label.format(
+                        'image 가 있는 경우 create_auto_image 는 False 여야 합니다.'
+                    ),
+                    'create_auto_image',
+                    self.create_auto_image,
+                )
+            )
+        if errors:
+            raise ValidationError.from_exception_data(
+                title=self.__class__.__name__,
+                line_errors=errors,
+            )
+        return self
 
     @field_validator(
         'experience',
