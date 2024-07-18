@@ -210,7 +210,7 @@ class CreateProjectRequest(BaseModel):
     experience: str = Field(description='프로젝트 경력 수준')
     extra_information: Optional[str] = Field(description='추가 정보')
     image: Optional[str] = Field(description='프로젝트 대표 이미지')
-    create_auto_image: Optional[bool] = Field(description='대표이미지 자동 생성')
+    create_auto_image: Optional[bool] = Field(None, description='대표이미지 자동 생성')
     jobs: List[CreateProjectJob] = Field(description='프로젝트 직군 ID 리스트 및 요구 인원 수')
 
     @model_validator(mode='after')
