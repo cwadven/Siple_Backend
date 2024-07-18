@@ -300,6 +300,24 @@ class CreateProjectRequestTest(TestCase):
             ],
         }
 
+    def test_validate_create_auto_image_by_image(self):
+        # Given: valid image
+        self.payload['image'] = 'Image URL'
+        self.payload['create_auto_image'] = True
+
+        # When: Expecting a ValidationError to be raised
+        with self.assertRaises(ValidationError) as context:
+            CreateProjectRequest.of(self.payload)
+
+        # Then: Validate the error details
+        errors = context.exception.errors()
+        self.assertEqual(len(errors), 1)
+        self.assertEqual(errors[0]['loc'], ('create_auto_image',))
+        self.assertEqual(
+            errors[0]['msg'].split(',')[1].strip(),
+            'image 가 있는 경우 create_auto_image 는 False 여야 합니다.',
+        )
+
     def test_check_experience_value_should_raise_error_when_invalid_type(self):
         # Given:
         self.payload['experience'] = 'INVALID_TYPE'
