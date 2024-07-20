@@ -7,7 +7,13 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 
 
-def generate_presigned_url_info(file_name: str, _type: str = 'common', unique: str = '0', expires_in: int = 1000) -> str:
+def generate_pre_signed_url_info(
+        file_name: str,
+        _type: str = 'common',
+        unique: str = '0',
+        expires_in: int = 1000,
+        same_file_name: bool = False
+) -> dict:
     s3_client = boto3.client(
         's3',
         region_name='ap-northeast-2',
@@ -16,9 +22,14 @@ def generate_presigned_url_info(file_name: str, _type: str = 'common', unique: s
         config=Config(signature_version='s3v4')
     )
     try:
+        key = f'{_type}/{unique}/'
+        if same_file_name:
+            key += f'{file_name}'
+        else:
+            key += f'{uuid.uuid4()}_{file_name}'
         response = s3_client.generate_presigned_post(
             Bucket=settings.AWS_S3_BUCKET_NAME,
-            Key=f'{_type}/{unique}/{uuid.uuid4()}_{file_name}',
+            Key=key,
             Conditions=[
                 ['content-length-range', 0, 10485760]
             ],
