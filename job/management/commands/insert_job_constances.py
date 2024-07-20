@@ -6,7 +6,7 @@ from job.models import (
 
 
 class Command(BaseCommand):
-    help = 'Describe your command here'
+    help = 'First time to set job constances data'
 
     def handle(self, *args, **kwargs):
         # Insert job category data
