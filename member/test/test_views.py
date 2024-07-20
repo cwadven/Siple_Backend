@@ -188,7 +188,7 @@ class SocialSignUpViewTestCase(TestCase):
         self.assertEqual(response.status_code, 400)
 
         # Check the response data for expected keys
-        self.assertEqual(response.data['message'], '유효하지 않은 입력값입니다.')
+        self.assertEqual(response.data['message'], '입력값을 다시 한번 확인해주세요.')
         self.assertEqual(response.data['error_code'], '400-invalid_sign_up_input_data-00001')
         self.assertEqual(response.data['errors']['extra_information'], ['에러'])
         mock_get_or_create_member_by_token.assert_not_called()
