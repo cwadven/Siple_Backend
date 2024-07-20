@@ -17,6 +17,7 @@ from common.helpers.constance_helpers import (
     CONSTANCE_TYPE_HELPER_MAPPER,
     ConstanceJobDetailTypeHelper,
 )
+from member.permissions import IsMemberLogin
 from pydantic import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -48,6 +49,10 @@ class ConstanceTypeView(APIView):
 
 
 class GetPreSignedURLView(APIView):
+    permission_classes = [
+        IsMemberLogin,
+    ]
+
     def post(self, request, constance_type: str, transaction_pk: str):
         try:
             pre_signed_url_request = GetPreSignedURLRequest.of(request.data)

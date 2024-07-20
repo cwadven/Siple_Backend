@@ -4,6 +4,8 @@ from common.common_testcase_helpers.job.testcase_helpers import create_job_categ
 from common.exceptions import InvalidPathParameterException
 from django.test import TestCase
 from django.urls import reverse
+from member.models import Member
+from rest_framework.test import APITestCase
 
 
 class HealthCheckViewTestCase(TestCase):
@@ -85,9 +87,46 @@ class ConstanceJobTypeViewTest(TestCase):
         mock_get_constance_detail_types.assert_called_once()
 
 
-class GetPreSignedURLViewTest(TestCase):
-    def test_get_pre_signed_url_should_return_400_when_invalid_query_params(self):
+class GetPreSignedURLViewTest(APITestCase):
+    def setUp(self):
+        self.member = Member.objects.create_user(username='test1', nickname='test1')
+
+    def test_get_pre_signed_url_should_return_401_when_not_login(self):
         # Given:
+        constance_type = 'project-image'
+        transaction_pk = 'transaction_pk'
+        # And:
+        data = {
+            'file_name': 'file_name',
+        }
+
+        # When:
+        response = self.client.post(
+            reverse(
+                'common:get_pre_signed_url',
+                kwargs={
+                    'constance_type': constance_type,
+                    'transaction_pk': transaction_pk,
+                },
+            ),
+            data,
+        )
+
+        # Then:
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(
+            response.json(),
+            {
+                'message': '로그인이 필요합니다.',
+                'error_code': 'login-required',
+                'errors': None,
+            }
+        )
+
+    def test_get_pre_signed_url_should_return_400_when_invalid_query_params(self):
+        # Given: Login
+        self.client.force_login(self.member)
+        # And:
         constance_type = 'project-image'
         transaction_pk = 'transaction_pk'
         # And:
@@ -119,7 +158,9 @@ class GetPreSignedURLViewTest(TestCase):
         )
 
     def test_get_pre_signed_url_should_return_400_when_invalid_constance_type(self):
-        # Given:
+        # Given: Login
+        self.client.force_login(self.member)
+        # And:
         constance_type = 'invalid_key'
         transaction_pk = 'transaction_pk'
         # And:
@@ -153,7 +194,9 @@ class GetPreSignedURLViewTest(TestCase):
     @patch('common.views.generate_pre_signed_url_info')
     def test_get_pre_signed_url_should_return_500_when_external_api_exception_raise(self,
                                                                                     mock_generate_pre_signed_url_info):
-        # Given:
+        # Given: Login
+        self.client.force_login(self.member)
+        # And:
         constance_type = 'project-image'
         transaction_pk = 'transaction_pk'
         # And:
@@ -189,7 +232,9 @@ class GetPreSignedURLViewTest(TestCase):
     @patch('common.views.generate_pre_signed_url_info')
     def test_get_pre_signed_url_should_return_data_when_success(self,
                                                                 mock_generate_pre_signed_url_info):
-        # Given:
+        # Given: Login
+        self.client.force_login(self.member)
+        # And:
         constance_type = 'project-image'
         transaction_pk = 'transaction_pk'
         # And:
