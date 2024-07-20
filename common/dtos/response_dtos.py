@@ -1,4 +1,6 @@
 from typing import (
+    Any,
+    Dict,
     List,
     Optional,
 )
@@ -23,6 +25,11 @@ class ConstanceTypeResponse(BaseModel):
 
 class ConstanceDetailTypeResponse(BaseModel):
     data: List[ConstanceDetailType] = Field(default_factory=list, description='Constance type detail list')
+
+
+class GetPreSignedURLResponse(BaseModel):
+    url: str = Field(...)
+    data: Dict[str, Any] = Field(default_factory=dict)
 
 
 class CursorPaginatorResponse(BaseModel):
