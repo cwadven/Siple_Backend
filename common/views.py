@@ -48,9 +48,9 @@ class ConstanceTypeView(APIView):
 
 
 class GetPreSignedURLView(APIView):
-    def get(self, request, constance_type: str, transaction_pk: str):
+    def post(self, request, constance_type: str, transaction_pk: str):
         try:
-            pre_signed_url_request = GetPreSignedURLRequest.of(request.query_params)
+            pre_signed_url_request = GetPreSignedURLRequest.of(request.data)
         except ValidationError as e:
             raise PydanticAPIException(
                 status_code=400,

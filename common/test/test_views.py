@@ -91,12 +91,12 @@ class GetPreSignedURLViewTest(TestCase):
         constance_type = 'project-image'
         transaction_pk = 'transaction_pk'
         # And:
-        query_params = {
+        data = {
             'invalid_key': 'invalid_value',
         }
 
         # When:
-        response = self.client.get(
+        response = self.client.post(
             reverse(
                 'common:get_pre_signed_url',
                 kwargs={
@@ -104,7 +104,7 @@ class GetPreSignedURLViewTest(TestCase):
                     'transaction_pk': transaction_pk,
                 },
             ),
-            query_params,
+            data,
         )
 
         # Then:
@@ -123,12 +123,12 @@ class GetPreSignedURLViewTest(TestCase):
         constance_type = 'invalid_key'
         transaction_pk = 'transaction_pk'
         # And:
-        query_params = {
+        data = {
             'file_name': 'file_name',
         }
 
         # When:
-        response = self.client.get(
+        response = self.client.post(
             reverse(
                 'common:get_pre_signed_url',
                 kwargs={
@@ -136,7 +136,7 @@ class GetPreSignedURLViewTest(TestCase):
                     'transaction_pk': transaction_pk,
                 },
             ),
-            query_params,
+            data,
         )
 
         # Then:
@@ -157,14 +157,14 @@ class GetPreSignedURLViewTest(TestCase):
         constance_type = 'project-image'
         transaction_pk = 'transaction_pk'
         # And:
-        query_params = {
+        data = {
             'file_name': 'file_name',
         }
         # And: mock external api exception
         mock_generate_pre_signed_url_info.side_effect = Exception('raise')
 
         # When:
-        response = self.client.get(
+        response = self.client.post(
             reverse(
                 'common:get_pre_signed_url',
                 kwargs={
@@ -172,7 +172,7 @@ class GetPreSignedURLViewTest(TestCase):
                     'transaction_pk': transaction_pk,
                 },
             ),
-            query_params,
+            data,
         )
 
         # Then:
@@ -193,7 +193,7 @@ class GetPreSignedURLViewTest(TestCase):
         constance_type = 'project-image'
         transaction_pk = 'transaction_pk'
         # And:
-        query_params = {
+        data = {
             'file_name': 'file_name',
         }
         # And: mock data
@@ -203,7 +203,7 @@ class GetPreSignedURLViewTest(TestCase):
         }
 
         # When:
-        response = self.client.get(
+        response = self.client.post(
             reverse(
                 'common:get_pre_signed_url',
                 kwargs={
@@ -211,7 +211,7 @@ class GetPreSignedURLViewTest(TestCase):
                     'transaction_pk': transaction_pk,
                 },
             ),
-            query_params,
+            data,
         )
 
         # Then:
