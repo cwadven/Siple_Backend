@@ -38,3 +38,8 @@ class ProjectDetailResponse(BaseModel):
     bookmark_count: int = Field(description='Bookmark Count')
     recent_recruited_at: datetime = Field(description='Recent Recruited At')
     first_recruited_at: datetime = Field(description='First Recruited At')
+
+
+class ProjectRecruitEligibleResponse(BaseModel):
+    is_available: bool = Field(description='Is available')
+    jobs: Optional[conlist(ProjectJobAvailabilities)] = Field(description='Project Job Availabilities')

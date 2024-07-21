@@ -7,7 +7,10 @@ from job.dtos.model_dtos import ProjectJobAvailabilities
 from job.services.project_job_services import get_current_active_project_job_recruitments
 from member.permissions import IsMemberLogin
 from member.services import get_member_info_block
-from project.consts import ProjectDetailStatus
+from project.consts import (
+    ProjectCurrentRecruitStatus,
+    ProjectDetailStatus,
+)
 from project.cursor_criteria.cursor_criteria import HomeProjectListCursorCriteria
 from project.dtos.model_dtos import ProjectListItem
 from project.dtos.request_dtos import (
@@ -19,6 +22,7 @@ from project.dtos.response_dtos import (
     HomeProjectListResponse,
     ProjectCreationResponse,
     ProjectDetailResponse,
+    ProjectRecruitEligibleResponse,
 )
 from project.dtos.service_dtos import ProjectCreationData
 from project.exceptions import ProjectNotFoundErrorException
@@ -179,6 +183,37 @@ class ProjectDetailAPIView(APIView):
                     or format_utc(project.created_at)
                 ),
                 first_recruited_at=format_utc(project.created_at),
+            ).model_dump(),
+            status=200
+        )
+
+
+class ProjectRecruitEligibleAPIView(APIView):
+    permission_classes = [
+        IsMemberLogin,
+    ]
+
+    def get(self, request, project_id: int):
+        project = get_active_project(project_id)
+        if not project:
+            raise ProjectNotFoundErrorException()
+        if not ProjectCurrentRecruitStatus.is_recruiting(project.current_recruit_status):
+            return Response(
+                ProjectRecruitEligibleResponse(
+                    is_available=False,
+                    jobs=None,
+                ).model_dump(),
+                status=200
+            )
+        job_recruits_by_project_id = get_current_active_project_job_recruitments([project.id])
+        project_job_availabilities = [
+            ProjectJobAvailabilities.from_recruit_info(job_recruit)
+            for job_recruit in job_recruits_by_project_id.get(project.id, [])
+        ]
+        return Response(
+            ProjectRecruitEligibleResponse(
+                is_available=any(job.is_available for job in project_job_availabilities),
+                jobs=project_job_availabilities or None,
             ).model_dump(),
             status=200
         )
