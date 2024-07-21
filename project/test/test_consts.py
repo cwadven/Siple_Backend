@@ -79,3 +79,29 @@ class ProjectDetailStatusTests(TestCase):
 
         # Then: UNKNOWN 반환
         self.assertEqual(result, ProjectDetailStatus.UNKNOWN)
+
+
+class ProjectCurrentRecruitStatusTests(TestCase):
+    def test_is_recruiting_should_return_true(self):
+        # Given: current_recruit_status
+        givens = [
+            ProjectCurrentRecruitStatus.RECRUITING.value,
+            ProjectCurrentRecruitStatus.ADDITIONAL_RECRUITING.value,
+        ]
+
+        for given in givens:
+            # When: is_recruiting 함수 실행
+            result = ProjectCurrentRecruitStatus.is_recruiting(given)
+
+            # Then: True 반환
+            self.assertEqual(result, True)
+
+    def test_is_recruiting_should_return_false(self):
+        # Given: current_recruit_status = RECRUITED
+        current_recruit_status = ProjectCurrentRecruitStatus.RECRUITED.value
+
+        # When: is_recruiting 함수 실행
+        result = ProjectCurrentRecruitStatus.is_recruiting(current_recruit_status)
+
+        # Then: False 반환
+        self.assertEqual(result, False)
