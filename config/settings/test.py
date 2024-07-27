@@ -30,7 +30,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 DATABASES = {
     'default': {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "siple_test",
+        "NAME": "siple",
         "USER": "postgres",
         "PASSWORD": "postgres",
         "HOST": "localhost",
