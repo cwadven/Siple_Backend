@@ -34,7 +34,7 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        DJANGO_SETTINGS_MODULE: config.settings.local
+        DJANGO_SETTINGS_MODULE: config.settings.test
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
