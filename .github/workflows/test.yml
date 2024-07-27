@@ -20,7 +20,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: siple_test
+          POSTGRES_DB: siple
         ports:
           - 5432:5432
 
@@ -47,6 +47,7 @@ jobs:
         DJANGO_SETTINGS_MODULE: config.settings.test
         PGPASSWORD: postgres
       run: |
+        psql -h localhost -U postgres -c "CREATE DATABASE siple_test;"
         psql -h localhost -U postgres -d siple_test -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 
     - name: Install Dependencies
