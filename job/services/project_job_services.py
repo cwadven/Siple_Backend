@@ -1,6 +1,7 @@
 from collections import (
     defaultdict,
 )
+from functools import cached_property
 from typing import (
     Dict,
     List,
@@ -11,15 +12,20 @@ from typing import (
 from job.dtos.model_dtos import (
     ProjectJobAvailabilities,
     ProjectJobRecruitInfo,
+    RecruitResult,
 )
 from job.models import (
     Job,
     JobCategory,
 )
 from project.consts import (
+    ProjectCurrentRecruitStatus,
+    ProjectRecruitApplicationStatus,
     ProjectRecruitmentStatus,
 )
 from project.models import (
+    Project,
+    ProjectRecruitApplication,
     ProjectRecruitmentJob,
 )
 
@@ -61,6 +67,94 @@ def get_current_project_job_availabilities(project_id: int, job_ids: Optional[Se
             continue
         project_job_availabilities_by_job_id[job_recruit.job_id] = ProjectJobAvailabilities.from_recruit_info(job_recruit)
     return project_job_availabilities_by_job_id
+
+
+class ProjectJobRecruitService:
+    def __init__(self, project_id: int, job_id: int, member_id: int):
+        self.project_id = project_id
+        self.job_id = job_id
+        self.member_id = member_id
+
+    @cached_property
+    def project(self) -> Optional[Project]:
+        try:
+            return Project.objects.get(id=self.project_id)
+        except Project.DoesNotExist:
+            return None
+
+    @cached_property
+    def current_project_job_availabilities(self) -> Dict[int, ProjectJobAvailabilities]:
+        return get_current_project_job_availabilities(self.project_id, {self.job_id})
+
+    @cached_property
+    def project_recruitment_job_recruiting(self) -> Optional[ProjectRecruitmentJob]:
+        return ProjectRecruitmentJob.objects.filter(
+            project_recruitment_id=self.project.latest_project_recruitment_id,
+            job_id=self.job_id,
+            recruit_status=ProjectRecruitmentStatus.RECRUITING.value,
+        ).last()
+
+    def is_job_available(self) -> bool:
+        if self.job_id not in self.current_project_job_availabilities:
+            return False
+        return self.current_project_job_availabilities[self.job_id].is_available
+
+    def validate_recruit(self) -> RecruitResult:
+        if not self.project:
+            return RecruitResult(
+                is_recruited=False,
+                message='프로젝트가 존재하지 않습니다.',
+            )
+        if not self.project.latest_project_recruitment_id:
+            return RecruitResult(
+                is_recruited=False,
+                message='아직 모집중이 아닙니다.',
+            )
+        if not ProjectCurrentRecruitStatus.is_recruiting(self.project.current_recruit_status):
+            return RecruitResult(
+                is_recruited=False,
+                message='모집이 마감되었습니다.',
+            )
+        if not self.is_job_available():
+            RecruitResult(
+                is_recruited=False,
+                message='모집이 마감되었습니다.',
+            )
+        if not self.project_recruitment_job_recruiting:
+            return RecruitResult(
+                is_recruited=False,
+                message='모집이 마감되었습니다.',
+            )
+        return RecruitResult(
+            is_recruited=True,
+            message='지원 가능합니다.',
+        )
+
+    def recruit(self, request_message: str) -> RecruitResult:
+        recruit_result = self.validate_recruit()
+        if not recruit_result.is_recruited:
+            return recruit_result
+
+        return self.get_or_create_recruit_application(request_message)
+
+    def get_or_create_recruit_application(self, request_message: str) -> RecruitResult:
+        project_recruit_application, is_created = ProjectRecruitApplication.objects.get_or_create(
+            project_recruitment_job_id=self.project_recruitment_job_recruiting.id,
+            member_id=self.member_id,
+            request_status=ProjectRecruitApplicationStatus.IN_REVIEW.value,
+            defaults={
+                'request_message': request_message,
+            }
+        )
+        if not is_created:
+            return RecruitResult(
+                is_recruited=False,
+                message='이미 지원한 모집입니다.',
+            )
+        return RecruitResult(
+            is_recruited=True,
+            message='지원이 완료되었습니다.',
+        )
 
 
 def get_active_job_categories() -> list[JobCategory]:
