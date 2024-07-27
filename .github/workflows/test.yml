@@ -66,6 +66,6 @@ jobs:
 
     - name: Run Tests
       env:
-        DJANGO_SETTINGS_MODULE: config.settings.test
+        DJANGO_SETTINGS_MODULE: config.settings.test --keepdb
       run: |
         python manage.py test --noinput
