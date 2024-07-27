@@ -93,9 +93,75 @@ paths:
                   refresh_token:
                     type: string
                     example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJndWVzdF9pZCI6MSwibWVtYmVyX2lkIjoxLCJleHAiOjE3MDczOTA5MTJ9.8l9dcqj63c1RJfE8Bkb2X_eqs4TCn7qcAxI3PvjeqP4"
-                  is_created:
-                    type: boolean
-                    example: true
+        '400':
+          description: | 
+            Social Login failed<br>
+            [ error_code ENUM ]<br>
+            missing-mandatory-parameter<br>
+            social-token-error<br>
+            [ errors ENUM ]<br>
+            provider<br>
+            token<br>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/member/social-sign-up:
+    post:
+      tags:
+        - Member
+      summary: Member social signup
+      description: Social signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - provider
+                - token
+                - jobs_info
+              properties:
+                provider:
+                  type: integer
+                  enum: [2, 3, 4]  # 2: KAKAO, 3: NAVER, 4: GOOGLE
+                  example: 2
+                token:
+                  type: string
+                  example: "gyYwO9GsLD30O1T7Sg"
+                jobs_info:
+                  type: array
+                  nullable: true
+                  items:
+                    type: object
+                    properties:
+                      job_id:
+                        type: integer
+                        example: 1
+                      start_date:
+                        type: string
+                        example: '2024-05-01'
+                      end_date:
+                        type: string
+                        nullable: true
+                        example: '2024-06-30'
+
+      responses:
+        '200':
+          description: Social signup successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJndWVzdF9pZCI6MSwibWVtYmVyX2lkIjoxLCJleHAiOjE3MDY3OTMzMTJ9.YoSa8QjqZ8jUUhMWHzsNTsrgMt5YmxQuey0vBwTKV6s"
+                  refresh_token:
+                    type: string
+                    example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJndWVzdF9pZCI6MSwibWVtYmVyX2lkIjoxLCJleHAiOjE3MDczOTA5MTJ9.8l9dcqj63c1RJfE8Bkb2X_eqs4TCn7qcAxI3PvjeqP4"
         '400':
           description: | 
             Social Login failed<br>
@@ -359,49 +425,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /v1/member/sign-up/job:
-    post:
-      tags:
-        - Member
-      summary: Get member's Job info when sign up
-      description: |
-        Get member's Job info.<br>
-        This API is under development and not yet completed ![Under Construction](https://via.placeholder.com/150x30?text=Under+Construction)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SignUpJobInformationPayload'
-
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "success"
-        '400':
-          description: Error for selecting job
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - message
-                  - error_code
-                properties:
-                  message:
-                    type: string
-                    description: '직무 선택 실패'
-                    example: '직무 선택 실패했습니다..'
-                  error_code:
-                    $ref: '#/components/schemas/MemberSignUpJobErrorCode'
-
   /v1/member/my:
     get:
       tags:
@@ -417,7 +440,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProfileBlock'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -486,7 +509,7 @@ paths:
                     example: '실패했습니다..'
                   error_code:
                     $ref: '#/components/schemas/UpdateProfileErrorCode'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -749,32 +772,38 @@ paths:
                     type: string
                     example: "OK"
 
-  /v1/common/image/{type}/{pk}/url:
-    get:
+  /v1/common/image/{constance_type}/{transaction_pk}/url:
+    post:
       tags:
         - Common
       summary: Give Presigned Url
       description: To upadte aws S3 image
       parameters:
         - in: path
-          name: type
+          name: constance_type
           required: true
           schema:
             type: string
             enum: ['project-image', 'member-image']
           description: Type of constance_type
         - in: path
-          name: pk
+          name: transaction_pk
           required: true
           schema:
             type: string
-          description: Type of constance_type
-        - in: query
-          name: file_name
-          required: true
-          schema:
-            type: string
-          description: file name
+          description: Type of constance_type pk
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - file_name
+              properties:
+                file_name:
+                  type: string
+                  description: '파일 이름 확장자까지 필요'
+                  example: 'test.png'
       responses:
         '200':
           description: Created Presigned URL
@@ -786,7 +815,28 @@ paths:
                   url:
                     type: string
                     example: "https://s3-bucket-url.com"
-        '403':
+                  data:
+                    type: object
+                    properties:
+                      key:
+                        type: string
+                        example: "project-image/1/test.png"
+                      x-amz-algorithm:
+                        type: string
+                        example: "AWS4-HMAC-SHA256"
+                      x-amz-credential:
+                        type: string
+                        example: "......./20240720/ap-northeast-2/s3/aws4_request"
+                      x-amz-date:
+                        type: string
+                        example: "20240720T054525Z"
+                      policy:
+                        type: string
+                        example: "eyJleHBpcmF0aW9uIjogIjIwMjQtMDctMjBUMDY6MDI6MDVaIiwgImNvbmRpdGlvbnMiOiBbWyJjb250ZW50LWxlbmd0aC1yYW5nZSIsIDAsIDEwNDg1NzYwXSwgeyJidWNrZXQiOiAic2lwbGUtZGV2In0sIHsia2V5IjogInByb2plY3QtaW1hZ2UvMS90ZXN0LnBuZyJ9LCB7IngtYW16LWFsZ29yaXRobSI6ICJBV1M0LUhNQUMtU0hBMjU2In0sIHsieC1hbXotY3JlZGVudGlhbCI6ICJBS0lBMlVDM0ZHUTZaNU5NUkJZUS8yMDI0MDcyMC9hcC1ub3J0aGVhc3QtMi9zMy9hd3M0X3JlcXVlc3QifSwgeyJ4LWFtei1kYXRlIjogIjIwMjQwNzIwVDA1NDUyNVoifV19"
+                      x-amz-signature:
+                        type: string
+                        example: "11a8ebd3d1b1c404c48d686727e96f1b6689906f87e89442487aa31db4b4b3eb"
+        '401':
           description: No Auth
           content:
             application/json:
@@ -801,7 +851,7 @@ paths:
       description: Get Job datas
       responses:
         '200':
-          description: Health Check successfully
+          description: JobConstanceType
           content:
             application/json:
               schema:
@@ -1116,6 +1166,7 @@ paths:
                 - hours_per_week
                 - duration_month
                 - image
+                - auto_image
                 - jobs
                 - experience
                 - extra_information
@@ -1145,10 +1196,18 @@ paths:
                   description: '프로젝트 배경 이미지'
                   example: 'https://이미지.com'
                   nullable: true
+                create_auto_image:
+                  type: boolean
+                  description: '자동 이미지 생성 N초 걸림 바로 안보임'
+                  example: true
+                  nullable: true
                 jobs:
                   type: array
                   items:
                     type: object
+                    required:
+                      - id
+                      - total_limit
                     properties:
                       id:
                         type: integer
@@ -1158,6 +1217,7 @@ paths:
                         type: integer
                         description: '역할을 구하려는 개수 1~10개'
                         example: 10
+                        nullable: true
                 experience:
                   $ref: '#/components/schemas/ProjectExperienceType'
                 extra_information:
@@ -1232,7 +1292,7 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/ProjectExtraInformationCreationError'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -1378,7 +1438,7 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/ProjectExtraInformationUpdateError'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -1427,7 +1487,71 @@ paths:
                     example: '프로젝트 삭제에 실패했습니다.'
                   error_code:
                     $ref: '#/components/schemas/ProjectDeleteErrorCode'
-        '403':
+        '401':
+          description: No Auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotUserAuthPermission'
+
+  /v1/project/{project_id}/recruit/eligible:
+    get:
+      tags:
+        - Project
+      summary: Get current applicable status with jobs
+      description: Get current applicable status with jobs
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: integer
+          description: project id
+      responses:
+        '200':
+          description: Apply success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - is_available
+                  - message
+                properties:
+                  is_available:
+                    type: boolean
+                    description: '하나라도 지원 가능한지 여부'
+                    example: true
+                  jobs:
+                    type: array
+                    nullable: true
+                    description: 'Nullable 가능 지원이 아닌 상태인 경우'
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - display_name
+                        - is_available
+                      properties:
+                        id:
+                          type: integer
+                          description: 'job id'
+                          example: 1
+                        display_name:
+                          type: string
+                          description: '사용자에게 보여주는 직업 정보'
+                          example: '프론트엔드'
+                        is_available:
+                          type: boolean
+                          description: '지원 가능 여부'
+                          example: true
+        '404':
+          description: Project not exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
           description: No Auth
           content:
             application/json:
@@ -1485,18 +1609,16 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - message
-                  - error_code
-                properties:
-                  message:
-                    type: string
-                    description: '지원 실패 내용'
-                    example: '지원에 실패했습니다.'
-                  error_code:
-                    $ref: '#/components/schemas/ProjectJobApplyRequestErrorCode'
-        '403':
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '404':
+          description: Apply fail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '401':
           description: No Auth
           content:
             application/json:
@@ -1524,7 +1646,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RecruitApplicationListItemsResponse'
 
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -1590,7 +1712,7 @@ paths:
                     example: '응답에 실패했습니다.'
                   error_code:
                     $ref: '#/components/schemas/ProjectRecruitApplicationReplyErrorCode'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -1640,7 +1762,7 @@ paths:
                     example: '시작에 실패했습니다.'
                   error_code:
                     $ref: '#/components/schemas/ProjectStartErrorCode'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -1690,7 +1812,7 @@ paths:
                     example: '프로젝트 탈주 실패했습니다.'
                   error_code:
                     $ref: '#/components/schemas/ProjectLeaveErrorCode'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -1740,7 +1862,7 @@ paths:
                     example: '실패처리에 실패했습니다.'
                   error_code:
                     $ref: '#/components/schemas/ProjectFailErrorCode'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -1790,7 +1912,7 @@ paths:
                     example: '종료에 실패했습니다.'
                   error_code:
                     $ref: '#/components/schemas/ProjectFinishErrorCode'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -1852,7 +1974,7 @@ paths:
                     example: '리더 위임에 실패했습니다.'
                   error_code:
                     $ref: '#/components/schemas/ProjectTrasferLeaderErrorCode'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -1918,7 +2040,7 @@ paths:
                     example: '밴 요청에 실패했습니다.'
                   error_code:
                     $ref: '#/components/schemas/ProjectBanRequestErrorCode'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -1974,7 +2096,7 @@ paths:
                     example: '실패했습니다.'
                   error_code:
                     $ref: '#/components/schemas/ProjectExtraRecruitErrorCode'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -1994,7 +2116,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MyDoingProjectItemsResponse'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -2014,7 +2136,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MyBookmarkProjectItemsResponse'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -2110,7 +2232,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MyProjectItemsResponse'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -2137,7 +2259,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TeamMemberListItemsResponse'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -2170,7 +2292,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TeamMemberListItemsResponse'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -2190,7 +2312,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MyRecruitApplicationListItemsResponse'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -2240,7 +2362,7 @@ paths:
                     example: '지원 취소 실패했습니다.'
                   error_code:
                     $ref: '#/components/schemas/ProjectRecruitApplicationCancelErrorCode'
-        '403':
+        '401':
           description: No Auth
           content:
             application/json:
@@ -2446,16 +2568,16 @@ components:
     ProfileBlock:
       type: object
       required:
-            - id
+            - member_id
             - profile_image
             - nickname
             - simple_description
-            - member_main_attribute
-            - member_job_experience
+            - member_main_attributes
+            - member_job_experiences
             - project_info
             - link
       properties:
-        id:
+        member_id:
           type: integer
           description: 맴버 id
           example: 1
@@ -2473,38 +2595,35 @@ components:
           description: '한줄 소개'
           nullable: true
           example: '사이플 관리자 입니다.'
-        member_main_attribute:
+        member_main_attributes:
           type: array
+          nullable: true
           items:
             type: object
             required:
-              - id
+              - member_attribute_type_id
               - display_name
-              - name
             properties:
-              id:
+              member_attribute_type_id:
                 type: integer
                 description: '성격 id'
                 example: 1
-              name:
-                type: string
-                description: '고유 name'
-                example: 'kind'
               display_name:
                 type: string
                 description: '사용자에게 보여주는 성격 정보'
                 example: '친절해요'
-        member_job_experience:
+        member_job_experiences:
           type: array
+          nullable: true
           items:
             type: object
             required:
-              - id
+              - job_id
               - display_name
-              - year
-              - month
+              - total_year
+              - total_month
             properties:
-              id:
+              job_id:
                 type: integer
                 description: 'Job id'
                 example: 1
@@ -2512,11 +2631,11 @@ components:
                 type: string
                 description: '사용자에게 보여주는 직업 정보'
                 example: '백엔드'
-              year:
+              total_year:
                 type: integer
                 description: '연차'
                 example: 2
-              month:
+              total_month:
                 type: integer
                 description: '개월'
                 example: 4
@@ -2717,8 +2836,9 @@ components:
         - id
         - name
         - display_name
-        - category_id
-        - category_name
+        - parent_id
+        - parent_name
+        - parent_display_name
       properties:
         id:
           type: integer
@@ -2732,14 +2852,21 @@ components:
           type: string
           description: What user will see
           example: '프론트엔더'
-        category_id:
+        parent_id:
           type: integer
           description: Job category id for search
           example: 1
-        category_name:
+          nullable: true
+        parent_name:
+          type: string
+          description: searching for wording
+          example: Developer
+          nullable: true
+        parent_display_name:
           type: string
           description: Job category what user will see
           example: '개발'
+          nullable: true
 
     CommonConstanceTypeItemsResponse:
       type: object
@@ -3312,7 +3439,7 @@ components:
         - extra_information
         - jobs
         - experience
-        - status_display_name
+        - detail_status
         - image
         - leader_info
         - bookmark_count
@@ -3372,8 +3499,8 @@ components:
                 example: True
         experience:
           $ref: '#/components/schemas/ProjectExperienceType'
-        status_display_name:
-          $ref: '#/components/schemas/ProjectDetailStatusDisplayName'
+        detail_status:
+          $ref: '#/components/schemas/ProjectDetailStatus'
         image:
           type: string
           description: '이미지 사진'
@@ -3398,10 +3525,10 @@ components:
       type: string
       enum: ['FAIL', 'SUCCESS', 'LEFT']
 
-    ProjectDetailStatusDisplayName:
+    ProjectDetailStatus:
       type: string
-      enum: ['모집중', '진행중', '완료', '실패', '삭제']
-      example: '진행중'
+      enum: ['RECRUITING', 'WORKING', 'DONE', 'FAIL', 'UNKNOWN']
+      example: 'WORKING'
 
     ProjectHomeErrorResponse:
       type: object
