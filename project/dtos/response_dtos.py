@@ -43,3 +43,7 @@ class ProjectDetailResponse(BaseModel):
 class ProjectRecruitEligibleResponse(BaseModel):
     is_available: bool = Field(description='Is available')
     jobs: Optional[conlist(ProjectJobAvailabilities)] = Field(description='Project Job Availabilities')
+
+
+class ProjectJobRecruitApplyResponse(BaseModel):
+    message: str = Field(description='Result Message')

@@ -4,7 +4,10 @@ from common.common_exceptions import PydanticAPIException
 from common.common_paginations.cursor_pagination_helpers import get_objects_with_cursor_pagination
 from common.common_utils import format_utc
 from job.dtos.model_dtos import ProjectJobAvailabilities
-from job.services.project_job_services import get_current_active_project_job_recruitments
+from job.services.project_job_services import (
+    ProjectJobRecruitService,
+    get_current_active_project_job_recruitments,
+)
 from member.permissions import IsMemberLogin
 from member.services import get_member_info_block
 from project.consts import (
@@ -17,11 +20,13 @@ from project.dtos.request_dtos import (
     CreateProjectJob,
     CreateProjectRequest,
     HomeProjectListRequest,
+    ProjectJobRecruitApplyRequest,
 )
 from project.dtos.response_dtos import (
     HomeProjectListResponse,
     ProjectCreationResponse,
     ProjectDetailResponse,
+    ProjectJobRecruitApplyResponse,
     ProjectRecruitEligibleResponse,
 )
 from project.dtos.service_dtos import ProjectCreationData
@@ -216,4 +221,36 @@ class ProjectRecruitEligibleAPIView(APIView):
                 jobs=project_job_availabilities or None,
             ).model_dump(),
             status=200
+        )
+
+
+class ProjectJobRecruitApplyAPIView(APIView):
+    permission_classes = [
+        IsMemberLogin,
+    ]
+
+    def post(self, request, project_id: int, job_id: int):
+        try:
+            project_job_recruit_apply_request = ProjectJobRecruitApplyRequest.of(request.data)
+        except ValidationError as e:
+            raise PydanticAPIException(
+                status_code=400,
+                error_summary=InvalidInputResponseErrorStatus.INVALID_RECRUIT_JOB_INPUT_ERROR_400.label,
+                error_code=InvalidInputResponseErrorStatus.INVALID_RECRUIT_JOB_INPUT_ERROR_400.value,
+                errors=e.errors(),
+            )
+
+        project_job_recruit_service = ProjectJobRecruitService(
+            project_id=project_id,
+            job_id=job_id,
+            member_id=request.member.id,
+        )
+        recruit_result = project_job_recruit_service.recruit(project_job_recruit_apply_request.description)
+        if recruit_result.exception:
+            raise recruit_result.exception
+        return Response(
+            ProjectJobRecruitApplyResponse(
+                message='모집 신청이 완료되었습니다.',
+            ).model_dump(),
+            status=200,
         )

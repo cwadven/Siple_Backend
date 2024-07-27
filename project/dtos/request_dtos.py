@@ -262,3 +262,13 @@ class CreateProjectRequest(BaseModel):
         return cls(
             **request,
         )
+
+
+class ProjectJobRecruitApplyRequest(BaseModel):
+    description: str = Field(description='지원서 내용')
+
+    @classmethod
+    def of(cls, request: QueryDict):
+        return cls(
+            **request,
+        )

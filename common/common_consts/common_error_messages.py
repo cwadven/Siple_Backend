@@ -23,3 +23,6 @@ class InvalidInputResponseErrorStatus(StrValueLabel):
     INVALID_PRE_SIGNED_URL_INPUT_DATA_400 = (
         '400-pre_signed_url_input_data-00001', ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label
     )
+    INVALID_RECRUIT_JOB_INPUT_ERROR_400 = (
+        '400-invalid_recruit_job_input-00001', ErrorMessage.INVALID_INPUT_ERROR_MESSAGE.label
+    )
