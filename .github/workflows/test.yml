@@ -49,6 +49,7 @@ jobs:
       run: |
         psql -h localhost -U postgres -c "CREATE DATABASE siple_test;"
         psql -h localhost -U postgres -d siple_test -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+        psql -h localhost -U postgres -d siple -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 
     - name: Install Dependencies
       env:
