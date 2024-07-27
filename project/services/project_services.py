@@ -4,13 +4,11 @@ from typing import (
     Type,
 )
 
-from django.contrib.postgres.search import TrigramSimilarity
 from django.db import (
     DatabaseError,
     transaction,
 )
 from django.db.models import (
-    F,
     Max,
     Q,
     QuerySet
@@ -56,10 +54,9 @@ def get_filtered_project_qs(title: Optional[str],
     q = Q()
     qs = get_active_project_qs()
     if title:
-        qs = qs.annotate(
-            similarity=TrigramSimilarity(F('title'), title)
-        ).filter(
-            similarity__gt=0.1
+        qs = qs.extra(
+            where=[""""project_project"."title"::text ILIKE %s"""],
+            params=[f'%{title}%'],
         )
 
     if category_ids:
