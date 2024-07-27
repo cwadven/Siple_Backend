@@ -127,6 +127,28 @@ class ProjectFilterTestCase(TestCase):
         self.assertEqual(qs.count(), 1)
         self.assertEqual(qs.first(), self.project1)
 
+    def test_filter_by_title_between(self):
+        # Given: Title filter
+        title = 'Project'
+
+        # When: Filtering projects
+        qs = get_filtered_project_qs(
+            title=title,
+            category_ids=None,
+            job_ids=None,
+            jobs_operator=None,
+            experience=None,
+            min_hours_per_week=None,
+            max_hours_per_week=None,
+            min_duration_month=None,
+            max_duration_month=None,
+            current_recruit_status=None
+        )
+
+        # Then: Only project with title starting with 'Project' should be returned
+        self.assertEqual(qs.count(), 2)
+        self.assertEqual(set(qs.values_list('id', flat=True)), {self.project1.id, self.project2.id})
+
     def test_filter_by_category(self):
         # Given: Category filter
         category_ids = [self.project1.category.id]
