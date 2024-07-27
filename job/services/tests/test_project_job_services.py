@@ -98,7 +98,7 @@ class ProjectJobRecruitmentTestCase(TestCase):
 
         # Then: We should get a dictionary mapping project IDs to active recruitment jobs, excluding non-recruiting projects
         expected_result = {
-            1: [
+            self.project1.id: [
                 ProjectJobRecruitInfo(
                     job_id=self.job_backend.id,
                     job_name=self.job_backend.name,
@@ -116,7 +116,7 @@ class ProjectJobRecruitmentTestCase(TestCase):
                     recruit_status=ProjectRecruitmentStatus.RECRUITING.value,
                 )
             ],
-            2: [
+            self.project2.id: [
                 ProjectJobRecruitInfo(
                     job_id=self.job_backend.id,
                     job_name=self.job_backend.name,

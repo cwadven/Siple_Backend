@@ -15,6 +15,15 @@ jobs:
         ports:
           - 6379:6379
 
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: siple
+        ports:
+          - 5432:5432
+
     strategy:
       max-parallel: 4
       matrix:
@@ -26,18 +35,44 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        DJANGO_SETTINGS_MODULE: config.settings.local
+        DJANGO_SETTINGS_MODULE: config.settings.test
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Wait for Postgres
+      run: |
+        while ! pg_isready -h localhost -U postgres; do
+          echo "Waiting for postgres..."
+          sleep 1
+        done
+
+    - name: Set up Database Extension
+      env:
+        DJANGO_SETTINGS_MODULE: config.settings.test
+        PGPASSWORD: postgres
+      run: |
+        psql -h localhost -U postgres -c "CREATE DATABASE siple_test;"
+        psql -h localhost -U postgres -d siple_test -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+        psql -h localhost -U postgres -d siple -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+
     - name: Install Dependencies
+      env:
+        DJANGO_SETTINGS_MODULE: config.settings.test
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+
     - name: Database Settings
+      env:
+        DJANGO_SETTINGS_MODULE: config.settings.test
       run: |
         python manage.py migrate --noinput
+
     - name: Run Tests
+      env:
+        DJANGO_SETTINGS_MODULE: config.settings.test
       run: |
-        python manage.py test --noinput
+        python manage.py test --keepdb

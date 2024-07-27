@@ -1,3 +1,4 @@
+from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from member.models import Member
 from project.consts import (
@@ -205,6 +206,15 @@ class Project(models.Model):
 
     def __str__(self):
         return self.title
+
+    class Meta:
+        indexes = [
+            GinIndex(
+                fields=['title'],
+                name='title_gin_idx',
+                opclasses=['gin_trgm_ops'],
+            ),
+        ]
 
 
 class ProjectManagementPermission(models.Model):

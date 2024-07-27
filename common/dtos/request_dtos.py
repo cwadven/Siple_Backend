@@ -10,7 +10,6 @@ class GetPreSignedURLRequest(BaseModel):
 
     @classmethod
     def of(cls, request: QueryDict):
-        print(request)
         return cls(
             file_name=request.get('file_name'),
         )

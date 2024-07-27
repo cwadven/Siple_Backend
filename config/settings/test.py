@@ -29,9 +29,16 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3', # noqa
-    }
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "siple",
+        "USER": "postgres",
+        "PASSWORD": "postgres",
+        "HOST": "localhost",
+        "PORT": "5432",
+        "TEST": {
+            "NAME": "siple_test"
+        }
+    },
 }
 
 # CELERY SETTINGS
