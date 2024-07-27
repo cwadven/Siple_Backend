@@ -3,7 +3,10 @@ from unittest.mock import patch
 
 from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
 from common.common_testcase_helpers.member.testcase_helpers import create_member_attribute_type_for_testcase
-from common.models import BlackListWord
+from common.models import (
+    BlackListSection,
+    BlackListWord,
+)
 from django.test import TestCase
 from member.dtos.model_dtos import (
     JobExperience,
@@ -92,8 +95,14 @@ class MemberCheckMemberInfoTestCase(TestCase):
 
     def test_check_nickname_valid_when_invalid(self):
         # Given: test 라는 nickname 을 가진 Member 생성
+        black_list_section, _ = BlackListSection.objects.get_or_create(
+            name='닉네임',
+            defaults={
+                'description': '닉네임 블랙리스트',
+            }
+        )
         BlackListWord.objects.get_or_create(
-            black_list_section_id=1,
+            black_list_section=black_list_section,
             wording='test',
         )
 
