@@ -2,10 +2,14 @@ from collections import (
     defaultdict,
 )
 from typing import (
+    Dict,
     List,
+    Optional,
+    Set,
 )
 
 from job.dtos.model_dtos import (
+    ProjectJobAvailabilities,
     ProjectJobRecruitInfo,
 )
 from job.models import (
@@ -47,6 +51,16 @@ def get_current_active_project_job_recruitments(project_ids: list[int]) -> dict[
         )
 
     return project_recruitment_jobs_by_project_id
+
+
+def get_current_project_job_availabilities(project_id: int, job_ids: Optional[Set[int]] = None) -> Dict[int, ProjectJobAvailabilities]:
+    job_recruits_by_project_id = get_current_active_project_job_recruitments([project_id])
+    project_job_availabilities_by_job_id = {}
+    for job_recruit in job_recruits_by_project_id.get(project_id, []):
+        if job_ids and job_recruit.job_id not in job_ids:
+            continue
+        project_job_availabilities_by_job_id[job_recruit.job_id] = ProjectJobAvailabilities.from_recruit_info(job_recruit)
+    return project_job_availabilities_by_job_id
 
 
 def get_active_job_categories() -> list[JobCategory]:

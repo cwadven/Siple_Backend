@@ -9,12 +9,14 @@ from django.test import (
     TestCase,
 )
 from job.dtos.model_dtos import (
+    ProjectJobAvailabilities,
     ProjectJobRecruitInfo,
 )
 from job.services.project_job_services import (
     get_active_job_categories,
     get_active_jobs,
     get_current_active_project_job_recruitments,
+    get_current_project_job_availabilities,
 )
 from member.models import (
     Member,
@@ -164,3 +166,78 @@ class GetActiveJobs(TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].id, self.valid_job.id)
         self.assertEqual(result[0].name, 'valid')
+
+
+class GetCurrentProjectJobAvailabilitiesTest(TestCase):
+    def setUp(self):
+        self.member = Member.objects.create_user(username='test', nickname='test')
+        self.job_backend = create_job_for_testcase('backend')
+        self.job_frontend = create_job_for_testcase('frontend')
+        self.project = Project.objects.create(title='Project', created_member_id=self.member.id)
+        self.project_recruitment_job_for_backend = create_project_with_active_job_recruitment_for_testcase(
+            project=self.project,
+            job_id=self.job_backend.id,
+            created_member_id=self.member.id,
+            total_limit=2,
+            current_recruited=1,
+        )
+        self.project_recruitment_job_for_backend.recruit_status = ProjectRecruitmentStatus.RECRUITING.value
+        self.project_recruitment_job_for_backend.save()
+        self.project_recruitment_job_for_frontend = create_project_with_active_job_recruitment_for_testcase(
+            project=self.project,
+            job_id=self.job_frontend.id,
+            created_member_id=self.member.id,
+            total_limit=1,
+            current_recruited=1,
+        )
+        self.project_recruitment_job_for_frontend.recruit_status = ProjectRecruitmentStatus.RECRUIT_FINISH.value
+        self.project_recruitment_job_for_frontend.save()
+
+    def test_get_current_project_job_availabilities_with_job_ids_exists(self):
+        # Given:
+        # When: We call the function with a project ID and a set of job IDs
+        result = get_current_project_job_availabilities(
+            self.project.id,
+            {self.job_backend.id, self.job_frontend.id},
+        )
+
+        # Then: The result should only contain availabilities for the specified job IDs
+        self.assertEqual(
+            result,
+            {
+                self.job_backend.id: ProjectJobAvailabilities(id=self.job_backend.id, display_name=self.job_backend.display_name, is_available=True),
+                self.job_frontend.id: ProjectJobAvailabilities(id=self.job_frontend.id, display_name=self.job_frontend.display_name, is_available=False),
+            }
+        )
+
+    def test_get_current_project_job_availabilities_with_job_ids_not_exists(self):
+        # Given:
+        # When: We call the function with a project ID and a set of job IDs
+        result = get_current_project_job_availabilities(
+            self.project.id,
+        )
+
+        # Then: The result should only contain availabilities for the specified all job IDs
+        self.assertEqual(
+            result,
+            {
+                self.job_backend.id: ProjectJobAvailabilities(id=self.job_backend.id, display_name=self.job_backend.display_name, is_available=True),
+                self.job_frontend.id: ProjectJobAvailabilities(id=self.job_frontend.id, display_name=self.job_frontend.display_name, is_available=False),
+            }
+        )
+
+    def test_get_current_project_job_availabilities_with_job_ids_specific_exists(self):
+        # Given:
+        # When: We call the function with a project ID and a set of job IDs
+        result = get_current_project_job_availabilities(
+            self.project.id,
+            {self.job_backend.id},
+        )
+
+        # Then: The result should only contain availabilities for the specified job ID
+        self.assertEqual(
+            result,
+            {
+                self.job_backend.id: ProjectJobAvailabilities(id=self.job_backend.id, display_name=self.job_backend.display_name, is_available=True),
+            }
+        )
