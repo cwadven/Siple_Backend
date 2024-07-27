@@ -27,3 +27,8 @@ class ProjectJobAvailabilities(BaseModel):
             display_name=recruit_info.job_display_name,
             is_available=not bool(recruit_info.total_limit) or bool(recruit_info.total_limit > recruit_info.current_recruited),
         )
+
+
+class RecruitResult(BaseModel):
+    is_recruited: bool = Field(..., description='Recruit result')
+    message: str = Field(..., description='Recruit message')
