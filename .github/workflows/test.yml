@@ -48,7 +48,7 @@ jobs:
         POSTGRES_PASSWORD: postgres
         POSTGRES_DB: siple_test
       run: |
-        psql -h 127.0.0.1 -U postgres -d siple_test -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+        psql -U postgres -d siple_test -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 
     - name: Install Dependencies
       run: |
