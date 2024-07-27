@@ -4,6 +4,7 @@ from unittest.mock import (
     patch,
 )
 
+from common.common_exceptions import CommonAPIException
 from common.common_testcase_helpers.job.testcase_helpers import (
     create_job_category_for_testcase,
     create_job_for_testcase,
@@ -32,6 +33,14 @@ from member.models import (
 from project.consts import (
     ProjectRecruitApplicationStatus,
     ProjectRecruitmentStatus,
+)
+from project.exceptions import (
+    ProjectCurrentRecruitStatusNotRecruitingException,
+    ProjectLatestRecruitNotFoundErrorException,
+    ProjectRecruitProjectNotFoundErrorException,
+    ProjectRecruitmentJobAlreadyRecruitedException,
+    ProjectRecruitmentJobNotAvailableException,
+    ProjectRecruitmentJobRecruitingNotFoundErrorException,
 )
 from project.models import (
     Project,
@@ -314,10 +323,9 @@ class ProjectJobRecruitServiceTestCase(TestCase):
         # When: validate_recruit 메서드 호출
         result = self.service.validate_recruit()
 
-        # Then: '프로젝트가 존재하지 않습니다.' 메시지와 함께 is_recruited가 False여야 함
+        # Then:
         self.assertIsInstance(result, RecruitResult)
-        self.assertEqual(result.is_recruited, False)
-        self.assertEqual(result.message, '프로젝트가 존재하지 않습니다.')
+        self.assertIsInstance(result.exception, ProjectRecruitProjectNotFoundErrorException)
 
     def test_validate_recruit_not_recruiting(self):
         # Given: 프로젝트가 존재하지만 모집중이 아닌 경우
@@ -327,10 +335,9 @@ class ProjectJobRecruitServiceTestCase(TestCase):
         # When: validate_recruit 메서드 호출
         result = self.service.validate_recruit()
 
-        # Then: '아직 모집중이 아닙니다.' 메시지와 함께 is_recruited가 False여야 함
+        # Then:
         self.assertIsInstance(result, RecruitResult)
-        self.assertEqual(result.is_recruited, False)
-        self.assertEqual(result.message, '아직 모집중이 아닙니다.')
+        self.assertIsInstance(result.exception, ProjectLatestRecruitNotFoundErrorException)
 
     @patch('job.services.project_job_services.ProjectCurrentRecruitStatus.is_recruiting')
     def test_validate_recruit_not_recruiting_by_current_recruit_status(self, mock_is_recruiting):
@@ -340,10 +347,9 @@ class ProjectJobRecruitServiceTestCase(TestCase):
         # When: validate_recruit 메서드 호출
         result = self.service.validate_recruit()
 
-        # Then: '모집이 마감되었습니다.' 메시지와 함께 is_recruited가 False여야 함
+        # Then:
         self.assertIsInstance(result, RecruitResult)
-        self.assertEqual(result.is_recruited, False)
-        self.assertEqual(result.message, '모집이 마감되었습니다.')
+        self.assertIsInstance(result.exception, ProjectCurrentRecruitStatusNotRecruitingException)
         mock_is_recruiting.assert_called_once()
 
     def test_validate_recruit_no_job_available(self):
@@ -353,20 +359,31 @@ class ProjectJobRecruitServiceTestCase(TestCase):
         # When: validate_recruit 메서드 호출
         result = self.service.validate_recruit()
 
-        # Then: '모집이 마감되었습니다.' 메시지와 함께 is_recruited가 False여야 함
+        # Then:
         self.assertIsInstance(result, RecruitResult)
-        self.assertEqual(result.is_recruited, False)
-        self.assertEqual(result.message, '모집이 마감되었습니다.')
+        self.assertIsInstance(result.exception, ProjectRecruitmentJobNotAvailableException)
+
+    @patch.object(ProjectJobRecruitService, 'project_recruitment_job_recruiting', new_callable=PropertyMock)
+    def test_validate_recruit_project_recruitment_job_invalid(self,
+                                                              mock_project_recruitment_job_recruiting):
+        # Given: 프로젝트가 존재하고 모집중이지만 해당 job이 없는 경우
+        mock_project_recruitment_job_recruiting.return_value = None
+
+        # When: validate_recruit 메서드 호출
+        result = self.service.validate_recruit()
+
+        # Then:
+        self.assertIsInstance(result, RecruitResult)
+        self.assertIsInstance(result.exception, ProjectRecruitmentJobRecruitingNotFoundErrorException)
 
     def test_validate_recruit_success(self):
         # Given:
         # When: validate_recruit 메서드 호출
         result = self.service.validate_recruit()
 
-        # Then: '지원 가능합니다.' 메시지와 함께 is_recruited가 True여야 함
+        # Then:
         self.assertIsInstance(result, RecruitResult)
-        self.assertEqual(result.is_recruited, True)
-        self.assertEqual(result.message, '지원 가능합니다.')
+        self.assertEqual(result.exception, None)
 
     @patch('job.services.project_job_services.ProjectJobRecruitService.get_or_create_recruit_application')
     @patch('job.services.project_job_services.ProjectJobRecruitService.validate_recruit')
@@ -381,10 +398,9 @@ class ProjectJobRecruitServiceTestCase(TestCase):
         # When: validate_recruit 메서드 호출
         result = self.service.recruit('지원 요청 메시지')
 
-        # Then: '지원 가능합니다.' 메시지와 함께 is_recruited가 True여야 함
+        # Then:
         self.assertIsInstance(result, RecruitResult)
-        self.assertEqual(result.is_recruited, True)
-        self.assertEqual(result.message, '지원이 완료되었습니다.')
+        self.assertEqual(result.exception, None)
         mock_get_or_create_recruit_application.assert_called_once_with(
             '지원 요청 메시지'
         )
@@ -395,15 +411,14 @@ class ProjectJobRecruitServiceTestCase(TestCase):
                                                           mock_validate_recruit,
                                                           mock_get_or_create_recruit_application):
         # Given: validate_recruit 메서드가 False 반환하도록 설정
-        mock_validate_recruit.return_value = RecruitResult(is_recruited=False, message='False Test')
+        mock_validate_recruit.return_value = RecruitResult(exception=CommonAPIException())
 
         # When: validate_recruit 메서드 호출
         result = self.service.recruit('지원 요청 메시지')
 
-        # Then: '지원 가능합니다.' 메시지와 함께 is_recruited가 True여야 함
+        # Then:
         self.assertIsInstance(result, RecruitResult)
-        self.assertEqual(result.is_recruited, False)
-        self.assertEqual(result.message, 'False Test')
+        self.assertIsInstance(result.exception, CommonAPIException)
         mock_get_or_create_recruit_application.assert_not_called()
 
     def test_get_or_create_recruit_application_already_applied(self):
@@ -418,20 +433,19 @@ class ProjectJobRecruitServiceTestCase(TestCase):
         # When: get_or_create_recruit_application 메서드 호출
         result = self.service.get_or_create_recruit_application('지원하기.')
 
-        # Then: '이미 지원한 모집입니다.' 메시지와 함께 is_recruited가 False여야 함
+        # Then:
         self.assertIsInstance(result, RecruitResult)
-        self.assertEqual(result.is_recruited, False)
-        self.assertEqual(result.message, '이미 지원한 모집입니다.')
+        self.assertIsInstance(result.exception, ProjectRecruitmentJobAlreadyRecruitedException)
 
     def test_get_or_create_recruit_application_success(self):
         # Given: 프로젝트와 job이 존재하고, 지원하지 않은 경우
         # When: get_or_create_recruit_application 메서드 호출
         result = self.service.get_or_create_recruit_application('지원하기.')
 
-        # Then: '지원이 완료되었습니다.' 메시지와 함께 is_recruited
+        # Then:
         self.assertIsInstance(result, RecruitResult)
-        self.assertEqual(result.is_recruited, True)
-        self.assertEqual(result.message, '지원이 완료되었습니다.')
+        self.assertIsInstance(result.project_recruit_application_id, int)
+        self.assertEqual(result.exception, None)
 
     @patch('job.services.project_job_services.Project.objects.get')
     def test_project_exists(self, mock_project_get):

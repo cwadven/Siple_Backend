@@ -23,6 +23,14 @@ from project.consts import (
     ProjectRecruitApplicationStatus,
     ProjectRecruitmentStatus,
 )
+from project.exceptions import (
+    ProjectCurrentRecruitStatusNotRecruitingException,
+    ProjectLatestRecruitNotFoundErrorException,
+    ProjectRecruitProjectNotFoundErrorException,
+    ProjectRecruitmentJobAlreadyRecruitedException,
+    ProjectRecruitmentJobNotAvailableException,
+    ProjectRecruitmentJobRecruitingNotFoundErrorException,
+)
 from project.models import (
     Project,
     ProjectRecruitApplication,
@@ -102,37 +110,29 @@ class ProjectJobRecruitService:
     def validate_recruit(self) -> RecruitResult:
         if not self.project:
             return RecruitResult(
-                is_recruited=False,
-                message='프로젝트가 존재하지 않습니다.',
+                exception=ProjectRecruitProjectNotFoundErrorException(),
             )
         if not self.project.latest_project_recruitment_id:
             return RecruitResult(
-                is_recruited=False,
-                message='아직 모집중이 아닙니다.',
+                exception=ProjectLatestRecruitNotFoundErrorException(),
             )
         if not ProjectCurrentRecruitStatus.is_recruiting(self.project.current_recruit_status):
             return RecruitResult(
-                is_recruited=False,
-                message='모집이 마감되었습니다.',
+                exception=ProjectCurrentRecruitStatusNotRecruitingException(),
             )
         if not self.is_job_available():
-            RecruitResult(
-                is_recruited=False,
-                message='모집이 마감되었습니다.',
+            return RecruitResult(
+                exception=ProjectRecruitmentJobNotAvailableException(),
             )
         if not self.project_recruitment_job_recruiting:
             return RecruitResult(
-                is_recruited=False,
-                message='모집이 마감되었습니다.',
+                exception=ProjectRecruitmentJobRecruitingNotFoundErrorException(),
             )
-        return RecruitResult(
-            is_recruited=True,
-            message='지원 가능합니다.',
-        )
+        return RecruitResult()
 
     def recruit(self, request_message: str) -> RecruitResult:
         recruit_result = self.validate_recruit()
-        if not recruit_result.is_recruited:
+        if recruit_result.exception:
             return recruit_result
 
         return self.get_or_create_recruit_application(request_message)
@@ -148,12 +148,10 @@ class ProjectJobRecruitService:
         )
         if not is_created:
             return RecruitResult(
-                is_recruited=False,
-                message='이미 지원한 모집입니다.',
+                exception=ProjectRecruitmentJobAlreadyRecruitedException(),
             )
         return RecruitResult(
-            is_recruited=True,
-            message='지원이 완료되었습니다.',
+            project_recruit_application_id=project_recruit_application.id,
         )
 
 

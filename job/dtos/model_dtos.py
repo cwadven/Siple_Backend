@@ -1,4 +1,7 @@
-from typing import Optional
+from typing import (
+    Any,
+    Optional,
+)
 
 from pydantic import (
     BaseModel,
@@ -30,5 +33,5 @@ class ProjectJobAvailabilities(BaseModel):
 
 
 class RecruitResult(BaseModel):
-    is_recruited: bool = Field(..., description='Recruit result')
-    message: str = Field(..., description='Recruit message')
+    project_recruit_application_id: Optional[int] = Field(None, description='Project Recruit Application ID')
+    exception: Optional[Any] = Field(None, description='Error object')  # type: CommonAPIException
