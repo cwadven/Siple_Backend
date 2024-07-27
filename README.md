@@ -261,7 +261,12 @@ sudo /etc/init.d/celeryd restart
 
 ## Database
 
-Not Ready
+### Postgres
+
+```shell
+# Set gin index for extension 
+psql -U postgres -d database_name -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+```
 
 ## Setting CRON
 
