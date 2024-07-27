@@ -4,21 +4,30 @@ from common.common_exceptions import PydanticAPIException
 from common.common_paginations.cursor_pagination_helpers import get_objects_with_cursor_pagination
 from common.common_utils import format_utc
 from job.dtos.model_dtos import ProjectJobAvailabilities
-from job.services.project_job_services import get_current_active_project_job_recruitments
+from job.services.project_job_services import (
+    ProjectJobRecruitService,
+    get_current_active_project_job_recruitments,
+)
 from member.permissions import IsMemberLogin
 from member.services import get_member_info_block
-from project.consts import ProjectDetailStatus
+from project.consts import (
+    ProjectCurrentRecruitStatus,
+    ProjectDetailStatus,
+)
 from project.cursor_criteria.cursor_criteria import HomeProjectListCursorCriteria
 from project.dtos.model_dtos import ProjectListItem
 from project.dtos.request_dtos import (
     CreateProjectJob,
     CreateProjectRequest,
     HomeProjectListRequest,
+    ProjectJobRecruitApplyRequest,
 )
 from project.dtos.response_dtos import (
     HomeProjectListResponse,
     ProjectCreationResponse,
     ProjectDetailResponse,
+    ProjectJobRecruitApplyResponse,
+    ProjectRecruitEligibleResponse,
 )
 from project.dtos.service_dtos import ProjectCreationData
 from project.exceptions import ProjectNotFoundErrorException
@@ -181,4 +190,67 @@ class ProjectDetailAPIView(APIView):
                 first_recruited_at=format_utc(project.created_at),
             ).model_dump(),
             status=200
+        )
+
+
+class ProjectRecruitEligibleAPIView(APIView):
+    permission_classes = [
+        IsMemberLogin,
+    ]
+
+    def get(self, request, project_id: int):
+        project = get_active_project(project_id)
+        if not project:
+            raise ProjectNotFoundErrorException()
+        if not ProjectCurrentRecruitStatus.is_recruiting(project.current_recruit_status):
+            return Response(
+                ProjectRecruitEligibleResponse(
+                    is_available=False,
+                    jobs=None,
+                ).model_dump(),
+                status=200
+            )
+        job_recruits_by_project_id = get_current_active_project_job_recruitments([project.id])
+        project_job_availabilities = [
+            ProjectJobAvailabilities.from_recruit_info(job_recruit)
+            for job_recruit in job_recruits_by_project_id.get(project.id, [])
+        ]
+        return Response(
+            ProjectRecruitEligibleResponse(
+                is_available=any(job.is_available for job in project_job_availabilities),
+                jobs=project_job_availabilities or None,
+            ).model_dump(),
+            status=200
+        )
+
+
+class ProjectJobRecruitApplyAPIView(APIView):
+    permission_classes = [
+        IsMemberLogin,
+    ]
+
+    def post(self, request, project_id: int, job_id: int):
+        try:
+            project_job_recruit_apply_request = ProjectJobRecruitApplyRequest.of(request.data)
+        except ValidationError as e:
+            raise PydanticAPIException(
+                status_code=400,
+                error_summary=InvalidInputResponseErrorStatus.INVALID_RECRUIT_JOB_INPUT_ERROR_400.label,
+                error_code=InvalidInputResponseErrorStatus.INVALID_RECRUIT_JOB_INPUT_ERROR_400.value,
+                errors=e.errors(),
+            )
+
+        project_job_recruit_service = ProjectJobRecruitService(
+            project_id=project_id,
+            job_id=job_id,
+            member_id=request.member.id,
+        )
+        recruit_result = project_job_recruit_service.recruit(project_job_recruit_apply_request.description)
+        if recruit_result.exception:
+            raise recruit_result.exception
+        return Response(
+            ProjectJobRecruitApplyResponse(
+                message='모집 신청이 완료되었습니다.',
+            ).model_dump(),
+            status=200,
         )

@@ -11,3 +11,39 @@ class ProjectNotFoundErrorException(CommonAPIException):
     status_code = 404
     default_detail = '프로젝트가 존재하지 않습니다.'
     default_code = 'project-not-found-error'
+
+
+class ProjectRecruitProjectNotFoundErrorException(CommonAPIException):
+    status_code = 404
+    default_detail = '프로젝트가 존재하지 않습니다.'
+    default_code = 'project-recruit-project-not-found-error'
+
+
+class ProjectLatestRecruitNotFoundErrorException(CommonAPIException):
+    status_code = 404
+    default_detail = '아직 모집중이 아닙니다.'
+    default_code = 'project-recruit-latest-not-found-error'
+
+
+class ProjectCurrentRecruitStatusNotRecruitingException(CommonAPIException):
+    status_code = 400
+    default_detail = '모집이 마감되었습니다.'
+    default_code = 'project-recruit-not-recruiting-error'
+
+
+class ProjectRecruitmentJobNotAvailableException(CommonAPIException):
+    status_code = 404
+    default_detail = '모집이 마감되었습니다.'
+    default_code = 'project-recruit-job-not-found-error'
+
+
+class ProjectRecruitmentJobRecruitingNotFoundErrorException(CommonAPIException):
+    status_code = 404
+    default_detail = '모집이 존재하지 않습니다.'
+    default_code = 'project-recruit-job-recruiting-not-found-error'
+
+
+class ProjectRecruitmentJobAlreadyRecruitedException(CommonAPIException):
+    status_code = 400
+    default_detail = '이미 지원한 모집입니다.'
+    default_code = 'project-recruit-job-already-recruited-error'

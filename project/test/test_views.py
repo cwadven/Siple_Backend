@@ -8,6 +8,7 @@ from common.common_consts.common_error_messages import (
     ErrorMessage,
     InvalidInputResponseErrorStatus,
 )
+from common.common_exceptions import CommonAPIException
 from common.common_testcase_helpers.job.testcase_helpers import create_job_for_testcase
 from common.common_utils import format_utc
 from common.common_utils.error_utils import generate_pydantic_error_detail
@@ -16,11 +17,13 @@ from freezegun import freeze_time
 from job.dtos.model_dtos import (
     ProjectJobAvailabilities,
     ProjectJobRecruitInfo,
+    RecruitResult,
 )
 from member.dtos.model_dtos import MemberInfoBlock
 from member.exceptions import LoginRequiredException
 from member.models import Member
 from project.consts import (
+    ProjectCurrentRecruitStatus,
     ProjectDetailStatus,
     ProjectJobExperienceType,
     ProjectJobSearchOperator,
@@ -691,4 +694,370 @@ class ProjectDetailAPIViewTests(APITestCase):
                 'error_code': 'project-not-found-error',
                 'errors': None,
             }
+        )
+
+
+class ProjectRecruitEligibleAPIViewTests(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.member = Member.objects.create_user(username='test1', nickname='test1')
+        self.category = ProjectCategory.objects.create(
+            display_name='카테고리 테스트',
+            name='category_test',
+        )
+        self.project = Project.objects.create(
+            title='project',
+            category=self.category,
+            hours_per_week=10,
+            created_member_id=self.member.id,
+        )
+        self.project_recruitment = ProjectRecruitment.objects.create(
+            project_id=self.project.id,
+            times_project_recruit=1,
+            recruit_status=ProjectRecruitmentStatus.RECRUITING.value,
+            created_member_id=self.member.id,
+        )
+        self.project_recruitment.created_at = datetime(2021, 1, 1, 10, 0, 0)
+        self.project_recruitment.save()
+        self.job1 = create_job_for_testcase('job1')
+        self.job2 = create_job_for_testcase('job2')
+
+    def test_get_project_recruit_eligible_should_raise_when_not_login(self):
+        # Given: Not login
+        # When: Get request
+        response = self.client.get(
+            reverse('project:project_recruit_eligible', kwargs={'project_id': self.project.id}),
+        )
+
+        # Then: Error 401
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        # And: Error info
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': '로그인이 필요합니다.',
+                'error_code': 'login-required',
+                'errors': None,
+            }
+        )
+
+    def test_get_project_recruit_eligible_should_raise_when_project_not_exist(self):
+        # Given:
+        project_id = 0
+        # And: Login
+        self.client.force_login(self.member)
+
+        # When: Get request
+        response = self.client.get(
+            reverse('project:project_recruit_eligible', kwargs={'project_id': project_id}),
+        )
+
+        # Then: Error 404
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        # And: Error info
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': '프로젝트가 존재하지 않습니다.',
+                'error_code': 'project-not-found-error',
+                'errors': None,
+            }
+        )
+
+    def test_get_project_recruit_eligible_should_return_false_when_project_current_recruit_status_not_recruiting(self):
+        # Given: Login
+        self.client.force_login(self.member)
+        # And: Project current recruit status is not recruiting
+        self.project.current_recruit_status = ProjectCurrentRecruitStatus.RECRUITED.value
+        self.project.save()
+
+        # When: Get request
+        response = self.client.get(
+            reverse('project:project_recruit_eligible', kwargs={'project_id': self.project.id}),
+        )
+
+        # Then: Success
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertDictEqual(
+            response.json(),
+            {
+                'is_available': False,
+                'jobs': None,
+            }
+        )
+
+    @patch('project.views.get_current_active_project_job_recruitments')
+    def test_get_project_recruit_eligible_should_return_true_when_job_has_least_one_true(self,
+                                                                                         mock_get_current_active_project_job_recruitments):
+        # Given: Login
+        self.client.force_login(self.member)
+        mock_get_current_active_project_job_recruitments.return_value = {
+            self.project.id: [
+                ProjectJobRecruitInfo(
+                    job_id=self.job1.id,
+                    job_name=self.job1.name,
+                    job_display_name=self.job1.display_name,
+                    total_limit=5,
+                    current_recruited=2,
+                    recruit_status=ProjectRecruitmentStatus.RECRUITING.value,
+                ),
+                ProjectJobRecruitInfo(
+                    job_id=self.job2.id,
+                    job_name=self.job2.name,
+                    job_display_name=self.job2.display_name,
+                    total_limit=5,
+                    current_recruited=5,
+                    recruit_status=ProjectRecruitmentStatus.RECRUIT_FINISH.value,
+                ),
+            ]
+        }
+
+        # When: Get request
+        response = self.client.get(
+            reverse('project:project_recruit_eligible', kwargs={'project_id': self.project.id}),
+        )
+
+        # Then: Success
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertDictEqual(
+            response.json(),
+            {
+                'is_available': True,
+                'jobs': [
+                    {
+                        'id': self.job1.id,
+                        'display_name': self.job1.display_name,
+                        'is_available': True,
+                    },
+                    {
+                        'id': self.job2.id,
+                        'display_name': self.job2.display_name,
+                        'is_available': False,
+                    },
+                ],
+            }
+        )
+
+    @patch('project.views.get_current_active_project_job_recruitments')
+    def test_get_project_recruit_eligible_should_return_false_when_job_is_all_false(self,
+                                                                                    mock_get_current_active_project_job_recruitments):
+        # Given: Login
+        self.client.force_login(self.member)
+        mock_get_current_active_project_job_recruitments.return_value = {
+            self.project.id: [
+                ProjectJobRecruitInfo(
+                    job_id=self.job1.id,
+                    job_name=self.job1.name,
+                    job_display_name=self.job1.display_name,
+                    total_limit=5,
+                    current_recruited=5,
+                    recruit_status=ProjectRecruitmentStatus.RECRUIT_FINISH.value,
+                ),
+                ProjectJobRecruitInfo(
+                    job_id=self.job2.id,
+                    job_name=self.job2.name,
+                    job_display_name=self.job2.display_name,
+                    total_limit=5,
+                    current_recruited=5,
+                    recruit_status=ProjectRecruitmentStatus.RECRUIT_FINISH.value,
+                ),
+            ]
+        }
+
+        # When: Get request
+        response = self.client.get(
+            reverse('project:project_recruit_eligible', kwargs={'project_id': self.project.id}),
+        )
+
+        # Then: Success
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertDictEqual(
+            response.json(),
+            {
+                'is_available': False,
+                'jobs': [
+                    {
+                        'id': self.job1.id,
+                        'display_name': self.job1.display_name,
+                        'is_available': False,
+                    },
+                    {
+                        'id': self.job2.id,
+                        'display_name': self.job2.display_name,
+                        'is_available': False,
+                    },
+                ],
+            }
+        )
+
+
+class ProjectJobRecruitApplyAPIViewTests(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.member = Member.objects.create_user(username='test1', nickname='test1')
+        self.category = ProjectCategory.objects.create(
+            display_name='카테고리 테스트',
+            name='category_test',
+        )
+        self.project = Project.objects.create(
+            title='project',
+            category=self.category,
+            hours_per_week=10,
+            created_member_id=self.member.id,
+        )
+        self.project_recruitment = ProjectRecruitment.objects.create(
+            project_id=self.project.id,
+            times_project_recruit=1,
+            recruit_status=ProjectRecruitmentStatus.RECRUITING.value,
+            created_member_id=self.member.id,
+        )
+        self.project_recruitment.created_at = datetime(2021, 1, 1, 10, 0, 0)
+        self.project_recruitment.save()
+        self.job1 = create_job_for_testcase('job1')
+        self.job2 = create_job_for_testcase('job2')
+        self.data = {
+            'description': 'Test, Test',
+        }
+
+    def test_project_job_recruit_apply_should_raise_when_not_login(self):
+        # Given: Not login
+        # When: Post request
+        response = self.client.post(
+            reverse(
+                'project:project_recruit_job_apply',
+                kwargs={
+                    'project_id': self.project.id,
+                    'job_id': self.job1.id,
+                }
+            ),
+            data=self.data,
+        )
+
+        # Then: Error 401
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        # And: Error info
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': '로그인이 필요합니다.',
+                'error_code': 'login-required',
+                'errors': None,
+            }
+        )
+
+    def test_project_job_recruit_apply_should_raise_when_invalid_input(self):
+        # Given:
+        self.client.force_login(self.member)
+        data = {
+            'invalid_key': 'invalid_value',
+        }
+        # When: Post request
+        response = self.client.post(
+            reverse(
+                'project:project_recruit_job_apply',
+                kwargs={
+                    'project_id': self.project.id,
+                    'job_id': self.job1.id,
+                }
+            ),
+            data=data,
+            format='json',
+        )
+
+        # Then: Error
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # And: Error info
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': '입력값을 다시 한번 확인해주세요.',
+                'error_code': '400-invalid_recruit_job_input-00001',
+                'errors': {'description': ['이 값은 필수 입력 사항입니다.']},
+            }
+        )
+
+    @patch('project.views.ProjectJobRecruitService')
+    def test_project_job_recruit_apply_should_raise_when_recruit_result_exception_exists(self,
+                                                                                         mock_project_job_recruit_service):
+        # Given:
+        self.client.force_login(self.member)
+        # And:
+        mock_project_job_recruit_service.return_value.recruit.return_value = RecruitResult(
+            exception=CommonAPIException(),
+        )
+
+        # When: Post request
+        response = self.client.post(
+            reverse(
+                'project:project_recruit_job_apply',
+                kwargs={
+                    'project_id': self.project.id,
+                    'job_id': self.job1.id,
+                }
+            ),
+            data=self.data,
+            format='json',
+        )
+
+        # Then: Error
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # And: Error info CommonAPIException
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': '예상치 못한 에러가 발생했습니다.',
+                'error_code': 'unexpected-error',
+                'errors': None,
+            }
+        )
+        # And: Verify the mocked services are called
+        mock_project_job_recruit_service.assert_called_once_with(
+            project_id=self.project.id,
+            job_id=self.job1.id,
+            member_id=self.member.id,
+        )
+        # And: Verify the recruit is called
+        mock_project_job_recruit_service.return_value.recruit.assert_called_once_with(
+            self.data['description'],
+        )
+
+    @patch('project.views.ProjectJobRecruitService')
+    def test_project_job_recruit_apply_should_success(self,
+                                                      mock_project_job_recruit_service):
+        # Given:
+        self.client.force_login(self.member)
+        # And:
+        mock_project_job_recruit_service.return_value.recruit.return_value = RecruitResult()
+
+        # When: Post request
+        response = self.client.post(
+            reverse(
+                'project:project_recruit_job_apply',
+                kwargs={
+                    'project_id': self.project.id,
+                    'job_id': self.job1.id,
+                }
+            ),
+            data=self.data,
+            format='json',
+        )
+
+        # Then: Error
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # And: Error info CommonAPIException
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': '모집 신청이 완료되었습니다.',
+            }
+        )
+        # And: Verify the mocked services are called
+        mock_project_job_recruit_service.assert_called_once_with(
+            project_id=self.project.id,
+            job_id=self.job1.id,
+            member_id=self.member.id,
+        )
+        # And: Verify the recruit is called
+        mock_project_job_recruit_service.return_value.recruit.assert_called_once_with(
+            self.data['description'],
         )

@@ -1,4 +1,7 @@
-from typing import Optional
+from typing import (
+    Any,
+    Optional,
+)
 
 from pydantic import (
     BaseModel,
@@ -27,3 +30,8 @@ class ProjectJobAvailabilities(BaseModel):
             display_name=recruit_info.job_display_name,
             is_available=not bool(recruit_info.total_limit) or bool(recruit_info.total_limit > recruit_info.current_recruited),
         )
+
+
+class RecruitResult(BaseModel):
+    project_recruit_application_id: Optional[int] = Field(None, description='Project Recruit Application ID')
+    exception: Optional[Any] = Field(None, description='Error object')  # type: CommonAPIException

@@ -6,6 +6,10 @@ class ProjectCurrentRecruitStatus(StrValueLabel):
     ADDITIONAL_RECRUITING = ('ADDITIONAL_RECRUITING', '추가 모집중')
     RECRUITED = ('RECRUITED', '모집 완료')
 
+    @classmethod
+    def is_recruiting(cls, current_recruit_status: str) -> bool:
+        return current_recruit_status in {cls.RECRUITING.value, cls.ADDITIONAL_RECRUITING.value}
+
 
 class ProjectStatus(StrValueLabel):
     READY = ('READY', '모집중')
