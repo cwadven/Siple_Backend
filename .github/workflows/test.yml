@@ -42,13 +42,6 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Wait for Postgres
-      run: |
-        until pg_isready -h 127.0.0.1 -p 5432; do
-        echo "Waiting for postgres to be ready..."
-        sleep 1
-        done
-
     - name: Set up Database
       env:
         POSTGRES_USER: postgres
