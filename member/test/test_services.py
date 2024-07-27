@@ -92,7 +92,7 @@ class MemberCheckMemberInfoTestCase(TestCase):
 
     def test_check_nickname_valid_when_invalid(self):
         # Given: test 라는 nickname 을 가진 Member 생성
-        BlackListWord.objects.create(
+        BlackListWord.objects.get_or_create(
             black_list_section_id=1,
             wording='test',
         )
