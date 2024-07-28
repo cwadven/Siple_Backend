@@ -46,7 +46,7 @@ CACHEOPS_REDIS = data['CACHEOPS_REDIS']
 CACHEOPS_DEFAULTS = {
     'timeout': 60 * 15
 }
-CACHEOPS = {}
+CACHEOPS = data['CACHEOPS']
 
 # CELERY SETTINGS
 timezone = 'Asia/Seoul'
