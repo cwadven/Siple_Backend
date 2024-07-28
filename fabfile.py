@@ -43,6 +43,7 @@ def generate_env(c):
             'port': int(_get_or_set_environment('CACHEOPS_REDIS_PORT')),
             'db': int(_get_or_set_environment('CACHEOPS_REDIS_DB')),
         },
+        'CACHEOPS': _get_or_set_environment('CACHEOPS'),
         'CACHES_LOCATION': _get_or_set_environment('CACHES_LOCATION'),
         'DATABASE': {
             'ENGINE': _get_or_set_environment('DB_ENGINE'),
