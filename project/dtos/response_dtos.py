@@ -47,3 +47,8 @@ class ProjectRecruitEligibleResponse(BaseModel):
 
 class ProjectJobRecruitApplyResponse(BaseModel):
     message: str = Field(description='Result Message')
+
+
+class ProjectActiveRecruitJobSelfApplicationResponse(BaseModel):
+    has_applied: bool = Field(description='Has Applied')
+    description: str = Field(description='Self Application Description')
