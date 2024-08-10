@@ -28,6 +28,7 @@ from project.dtos.response_dtos import (
     ProjectDetailResponse,
     ProjectJobRecruitApplyResponse,
     ProjectRecruitEligibleResponse,
+    ProjectActiveRecruitJobSelfApplicationResponse,
 )
 from project.dtos.service_dtos import ProjectCreationData
 from project.exceptions import ProjectNotFoundErrorException
@@ -251,6 +252,31 @@ class ProjectJobRecruitApplyAPIView(APIView):
         return Response(
             ProjectJobRecruitApplyResponse(
                 message='모집 신청이 완료되었습니다.',
+            ).model_dump(),
+            status=200,
+        )
+
+
+class ProjectActiveRecruitJobSelfApplicationAPIView(APIView):
+    permission_classes = [
+        IsMemberLogin,
+    ]
+
+    def get(self, request, project_id: int, job_id: int):
+        project_job_recruit_service = ProjectJobRecruitService(
+            project_id=project_id,
+            job_id=job_id,
+            member_id=request.member.id,
+        )
+        latest_member_recruit_application = project_job_recruit_service.get_latest_member_recruit_application()
+        return Response(
+            ProjectActiveRecruitJobSelfApplicationResponse(
+                has_applied=latest_member_recruit_application is not None,
+                description=(
+                    latest_member_recruit_application.request_message
+                    if latest_member_recruit_application
+                    else None
+                ),
             ).model_dump(),
             status=200,
         )

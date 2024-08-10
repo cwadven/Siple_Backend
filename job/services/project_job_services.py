@@ -137,6 +137,12 @@ class ProjectJobRecruitService:
 
         return self.get_or_create_recruit_application(request_message)
 
+    def get_latest_member_recruit_application(self) -> Optional[ProjectRecruitApplication]:
+        return ProjectRecruitApplication.objects.filter(
+            project_recruitment_job_id=self.project_recruitment_job_recruiting.id,
+            member_id=self.member_id,
+        ).last()
+
     def get_or_create_recruit_application(self, request_message: str) -> RecruitResult:
         project_recruit_application, is_created = ProjectRecruitApplication.objects.get_or_create(
             project_recruitment_job_id=self.project_recruitment_job_recruiting.id,
