@@ -38,7 +38,7 @@ from project.dtos.service_dtos import ProjectCreationData
 from project.models import (
     Project,
     ProjectCategory,
-    ProjectRecruitment,
+    ProjectRecruitment, ProjectRecruitApplication, ProjectRecruitmentJob,
 )
 from pydantic import ValidationError
 from rest_framework import status
@@ -1042,9 +1042,9 @@ class ProjectJobRecruitApplyAPIViewTests(APITestCase):
             format='json',
         )
 
-        # Then: Error
+        # Then: Success
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # And: Error info CommonAPIException
+        # And: Success info
         self.assertDictEqual(
             response.json(),
             {
@@ -1061,3 +1061,140 @@ class ProjectJobRecruitApplyAPIViewTests(APITestCase):
         mock_project_job_recruit_service.return_value.recruit.assert_called_once_with(
             self.data['description'],
         )
+
+
+class ProjectActiveRecruitJobSelfApplicationAPIViewTests(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.member = Member.objects.create_user(username='test1', nickname='test1')
+        self.category = ProjectCategory.objects.create(
+            display_name='카테고리 테스트',
+            name='category_test',
+        )
+        self.project = Project.objects.create(
+            title='project',
+            category=self.category,
+            hours_per_week=10,
+            created_member_id=self.member.id,
+        )
+        self.project_recruitment = ProjectRecruitment.objects.create(
+            project_id=self.project.id,
+            times_project_recruit=1,
+            recruit_status=ProjectRecruitmentStatus.RECRUITING.value,
+            created_member_id=self.member.id,
+        )
+        self.project_recruitment.created_at = datetime(2021, 1, 1, 10, 0, 0)
+        self.project_recruitment.save()
+        self.job1 = create_job_for_testcase('job1')
+        self.job2 = create_job_for_testcase('job2')
+        self.project_recruitment_job = ProjectRecruitmentJob.objects.create(
+            project_recruitment=self.project_recruitment,
+            job=self.job1,
+            total_limit=10,
+            created_member_id=self.member.id,
+        )
+
+    def test_project_active_recruit_job_self_application_should_raise_when_not_login(self):
+        # Given: Not login
+        # When: Get request
+        response = self.client.get(
+            reverse(
+                'project:project_active_recruit_applications_self',
+                kwargs={
+                    'project_id': self.project.id,
+                    'job_id': self.job1.id,
+                }
+            ),
+        )
+
+        # Then: Error 401
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        # And: Error info
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': '로그인이 필요합니다.',
+                'error_code': 'login-required',
+                'errors': None,
+            }
+        )
+
+    @patch('project.views.ProjectJobRecruitService')
+    def test_project_active_recruit_job_self_application_success_when_without_application(self,
+                                                                                          mock_project_job_recruit_service):
+        # Given:
+        self.client.force_login(self.member)
+        # And: Mock get_latest_member_recruit_application
+        mock_project_job_recruit_service.return_value.get_latest_member_recruit_application.return_value = None
+
+        # When: Post request
+        response = self.client.get(
+            reverse(
+                'project:project_active_recruit_applications_self',
+                kwargs={
+                    'project_id': self.project.id,
+                    'job_id': self.job1.id,
+                }
+            ),
+        )
+
+        # Then:
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # And: No application reply
+        self.assertDictEqual(
+            response.json(),
+            {
+                'has_applied': False,
+                'description': None,
+            }
+        )
+        # And: Verify the mocked services are called
+        mock_project_job_recruit_service.assert_called_once_with(
+            project_id=self.project.id,
+            job_id=self.job1.id,
+            member_id=self.member.id,
+        )
+        # And: Verify the get_latest_member_recruit_application is called
+        mock_project_job_recruit_service.return_value.get_latest_member_recruit_application.assert_called_once()
+
+    @patch('project.views.ProjectJobRecruitService')
+    def test_project_active_recruit_job_self_application_success_when_with_application(self,
+                                                                                       mock_project_job_recruit_service):
+        # Given:
+        self.client.force_login(self.member)
+        # And: Mock get_latest_member_recruit_application
+        mock_project_job_recruit_service.return_value.get_latest_member_recruit_application.return_value = ProjectRecruitApplication.objects.create(
+            project_recruitment_job=self.project_recruitment_job,
+            member_id=self.member.id,
+            request_message='Test',
+        )
+
+        # When: Post request
+        response = self.client.get(
+            reverse(
+                'project:project_active_recruit_applications_self',
+                kwargs={
+                    'project_id': self.project.id,
+                    'job_id': self.job1.id,
+                }
+            ),
+        )
+
+        # Then:
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # And: Have application reply
+        self.assertDictEqual(
+            response.json(),
+            {
+                'has_applied': True,
+                'description': 'Test',
+            }
+        )
+        # And: Verify the mocked services are called
+        mock_project_job_recruit_service.assert_called_once_with(
+            project_id=self.project.id,
+            job_id=self.job1.id,
+            member_id=self.member.id,
+        )
+        # And: Verify the get_latest_member_recruit_application is called
+        mock_project_job_recruit_service.return_value.get_latest_member_recruit_application.assert_called_once()
