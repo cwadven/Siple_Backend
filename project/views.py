@@ -27,7 +27,8 @@ from project.dtos.response_dtos import (
     ProjectCreationResponse,
     ProjectDetailResponse,
     ProjectJobRecruitApplyResponse,
-    ProjectRecruitEligibleResponse, ProjectActiveRecruitJobSelfApplicationResponse,
+    ProjectRecruitEligibleResponse,
+    ProjectActiveRecruitJobSelfApplicationResponse,
 )
 from project.dtos.service_dtos import ProjectCreationData
 from project.exceptions import ProjectNotFoundErrorException

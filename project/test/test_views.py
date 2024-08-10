@@ -38,7 +38,9 @@ from project.dtos.service_dtos import ProjectCreationData
 from project.models import (
     Project,
     ProjectCategory,
-    ProjectRecruitment, ProjectRecruitApplication, ProjectRecruitmentJob,
+    ProjectRecruitment,
+    ProjectRecruitApplication,
+    ProjectRecruitmentJob,
 )
 from pydantic import ValidationError
 from rest_framework import status

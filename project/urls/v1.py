@@ -4,7 +4,8 @@ from project.views import (
     HomeProjectListAPIView,
     ProjectDetailAPIView,
     ProjectJobRecruitApplyAPIView,
-    ProjectRecruitEligibleAPIView, ProjectActiveRecruitJobSelfApplicationAPIView,
+    ProjectRecruitEligibleAPIView,
+    ProjectActiveRecruitJobSelfApplicationAPIView,
 )
 
 app_name = 'project'
