@@ -501,6 +501,22 @@ class ProjectJobRecruitServiceTestCase(TestCase):
             recruit_status=ProjectRecruitmentStatus.RECRUITING.value
         )
 
+    @patch('job.services.project_job_services.ProjectRecruitApplication.objects.filter')
+    def test_get_latest_member_recruit_application(self, mock_project_recruit_application_filter):
+        # Given: 프로젝트와 job이 존재하고, 지원한 경우
+        recruit_application = MagicMock()
+        mock_project_recruit_application_filter.return_value.last.return_value = recruit_application
+
+        # When: get_member_recruit_application 메서드 호출
+        result = self.service.get_latest_member_recruit_application()
+
+        # Then: 반환된 결과가 ProjectRecruitApplication 인스턴스여야 함
+        self.assertEqual(result, recruit_application)
+        mock_project_recruit_application_filter.assert_called_once_with(
+            project_recruitment_job_id=self.project_recruitment_job_for_backend.id,
+            member_id=self.member.id,
+        )
+
     @patch.object(ProjectJobRecruitService, 'current_project_job_availabilities', new_callable=PropertyMock)
     def test_is_job_available_job_not_in_availabilities(self, mock_current_project_job_availabilities):
         # Given: current_project_job_availabilities에 job_id가 없는 경우
