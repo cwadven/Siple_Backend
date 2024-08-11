@@ -22,6 +22,7 @@ from job.dtos.model_dtos import (
 )
 from job.services.project_job_services import (
     ProjectJobRecruitService,
+    ProjectRecruitService,
     get_active_job_categories,
     get_active_jobs,
     get_current_active_project_job_recruitments,
@@ -553,3 +554,70 @@ class ProjectJobRecruitServiceTestCase(TestCase):
 
         # Then: 반환된 결과가 False여야 함
         self.assertEqual(result, False)
+
+
+class ProjectRecruitServiceTestCase(TestCase):
+
+    def setUp(self):
+        # Given: Create Members
+        self.member = Member.objects.create_user(username='test', nickname='test')
+        # And: Create Jobs
+        self.job_backend = create_job_for_testcase('backend')
+        self.job_frontend = create_job_for_testcase('frontend')
+        # And: Create project
+        self.project = Project.objects.create(title='Project', created_member_id=self.member.id)
+        # And: Create ProjectRecruitment
+        self.project_recruitment = ProjectRecruitment.objects.create(
+            project=self.project,
+            times_project_recruit=1,
+            recruit_status=ProjectRecruitmentStatus.RECRUITING.value,
+            created_member=self.member,
+        )
+        # And: Set project latest_project_recruitment
+        self.project.latest_project_recruitment = self.project_recruitment
+        self.project.save()
+        # And Create ProjectRecruitmentJob for backend and set it to recruiting
+        self.project_recruitment_job_for_backend = create_project_with_active_job_recruitment_for_testcase(
+            project=self.project,
+            job_id=self.job_backend.id,
+            created_member_id=self.member.id,
+            total_limit=2,
+            current_recruited=1,
+        )
+        self.project_recruitment_job_for_backend.project_recruitment = self.project_recruitment
+        self.project_recruitment_job_for_backend.recruit_status = ProjectRecruitmentStatus.RECRUITING.value
+        self.project_recruitment_job_for_backend.save()
+        # And Create ProjectRecruitmentJob for frontend and set it to recruited finish
+        self.project_recruitment_job_for_frontend = create_project_with_active_job_recruitment_for_testcase(
+            project=self.project,
+            job_id=self.job_frontend.id,
+            created_member_id=self.member.id,
+            total_limit=1,
+            current_recruited=1,
+        )
+        self.project_recruitment_job_for_frontend.project_recruitment = self.project_recruitment
+        self.project_recruitment_job_for_frontend.recruit_status = ProjectRecruitmentStatus.RECRUIT_FINISH.value
+        self.project_recruitment_job_for_frontend.save()
+        # And: Add backend to project latest_project_recruitment_jobs
+        self.project.latest_project_recruitment_jobs.add(self.job_backend)
+        # And: Create ProjectRecruitService
+        self.service = ProjectRecruitService(
+            self.project.id,
+            self.member.id,
+        )
+
+    @patch('job.services.project_job_services.ProjectRecruitApplication.objects.filter')
+    def test_get_latest_member_recruit_application(self, mock_project_recruit_application_filter):
+        # Given: 프로젝트와 job이 존재하고, 지원한 경우
+        recruit_application = MagicMock()
+        mock_project_recruit_application_filter.return_value.last.return_value = recruit_application
+
+        # When: get_member_recruit_application 메서드 호출
+        result = self.service.get_latest_member_recruit_application()
+
+        # Then: 반환된 결과가 ProjectRecruitApplication 인스턴스여야 함
+        self.assertEqual(result, recruit_application)
+        mock_project_recruit_application_filter.assert_called_once_with(
+            project_recruitment_job__project_recruitment_project_id=self.project.id,
+            member_id=self.member.id,
+        )

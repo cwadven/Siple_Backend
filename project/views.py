@@ -6,6 +6,7 @@ from common.common_utils import format_utc
 from job.dtos.model_dtos import ProjectJobAvailabilities
 from job.services.project_job_services import (
     ProjectJobRecruitService,
+    ProjectRecruitService,
     get_current_active_project_job_recruitments,
 )
 from member.permissions import IsMemberLogin
@@ -24,11 +25,11 @@ from project.dtos.request_dtos import (
 )
 from project.dtos.response_dtos import (
     HomeProjectListResponse,
+    ProjectActiveRecruitJobSelfApplicationResponse,
     ProjectCreationResponse,
     ProjectDetailResponse,
     ProjectJobRecruitApplyResponse,
     ProjectRecruitEligibleResponse,
-    ProjectActiveRecruitJobSelfApplicationResponse,
 )
 from project.dtos.service_dtos import ProjectCreationData
 from project.exceptions import ProjectNotFoundErrorException
@@ -257,20 +258,24 @@ class ProjectJobRecruitApplyAPIView(APIView):
         )
 
 
-class ProjectActiveRecruitJobSelfApplicationAPIView(APIView):
+class ProjectActiveRecruitSelfApplicationAPIView(APIView):
     permission_classes = [
         IsMemberLogin,
     ]
 
-    def get(self, request, project_id: int, job_id: int):
-        project_job_recruit_service = ProjectJobRecruitService(
+    def get(self, request, project_id: int):
+        project_recruit_service = ProjectRecruitService(
             project_id=project_id,
-            job_id=job_id,
             member_id=request.member.id,
         )
-        latest_member_recruit_application = project_job_recruit_service.get_latest_member_recruit_application()
+        latest_member_recruit_application = project_recruit_service.get_latest_member_recruit_application()
         return Response(
             ProjectActiveRecruitJobSelfApplicationResponse(
+                job_id=(
+                    latest_member_recruit_application.project_recruitment_job.job_id
+                    if latest_member_recruit_application
+                    else None
+                ),
                 has_applied=latest_member_recruit_application is not None,
                 description=(
                     latest_member_recruit_application.request_message

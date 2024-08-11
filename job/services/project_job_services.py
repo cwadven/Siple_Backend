@@ -161,6 +161,18 @@ class ProjectJobRecruitService:
         )
 
 
+class ProjectRecruitService:
+    def __init__(self, project_id: int, member_id: int):
+        self.project_id = project_id
+        self.member_id = member_id
+
+    def get_latest_member_recruit_application(self) -> Optional[ProjectRecruitApplication]:
+        return ProjectRecruitApplication.objects.filter(
+            project_recruitment_job__project_recruitment_project_id=self.project_id,
+            member_id=self.member_id,
+        ).last()
+
+
 def get_active_job_categories() -> list[JobCategory]:
     return list(
         JobCategory.objects.filter(
