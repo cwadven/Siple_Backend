@@ -50,5 +50,6 @@ class ProjectJobRecruitApplyResponse(BaseModel):
 
 
 class ProjectActiveRecruitJobSelfApplicationResponse(BaseModel):
+    job_id: Optional[int] = Field(description='Job ID')
     has_applied: bool = Field(description='Has Applied')
     description: Optional[str] = Field(description='Self Application Description')
