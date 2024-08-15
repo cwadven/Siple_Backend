@@ -47,3 +47,15 @@ class ProjectRecruitmentJobAlreadyRecruitedException(CommonAPIException):
     status_code = 400
     default_detail = '이미 지원한 모집입니다.'
     default_code = 'project-recruit-job-already-recruited-error'
+
+
+class ProjectBookmarkMemberNotFoundException(CommonAPIException):
+    status_code = 403
+    default_detail = '로그인을 확인해 주세요.'
+    default_code = 'project-bookmark-member-not-found-error'
+
+
+class ProjectBookmarkCreationErrorException(CommonAPIException):
+    status_code = 400
+    default_detail = '북마크 생성 중 오류가 발생했습니다.'
+    default_code = 'project-bookmark-creation-unknown-error'
