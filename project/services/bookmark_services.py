@@ -5,8 +5,6 @@ from typing import (
 
 from django.contrib.auth.models import AnonymousUser
 from django.db import (
-    DatabaseError,
-    IntegrityError,
     transaction,
 )
 from django.utils import timezone
