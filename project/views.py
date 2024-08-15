@@ -172,6 +172,12 @@ class ProjectDetailAPIView(APIView):
             raise ProjectNotFoundErrorException()
         job_recruits_by_project_id = get_current_active_project_job_recruitments([project.id])
         member_info_block = get_member_info_block(project.created_member_id)
+        is_bookmarked = bool(
+            get_member_bookmarked_project_ids(
+                request.member,
+                [project.id]
+            )
+        )
         return Response(
             ProjectDetailResponse(
                 id=project.id,
@@ -190,6 +196,7 @@ class ProjectDetailAPIView(APIView):
                 image=project.main_image,
                 leader_info=member_info_block,
                 bookmark_count=project.bookmark_count,
+                is_bookmarked=is_bookmarked,
                 recent_recruited_at=(
                     (project.latest_project_recruitment and format_utc(project.latest_project_recruitment.created_at))
                     or format_utc(project.created_at)
