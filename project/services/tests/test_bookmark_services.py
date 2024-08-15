@@ -120,9 +120,10 @@ class BookmarkServiceTestCase(TestCase):
         self.project_id = 100
         self.service = BookmarkService(member_id=self.member_id)
 
+    @patch('project.services.bookmark_services.update_project_bookmark_count')
     @patch('project.services.bookmark_services.ProjectBookmark.save')
     @patch('project.services.bookmark_services.ProjectBookmark.objects.get_or_create')
-    def test_create_bookmark_success(self, mock_get_or_create, mock_save):
+    def test_create_bookmark_success(self, mock_get_or_create, mock_save, mock_update_project_bookmark_count):
         # Given: get_or_create가 정상적으로 작동하여 북마크가 생성되거나 가져와집니다.
         mock_bookmark = ProjectBookmark(member_id=self.member_id, project_id=self.project_id)
         mock_get_or_create.return_value = (mock_bookmark, True)
@@ -136,6 +137,7 @@ class BookmarkServiceTestCase(TestCase):
             project_id=self.project_id,
         )
         mock_save.assert_called_once()
+        mock_update_project_bookmark_count.assert_called_once_with(self.project_id)
         self.assertEqual(bookmark.is_deleted, False)
         self.assertEqual(bookmark.deleted_at, None)
 
@@ -149,8 +151,9 @@ class BookmarkServiceTestCase(TestCase):
             self.service.create_bookmark(project_id=self.project_id)
 
     @freeze_time('2021-01-01')
+    @patch('project.services.bookmark_services.update_project_bookmark_count')
     @patch('project.services.bookmark_services.ProjectBookmark.objects.filter')
-    def test_delete_bookmark_success(self, mock_filter):
+    def test_delete_bookmark_success(self, mock_filter, mock_update_project_bookmark_count):
         # Given: filter 메서드가 호출되면 mock된 쿼리셋이 반환됩니다.
         mock_query_set = mock_filter.return_value
 
@@ -166,6 +169,7 @@ class BookmarkServiceTestCase(TestCase):
             is_deleted=True,
             deleted_at=datetime(2021, 1, 1, 0, 0, tzinfo=timezone.utc),
         )
+        mock_update_project_bookmark_count.assert_called_once_with(self.project_id)
 
     def test_validate_member_failure(self):
         # Given: member_id가 유효하지 않은 경우를 설정합니다.
