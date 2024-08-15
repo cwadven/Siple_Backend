@@ -7,7 +7,6 @@ from unittest.mock import (
 )
 
 from django.contrib.auth.models import AnonymousUser
-from django.db import IntegrityError
 from django.test import TestCase
 from freezegun import freeze_time
 from member.models import Member
