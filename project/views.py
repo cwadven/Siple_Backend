@@ -26,6 +26,8 @@ from project.dtos.request_dtos import (
 from project.dtos.response_dtos import (
     HomeProjectListResponse,
     ProjectActiveRecruitJobSelfApplicationResponse,
+    ProjectBookmarkCreationResponse,
+    ProjectBookmarkDeletionResponse,
     ProjectCreationResponse,
     ProjectDetailResponse,
     ProjectJobRecruitApplyResponse,
@@ -33,7 +35,10 @@ from project.dtos.response_dtos import (
 )
 from project.dtos.service_dtos import ProjectCreationData
 from project.exceptions import ProjectNotFoundErrorException
-from project.services.bookmark_services import get_member_bookmarked_project_ids
+from project.services.bookmark_services import (
+    BookmarkService,
+    get_member_bookmarked_project_ids,
+)
 from project.services.project_recruit_services import get_project_recent_recruited_at
 from project.services.project_services import (
     ProjectCreationService,
@@ -282,6 +287,30 @@ class ProjectActiveRecruitSelfApplicationAPIView(APIView):
                     if latest_member_recruit_application
                     else None
                 ),
+            ).model_dump(),
+            status=200,
+        )
+
+
+class ProjectBookmarkAPIView(APIView):
+    permission_classes = [
+        IsMemberLogin,
+    ]
+
+    def post(self, request, project_id: int):
+        BookmarkService(request.member.id).create_bookmark(project_id)
+        return Response(
+            ProjectBookmarkCreationResponse(
+                message='북마크가 추가되었습니다.',
+            ).model_dump(),
+            status=200,
+        )
+
+    def delete(self, request, project_id: int):
+        BookmarkService(request.member.id).delete_bookmark(project_id)
+        return Response(
+            ProjectBookmarkDeletionResponse(
+                message='북마크가 제거되었습니다.',
             ).model_dump(),
             status=200,
         )
