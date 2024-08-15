@@ -1195,3 +1195,90 @@ class ProjectActiveRecruitSelfApplicationAPIViewTests(APITestCase):
         )
         # And: Verify the get_latest_member_recruit_application is called
         mock_project_recruit_service.return_value.get_latest_member_recruit_application.assert_called_once()
+
+
+class ProjectBookmarkAPIViewTests(APITestCase):
+    def setUp(self):
+        # Given: 테스트에 필요한 사용자 및 프로젝트 데이터 생성
+        self.member_id = 1
+        self.project_id = 100
+        self.client = APIClient()
+
+        self.member = Member.objects.create_user(username='test2', nickname='test2')
+
+        # Mocking the request.member.id to return self.member_id for the tests
+        self.client.force_authenticate(user=None)
+        self.project = Project.objects.create(
+            title='Project 1',
+            created_member_id=self.member.id,
+        )
+
+    def test_post_create_bookmark_raise_error_need_login(self):
+        # Given: Not login
+        # And: create_bookmark 메서드가 정상적으로 동작하도록 모킹
+        url = reverse('project:project_bookmark', kwargs={'project_id': self.project_id})
+
+        # When: POST 요청을 보냅니다.
+        response = self.client.post(url)
+
+        # Then: Error 401
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        # And: Error info
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': '로그인이 필요합니다.',
+                'error_code': 'login-required',
+                'errors': None,
+            }
+        )
+
+    def test_post_delete_bookmark_raise_error_need_login(self):
+        # Given: Not login
+        # And: create_bookmark 메서드가 정상적으로 동작하도록 모킹
+        url = reverse('project:project_bookmark', kwargs={'project_id': self.project_id})
+
+        # When: Delete 요청을 보냅니다.
+        response = self.client.delete(url)
+
+        # Then: Error 401
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        # And: Error info
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': '로그인이 필요합니다.',
+                'error_code': 'login-required',
+                'errors': None,
+            }
+        )
+
+    @patch('project.views.BookmarkService.create_bookmark')
+    def test_post_create_bookmark_success(self, mock_create_bookmark):
+        # Given: 사용자가 로그인 상태인 경우
+        self.client.force_login(self.member)
+        # And: create_bookmark 메서드가 정상적으로 동작하도록 모킹
+        url = reverse('project:project_bookmark', kwargs={'project_id': self.project_id})
+
+        # When: POST 요청을 보냅니다.
+        response = self.client.post(url)
+
+        # Then: 북마크가 정상적으로 생성되었는지 확인합니다.
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], '북마크가 추가되었습니다.')
+        mock_create_bookmark.assert_called_once_with(self.project_id)
+
+    @patch('project.views.BookmarkService.delete_bookmark')
+    def test_delete_remove_bookmark_success(self, mock_delete_bookmark):
+        # Given: 사용자가 로그인 상태인 경우
+        self.client.force_login(self.member)
+        # And: delete_bookmark 메서드가 정상적으로 동작하도록 모킹
+        url = reverse('project:project_bookmark', kwargs={'project_id': self.project_id})
+
+        # When: DELETE 요청을 보냅니다.
+        response = self.client.delete(url)
+
+        # Then: 북마크가 정상적으로 삭제되었는지 확인합니다.
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], '북마크가 제거되었습니다.')
+        mock_delete_bookmark.assert_called_once_with(self.project_id)
