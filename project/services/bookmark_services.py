@@ -5,7 +5,6 @@ from typing import (
 
 from django.contrib.auth.models import AnonymousUser
 from django.db import (
-    DatabaseError,
     transaction,
 )
 from django.utils import timezone
@@ -43,15 +42,16 @@ class BookmarkService(object):
     @transaction.atomic
     def create_bookmark(self, project_id: int) -> ProjectBookmark:
         try:
+            project = Project.objects.get(id=project_id)
             bookmark, is_created = ProjectBookmark.objects.get_or_create(
                 member_id=self.member_id,
-                project_id=project_id,
+                project_id=project.id,
             )
             bookmark.is_deleted = False
             bookmark.deleted_at = None
             bookmark.save()
-            update_project_bookmark_count(project_id)
-        except DatabaseError:
+            update_project_bookmark_count(project.id)
+        except Project.DoesNotExist:
             raise ProjectBookmarkCreationErrorException()
         return bookmark
 
