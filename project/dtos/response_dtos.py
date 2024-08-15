@@ -36,6 +36,7 @@ class ProjectDetailResponse(BaseModel):
     image: Optional[str] = Field(description='Image')
     leader_info: MemberInfoBlock = Field(description='Leader Info')
     bookmark_count: int = Field(description='Bookmark Count')
+    is_bookmarked: bool = Field(description='Is Bookmarked')
     recent_recruited_at: datetime = Field(description='Recent Recruited At')
     first_recruited_at: datetime = Field(description='First Recruited At')
 

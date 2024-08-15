@@ -561,6 +561,7 @@ class ProjectDetailAPIViewTests(APITestCase):
                     "member_job_experiences": mock_get_member_info_block.return_value.member_job_experiences,
                 },
                 "bookmark_count": self.project1.bookmark_count,
+                "is_bookmarked": False,
                 "recent_recruited_at": format_utc(self.project1.created_at),
                 "first_recruited_at": format_utc(self.project1.created_at),
             }
@@ -667,6 +668,7 @@ class ProjectDetailAPIViewTests(APITestCase):
                     "member_job_experiences": mock_get_member_info_block.return_value.member_job_experiences,
                 },
                 "bookmark_count": self.project1.bookmark_count,
+                "is_bookmarked": False,
                 "recent_recruited_at": format_utc(recruitment_datetime),
                 "first_recruited_at": format_utc(self.project1.created_at),
             }
@@ -678,6 +680,29 @@ class ProjectDetailAPIViewTests(APITestCase):
             mock_get_current_active_project_job_recruitments.return_value[self.project1.id][0]
         )
         mock_get_by_project.assert_called_once_with(self.project1)
+
+    @patch('project.views.get_member_bookmarked_project_ids')
+    def test_get_should_return_is_bookmarked_with_true(self, mock_get_member_bookmarked_project_ids):
+        # Given: Login
+        self.client.force_login(self.member)
+        # And: Bookmark project1
+        mock_get_member_bookmarked_project_ids.return_value = {self.project1.id}
+
+        # When: Get request
+        response = self.client.get(self._get_url(self.project1.id))
+
+        # Then: Verify the response status
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # And: Verify the mocked services are called
+        mock_get_member_bookmarked_project_ids.assert_called_once_with(
+            self.member,
+            [self.project1.id],
+        )
+        # And: Info
+        self.assertEqual(
+            response.json()['is_bookmarked'],
+            True
+        )
 
     def test_get_should_fail_when_project_not_exists(self):
         # Given:
