@@ -1,5 +1,6 @@
 from common.dtos.helper_dtos import (
     ConstanceDetailType,
+    ConstanceIconImageType,
     ConstanceType,
 )
 from job.models import (
@@ -55,6 +56,28 @@ CONSTANCE_TYPE_HELPER_MAPPER = {
     'job-category': ConstanceJobCategoryTypeHelper(),
     'project-category': ConstanceProjectCategoryTypeHelper(),
 }
+
+
+class ConstanceIconImageTypeHelper(object):
+    def get_constance_icon_image_types(self) -> list[ConstanceIconImageType]:
+        raise NotImplementedError
+
+
+class ConstanceProjectCategoryIconImageTypeHelper(ConstanceIconImageTypeHelper):
+    @staticmethod
+    def get_project_categories() -> list[ProjectCategory]:
+        return get_active_project_categories()
+
+    def get_constance_icon_image_types(self) -> list[ConstanceIconImageType]:
+        return [
+            ConstanceIconImageType(
+                id=category.id,
+                name=category.name,
+                display_name=category.display_name,
+                icon_image=category.icon_image,
+            )
+            for category in self.get_project_categories()
+        ]
 
 
 class ConstanceDetailTypeHelper(object):
