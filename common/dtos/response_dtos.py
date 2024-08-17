@@ -7,6 +7,7 @@ from typing import (
 
 from common.dtos.helper_dtos import (
     ConstanceDetailType,
+    ConstanceIconImageType,
     ConstanceType,
 )
 from pydantic import (
@@ -21,6 +22,10 @@ class HealthCheckResponse(BaseModel):
 
 class ConstanceTypeResponse(BaseModel):
     data: List[ConstanceType] = Field(default_factory=list, description='Constance type list')
+
+
+class ConstanceIconImageTypeResponse(BaseModel):
+    data: List[ConstanceIconImageType] = Field(default_factory=list, description='Constance icon image type list')
 
 
 class ConstanceDetailTypeResponse(BaseModel):
