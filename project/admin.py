@@ -1,4 +1,8 @@
 from django.contrib import admin
+from project.forms.admin_forms import (
+    ProjectAdminForm,
+    ProjectCategoryAdminForm,
+)
 from project.models import (
     Project,
     ProjectBookmark,
@@ -24,6 +28,7 @@ class ProjectAdmin(admin.ModelAdmin):
         'project_start_time',
         'project_end_time',
     ]
+    form = ProjectAdminForm
 
 
 class ProjectCategoryAdmin(admin.ModelAdmin):
@@ -32,6 +37,7 @@ class ProjectCategoryAdmin(admin.ModelAdmin):
         'name',
         'is_deleted',
     ]
+    form = ProjectCategoryAdminForm
 
 
 class ProjectManagementPermissionAdmin(admin.ModelAdmin):
