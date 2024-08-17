@@ -196,6 +196,7 @@ Default Gmail if you want to use other email services, you need to change the se
 - Input AWS_IAM_ACCESS_KEY:
 - Input AWS_IAM_SECRET_ACCESS_KEY:
 - Input AWS_S3_BUCKET_NAME:
+- Input AWS_CLOUD_FRONT_DOMAIN:
 - Input AWS_SQS_URL:
 ----------------------------------------
 AWS settings.
@@ -203,6 +204,7 @@ AWS settings.
 "AWS_IAM_ACCESS_KEY" Example: AKIAYXZ223G...
 "AWS_IAM_SECRET_ACCESS_KEY" Example: AKIAYXZ223G...
 "AWS_S3_BUCKET_NAME" Example: nully
+"AWS_CLOUD_FRONT_DOMAIN" Example: empty string or https://XXXX.cloudfront.net
 "AWS_SQS_URL" Example: https://sqs.ap-northeast-2.amazonaws.com/1234/nully
 ----------------------------------------
 

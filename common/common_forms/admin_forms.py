@@ -3,6 +3,7 @@ from common.common_utils import (
     upload_file_to_presigned_url,
 )
 from django import forms
+from django.conf import settings
 
 
 class PreSignedUrlAdminForm(forms.ModelForm):
@@ -60,7 +61,11 @@ class PreSignedUrlAdminForm(forms.ModelForm):
                     unique=str(instance.id) if instance.id else '0'
                 )
                 upload_file_to_presigned_url(response['url'], response['fields'], self.cleaned_data[key].file)
-                setattr(instance, value, response['url'] + response['fields']['key'])
+                if settings.AWS_CLOUD_FRONT_DOMAIN:
+                    url = settings.AWS_CLOUD_FRONT_DOMAIN + '/'
+                else:
+                    url = response['url']
+                setattr(instance, value, url + response['fields']['key'])
         if commit:
             instance.save()
         return instance
