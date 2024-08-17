@@ -36,22 +36,6 @@ class ConstanceJobCategoryTypeHelper(ConstanceTypeHelper):
         ]
 
 
-class ConstanceProjectCategoryTypeHelper(ConstanceTypeHelper):
-    @staticmethod
-    def get_project_categories() -> list[ProjectCategory]:
-        return get_active_project_categories()
-
-    def get_constance_types(self) -> list[ConstanceType]:
-        return [
-            ConstanceType(
-                id=category.id,
-                name=category.name,
-                display_name=category.display_name,
-            )
-            for category in self.get_project_categories()
-        ]
-
-
 CONSTANCE_TYPE_HELPER_MAPPER = {
     'job-category': ConstanceJobCategoryTypeHelper(),
 }
