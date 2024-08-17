@@ -27,8 +27,8 @@ class ProjectCategory(models.Model):
         verbose_name='카테고리명',
     )
     icon_image = models.TextField(
-        help_text='이미지',
-        verbose_name='이미지',
+        help_text='아이콘 이미지',
+        verbose_name='아이콘 이미지',
         null=True,
         blank=True,
     )
