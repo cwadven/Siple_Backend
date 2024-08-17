@@ -54,7 +54,6 @@ class ConstanceProjectCategoryTypeHelper(ConstanceTypeHelper):
 
 CONSTANCE_TYPE_HELPER_MAPPER = {
     'job-category': ConstanceJobCategoryTypeHelper(),
-    'project-category': ConstanceProjectCategoryTypeHelper(),
 }
 
 

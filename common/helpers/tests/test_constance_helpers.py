@@ -112,14 +112,6 @@ class ConstanceTypeMapperTest(TestCase):
         # Then: Assert the result
         self.assertIsInstance(constance_type_helper, ConstanceJobCategoryTypeHelper)
 
-    def test_constance_type_mapper_project_category(self):
-        # Given:
-        # When: Call
-        constance_type_helper = CONSTANCE_TYPE_HELPER_MAPPER['project-category']
-
-        # Then: Assert the result
-        self.assertIsInstance(constance_type_helper, ConstanceProjectCategoryTypeHelper)
-
 
 class ConstanceIconImageTypeHelperTest(TestCase):
     def test_get_constance_icon_image_types(self):
