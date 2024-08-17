@@ -5,6 +5,7 @@ from common.consts import IMAGE_CONSTANCE_TYPES
 from common.dtos.request_dtos import GetPreSignedURLRequest
 from common.dtos.response_dtos import (
     ConstanceDetailTypeResponse,
+    ConstanceIconImageTypeResponse,
     ConstanceTypeResponse,
     GetPreSignedURLResponse,
     HealthCheckResponse,
@@ -16,6 +17,7 @@ from common.exceptions import (
 from common.helpers.constance_helpers import (
     CONSTANCE_TYPE_HELPER_MAPPER,
     ConstanceJobDetailTypeHelper,
+    ConstanceProjectCategoryIconImageTypeHelper,
 )
 from member.permissions import IsMemberLogin
 from pydantic import ValidationError
@@ -33,6 +35,17 @@ class ConstanceJobTypeView(APIView):
         constance_job_detail_type_helper = ConstanceJobDetailTypeHelper()
         return Response(
             ConstanceDetailTypeResponse(data=constance_job_detail_type_helper.get_constance_detail_types()).model_dump(),
+            status=200,
+        )
+
+
+class ConstanceProjectCategoryTypeView(APIView):
+    def get(self, request):
+        constance_project_category_detail_type_helper = ConstanceProjectCategoryIconImageTypeHelper()
+        return Response(
+            ConstanceIconImageTypeResponse(
+                data=constance_project_category_detail_type_helper.get_constance_icon_image_types()
+            ).model_dump(),
             status=200,
         )
 

@@ -12,6 +12,13 @@ class ConstanceType(BaseModel):
     display_name: Optional[str] = Field(description='상수 표시 이름')
 
 
+class ConstanceIconImageType(BaseModel):
+    id: int = Field(description='상수 ID')
+    name: Optional[str] = Field(description='상수 이름')
+    display_name: Optional[str] = Field(description='상수 표시 이름')
+    icon_image: Optional[str] = Field(description='아이콘 이름 표시')
+
+
 class ConstanceDetailType(BaseModel):
     id: int = Field(description='상수 상세 ID')
     name: Optional[str] = Field(description='상수 상세 이름')

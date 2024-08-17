@@ -87,6 +87,22 @@ class ConstanceJobTypeViewTest(TestCase):
         mock_get_constance_detail_types.assert_called_once()
 
 
+class ConstanceProjectCategoryTypeViewTest(TestCase):
+    @patch('common.helpers.constance_helpers.ConstanceProjectCategoryIconImageTypeHelper.get_constance_icon_image_types')
+    def test_constance_job_type_should_return_job_detail_type_helper(self, mock_get_constance_icon_image_types):
+        # Given:
+        mock_get_constance_icon_image_types.return_value = []
+
+        # When:
+        response = self.client.get(reverse('common:constance_project_category_type'))
+
+        # Then:
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'data': []})
+        # And:
+        mock_get_constance_icon_image_types.assert_called_once()
+
+
 class GetPreSignedURLViewTest(APITestCase):
     def setUp(self):
         self.member = Member.objects.create_user(username='test1', nickname='test1')
