@@ -118,6 +118,17 @@ class BookmarkServiceTestCase(TestCase):
         self.project = Project.objects.create(title='Project', created_member_id=self.member.id)
         self.service = BookmarkService(member_id=self.member.id)
 
+    def test_get_my_active_bookmarks(self):
+        # Given: member가 북마크를 가지고 있을 때
+        ProjectBookmark.objects.get_or_create(member=self.member, project=self.project, is_deleted=False)
+
+        # When: get_my_active_bookmarks 메서드를 호출합니다.
+        bookmarks = self.service.get_my_active_bookmarks()
+
+        # Then: 북마크가 정상적으로 반환되는지 확인합니다.
+        self.assertEqual(len(bookmarks), 1)
+        self.assertEqual(bookmarks[0].project_id, self.project.id)
+
     @patch('project.services.bookmark_services.update_project_bookmark_count')
     @patch('project.services.bookmark_services.ProjectBookmark.save')
     @patch('project.services.bookmark_services.ProjectBookmark.objects.get_or_create')
