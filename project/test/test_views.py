@@ -530,7 +530,7 @@ class ProjectDetailAPIViewTests(APITestCase):
             response.json(),
             {
                 "id": self.project1.id,
-                "category_display_name": self.project1.category.display_name,
+                "category_id": self.project1.category_id,
                 "title": self.project1.title,
                 "description": self.project1.description,
                 "duration_month": self.project1.duration_month,
@@ -637,7 +637,7 @@ class ProjectDetailAPIViewTests(APITestCase):
             response.json(),
             {
                 "id": self.project1.id,
-                "category_display_name": self.project1.category.display_name,
+                "category_id": self.project1.category_id,
                 "title": self.project1.title,
                 "description": self.project1.description,
                 "duration_month": self.project1.duration_month,

@@ -24,7 +24,7 @@ class ProjectCreationResponse(BaseModel):
 
 class ProjectDetailResponse(BaseModel):
     id: int = Field(description='Project ID')
-    category_display_name: Optional[str] = Field(description='Category Display Name')
+    category_id: Optional[int] = Field(description='Category ID')
     title: str = Field(description='Project Title')
     description: str = Field(description='Project Description')
     duration_month: int = Field(description='Project Duration Month')
