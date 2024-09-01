@@ -1,5 +1,6 @@
 from collections import defaultdict
 from typing import (
+    DefaultDict,
     List,
     Optional,
     Type,
@@ -275,11 +276,11 @@ def get_active_project(project_id: int) -> Optional[Project]:
         pass
 
 
-def get_projects_leader_ids(project_ids: List[int]) -> dict[int, Set[int]]:
-    if not project_ids:
-        return {}
-
+def get_projects_leader_ids(project_ids: List[int]) -> DefaultDict[int, Set[int]]:
     leader_ids_by_project_id = defaultdict(set)
+
+    if not project_ids:
+        return leader_ids_by_project_id
 
     project_member_management_qs = ProjectMemberManagement.objects.filter(
         project_id__in=project_ids,
