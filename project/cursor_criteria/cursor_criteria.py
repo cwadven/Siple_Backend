@@ -6,3 +6,9 @@ class HomeProjectListCursorCriteria(CursorCriteria):
         'id__lt',
         'rearrangement_time__lte',
     ]
+
+
+class MyProjectBookmarkListCursorCriteria(CursorCriteria):
+    cursor_keys = [
+        'updated_at__lt',
+    ]
