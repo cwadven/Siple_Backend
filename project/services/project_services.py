@@ -1,7 +1,9 @@
+from collections import defaultdict
 from typing import (
     List,
     Optional,
     Type,
+    Set,
 )
 
 from django.db import (
@@ -271,3 +273,21 @@ def get_active_project(project_id: int) -> Optional[Project]:
         )
     except Project.DoesNotExist:
         pass
+
+
+def get_projects_leader_ids(project_ids: List[int]) -> dict[int, Set[int]]:
+    if not project_ids:
+        return {}
+
+    leader_ids_by_project_id = defaultdict(set)
+
+    project_member_management_qs = ProjectMemberManagement.objects.filter(
+        project_id__in=project_ids,
+        is_leader=True,
+        left_status__isnull=True,
+    )
+    for project_member_management in project_member_management_qs:
+        leader_ids_by_project_id[project_member_management.project_id].add(
+            project_member_management.member_id
+        )
+    return leader_ids_by_project_id
