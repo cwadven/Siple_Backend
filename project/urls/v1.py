@@ -1,6 +1,7 @@
 from django.urls import path
 from project.views import (
     CreateProjectAPIView,
+    GetMyProjectBookmarkAPIView,
     HomeProjectListAPIView,
     ProjectActiveRecruitSelfApplicationAPIView,
     ProjectBookmarkAPIView,
@@ -25,6 +26,7 @@ urlpatterns = [
     path('<int:project_id>', ProjectDetailAPIView.as_view(), name='project_detail'),
 
     path('<int:project_id>/bookmark', ProjectBookmarkAPIView.as_view(), name='project_bookmark'),
+    path('my/bookmark', GetMyProjectBookmarkAPIView.as_view(), name='my_project_bookmark'),
 
     path('home', HomeProjectListAPIView.as_view(), name='home'),
 ]

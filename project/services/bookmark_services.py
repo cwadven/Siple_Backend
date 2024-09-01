@@ -7,6 +7,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.db import (
     transaction,
 )
+from django.db.models import QuerySet
 from django.utils import timezone
 from member.models import Member
 from project.exceptions import (
@@ -38,6 +39,12 @@ class BookmarkService(object):
     def _validate_member(self) -> None:
         if not self.member_id:
             raise ProjectBookmarkMemberNotFoundException()
+
+    def get_my_active_bookmarks(self) -> QuerySet[ProjectBookmark]:
+        return ProjectBookmark.objects.filter(
+            member_id=self.member_id,
+            is_deleted=False,
+        )
 
     @transaction.atomic
     def create_bookmark(self, project_id: int) -> ProjectBookmark:
