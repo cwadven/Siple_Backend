@@ -447,10 +447,12 @@ class ProjectMemberManagement(models.Model):
     )
 
     def __str__(self):
-        return (f'프로젝트:{self.project_recruit_application.project_recruitment_job.project_recruitment.project_id}\n'
-                f'직무:{self.job_id}\n'
-                f'탈주상태:{self.left_status}\n'
-                f'리더여부:{self.is_leader}')
+        return (
+            f'프로젝트:{self.project}\n'
+            f'직무:{self.job_id}\n'
+            f'탈주상태:{self.left_status}\n'
+            f'리더여부:{self.is_leader}'
+        )
 
 
 class ProjectMemberAttributeReferralReward(models.Model):
