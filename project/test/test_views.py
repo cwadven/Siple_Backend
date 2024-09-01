@@ -1573,7 +1573,7 @@ class GetMyProjectBookmarkAPIViewTests(APITestCase):
                         'image': self.project1.main_image,
                         'is_bookmarked': True,
                         'is_leader': True,
-                        'is_member_manageable': False,
+                        'is_member_manageable': True,
                         'recent_recruited_at': mock_get_project_recent_recruited_at.return_value[self.project1.id]
                     },
                     {

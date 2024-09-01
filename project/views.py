@@ -378,7 +378,7 @@ class GetMyProjectBookmarkAPIView(APIView):
                         image=project.main_image,
                         is_bookmarked=True,
                         is_leader=request.member.id in leader_ids_by_project_id[project.id],
-                        is_member_manageable=False,
+                        is_member_manageable=request.member.id in leader_ids_by_project_id[project.id],
                         hours_per_week=project.hours_per_week,
                         recent_recruited_at=recent_recruited_at_by_project_id.get(project.id),
                     )
