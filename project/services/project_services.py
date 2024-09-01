@@ -123,7 +123,7 @@ def get_filtered_project_qs(title: Optional[str],
     elif job_ids:
         qs = qs.prefetch_related('latest_project_recruitment_jobs').distinct()
 
-    return qs.select_related('category').filter(q)
+    return qs.filter(q)
 
 
 def create_project_member_management(project: Project,

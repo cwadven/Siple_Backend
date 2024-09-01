@@ -12,7 +12,7 @@ from pydantic import (
 
 class ProjectListItem(BaseModel):
     id: int = Field(..., description='Project ID')
-    category_display_name: Optional[str] = Field(None, description='Project category display name')
+    category_id: Optional[int] = Field(None, description='Project category id')
     title: str = Field(..., description='Project title')
     simple_description: str = Field(..., description='Project simple description')
     jobs: List[ProjectJobAvailabilities] = Field(..., description='Project jobs')
