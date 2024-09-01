@@ -5,7 +5,7 @@ from project.consts import ProjectManagementPermissionStatus
 from project.models import ProjectManagementPermission
 
 
-def get_project_permissions(member_id: int, project_ids: List[int]) -> dict[int, List[bool]]:
+def get_project_permissions(member_id: int, project_ids: List[int]) -> dict[int, List[str]]:
     if not member_id:
         return {}
     if not project_ids:
