@@ -37,11 +37,13 @@ from project.dtos.request_dtos import (
 from project.dtos.service_dtos import ProjectCreationData
 from project.models import (
     Project,
+    ProjectBookmark,
     ProjectCategory,
     ProjectRecruitApplication,
     ProjectRecruitment,
     ProjectRecruitmentJob,
 )
+from project.views import GetMyProjectBookmarkAPIView
 from pydantic import ValidationError
 from rest_framework import status
 from rest_framework.test import (
@@ -1307,3 +1309,167 @@ class ProjectBookmarkAPIViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['message'], '북마크가 제거되었습니다.')
         mock_delete_bookmark.assert_called_once_with(self.project_id)
+
+
+class GetMyProjectBookmarkAPIViewTests(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.url = reverse('project:my_project_bookmark')
+        self.member1 = Member.objects.create_user(username='test1', nickname='test1')
+        self.member2 = Member.objects.create_user(username='test2', nickname='test2')
+        self.category = ProjectCategory.objects.create(
+            display_name='카테고리 테스트',
+            name='category_test',
+        )
+        self.project1 = Project.objects.create(
+            title='Project 1',
+            created_member_id=self.member1.id,
+        )
+        self.project2 = Project.objects.create(
+            title='Project 2',
+            created_member_id=self.member1.id,
+        )
+        self.job1 = create_job_for_testcase('job1')
+
+    def test_extract_project_from_bookmark_qs(self):
+        # Given: Set Bookmark data
+        project_1_bookmark = ProjectBookmark.objects.create(
+            member=self.member1,
+            project=self.project1,
+            is_deleted=False
+        )
+        project_2_bookmark = ProjectBookmark.objects.create(
+            member=self.member1,
+            project=self.project2,
+            is_deleted=False
+        )
+
+        # When: Call _extract_project_from_bookmark_qs
+        projects = GetMyProjectBookmarkAPIView._extract_project_from_bookmark_qs(ProjectBookmark.objects.all())
+
+        # Then: Get projects extracted from bookmark queryset
+        self.assertEqual(
+            {project.id for project in projects},
+            {project_1_bookmark.project.id, project_2_bookmark.project.id}
+        )
+
+    @patch('project.views.get_project_recent_recruited_at')
+    @patch('project.views.get_current_active_project_job_recruitments')
+    @patch('project.views.GetMyProjectBookmarkAPIView._extract_project_from_bookmark_qs')
+    @patch('project.views.BookmarkService.get_my_active_bookmarks')
+    def test_get_projects_with_bookmarked_project_when_success(self,
+                                                               mock_get_my_active_bookmarks,
+                                                               mock_extract_project_from_bookmark_qs,
+                                                               mock_get_current_active_project_job_recruitments,
+                                                               mock_get_project_recent_recruited_at):
+        # Given: 사용자가 로그인 상태인 경우
+        self.client.force_login(self.member1)
+        # And: Set Bookmark data
+        ProjectBookmark.objects.create(
+            member=self.member1,
+            project=self.project1,
+            is_deleted=False
+        )
+        ProjectBookmark.objects.create(
+            member=self.member1,
+            project=self.project2,
+            is_deleted=False
+        )
+        # And: Mock func
+        mock_get_my_active_bookmarks.return_value = ProjectBookmark.objects.all()
+        mock_extract_project_from_bookmark_qs.return_value = [self.project1, self.project2]
+        mock_get_current_active_project_job_recruitments.return_value = {
+            self.project1.id: [
+                ProjectJobRecruitInfo(
+                    job_id=self.job1.id,
+                    job_name=self.job1.name,
+                    job_display_name=self.job1.display_name,
+                    total_limit=5,
+                    current_recruited=2,
+                    recruit_status=ProjectRecruitmentStatus.RECRUITING.value,
+                )
+            ],
+            self.project2.id: [
+                ProjectJobRecruitInfo(
+                    job_id=self.job1.id,
+                    job_name=self.job1.name,
+                    job_display_name=self.job1.display_name,
+                    total_limit=5,
+                    current_recruited=5,
+                    recruit_status=ProjectRecruitmentStatus.RECRUIT_FINISH.value,
+                )
+            ],
+        }
+        mock_get_project_recent_recruited_at.return_value = {
+            self.project1.id: format_utc(self.project1.created_at),
+            self.project2.id: format_utc(self.project2.created_at),
+        }
+
+        # When: Get request
+        response = self.client.get(self.url)
+
+        # Then: Called get_my_active_bookmarks
+        mock_get_my_active_bookmarks.assert_called_once_with()
+        # And: Called _extract_project_from_bookmark_qs
+        mock_extract_project_from_bookmark_qs.assert_called()
+        # And: Called get_current_active_project_job_recruitments
+        mock_get_current_active_project_job_recruitments.assert_called_once_with(
+            [self.project1.id, self.project2.id]
+        )
+        # And: Called get_project_recent_recruited_at
+        mock_get_project_recent_recruited_at.assert_called_once_with(
+            [self.project1.id, self.project2.id]
+        )
+        # And: Get projects with bookmarked project
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertDictEqual(
+            response.json(),
+            {
+                'data': [
+                    {
+                        'id': self.project1.id,
+                        'category_id': self.project1.category_id,
+                        'title': self.project1.title,
+                        'simple_description': self.project2.description[:100],
+                        'jobs': [
+                            {
+                                "id": self.job1.id,
+                                "display_name": self.job1.display_name,
+                                "is_available": True
+                            }
+                        ],
+                        'experience': self.project1.job_experience_type,
+                        'hours_per_week': self.project1.hours_per_week,
+                        'project_result_status': self.project1.project_result_status,
+                        'image': self.project1.main_image,
+                        'is_bookmarked': True,
+                        'is_leader': False,
+                        'is_member_manageable': False,
+                        'recent_recruited_at': mock_get_project_recent_recruited_at.return_value[self.project1.id]
+                    },
+                    {
+                        'id': self.project2.id,
+                        'category_id': self.project2.category_id,
+                        'title': self.project2.title,
+                        'simple_description': self.project2.description[:100],
+                        'jobs': [
+                            {
+                                "id": self.job1.id,
+                                "display_name": self.job1.display_name,
+                                "is_available": False
+                            }
+                        ],
+                        'experience': self.project2.job_experience_type,
+                        'hours_per_week': self.project2.hours_per_week,
+                        'project_result_status': self.project2.project_result_status,
+                        'image': self.project2.main_image,
+                        'is_bookmarked': True,
+                        'is_leader': False,
+                        'is_member_manageable': False,
+                        'recent_recruited_at': mock_get_project_recent_recruited_at.return_value[self.project2.id]
+                    }
+                ],
+                'next_cursor': None,
+                'has_more': False,
+            }
+        )

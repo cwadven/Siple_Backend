@@ -5,6 +5,7 @@ from common.dtos.response_dtos import CursorPaginatorResponse
 from job.dtos.model_dtos import ProjectJobAvailabilities
 from member.dtos.model_dtos import MemberInfoBlock
 from project.dtos.model_dtos import (
+    MyProjectBookmarkListItem,
     ProjectListItem,
 )
 from pydantic import (
@@ -16,6 +17,10 @@ from pydantic import (
 
 class HomeProjectListResponse(CursorPaginatorResponse):
     data: conlist(ProjectListItem) = Field(..., description="ProjectListItem 의 정보를 담은 리스트")
+
+
+class GetMyProjectBookmarkListResponse(CursorPaginatorResponse):
+    data: conlist(MyProjectBookmarkListItem) = Field(..., description="MyProjectBookmarkListItem 의 정보를 담은 리스트")
 
 
 class ProjectCreationResponse(BaseModel):

@@ -1,3 +1,5 @@
+from typing import List
+
 from common.common_consts.common_error_messages import InvalidInputResponseErrorStatus
 from common.common_decorators.request_decorators import cursor_pagination
 from common.common_exceptions import PydanticAPIException
@@ -15,8 +17,14 @@ from project.consts import (
     ProjectCurrentRecruitStatus,
     ProjectDetailStatus,
 )
-from project.cursor_criteria.cursor_criteria import HomeProjectListCursorCriteria
-from project.dtos.model_dtos import ProjectListItem
+from project.cursor_criteria.cursor_criteria import (
+    HomeProjectListCursorCriteria,
+    MyProjectBookmarkListCursorCriteria,
+)
+from project.dtos.model_dtos import (
+    ProjectListItem,
+    MyProjectBookmarkListItem,
+)
 from project.dtos.request_dtos import (
     CreateProjectJob,
     CreateProjectRequest,
@@ -25,6 +33,7 @@ from project.dtos.request_dtos import (
 )
 from project.dtos.response_dtos import (
     HomeProjectListResponse,
+    GetMyProjectBookmarkListResponse,
     ProjectActiveRecruitJobSelfApplicationResponse,
     ProjectBookmarkCreationResponse,
     ProjectBookmarkDeletionResponse,
@@ -35,6 +44,10 @@ from project.dtos.response_dtos import (
 )
 from project.dtos.service_dtos import ProjectCreationData
 from project.exceptions import ProjectNotFoundErrorException
+from project.models import (
+    Project,
+    ProjectBookmark,
+)
 from project.services.bookmark_services import (
     BookmarkService,
     get_member_bookmarked_project_ids,
@@ -315,6 +328,62 @@ class ProjectBookmarkAPIView(APIView):
         return Response(
             ProjectBookmarkDeletionResponse(
                 message='북마크가 제거되었습니다.',
+            ).model_dump(),
+            status=200,
+        )
+
+
+class GetMyProjectBookmarkAPIView(APIView):
+    permission_classes = [
+        IsMemberLogin,
+    ]
+
+    @staticmethod
+    def _extract_project_from_bookmark_qs(bookmark_qs: List[ProjectBookmark]) -> List[Project]:
+        return [bookmark.project for bookmark in bookmark_qs]
+
+    @cursor_pagination(default_size=20, cursor_criteria=[MyProjectBookmarkListCursorCriteria])
+    def get(self, request, decoded_next_cursor: dict, size: int):
+        bookmark_qs = BookmarkService(request.member.id).get_my_active_bookmarks().select_related('project')
+        paginated_bookmark_qs, has_more, next_cursor = get_objects_with_cursor_pagination(
+            bookmark_qs,
+            MyProjectBookmarkListCursorCriteria,
+            decoded_next_cursor,
+            size,
+        )
+        projects = self._extract_project_from_bookmark_qs(paginated_bookmark_qs)
+        project_ids = [project.id for project in projects]
+        job_recruits_by_project_id = get_current_active_project_job_recruitments(
+            project_ids
+        )
+        recent_recruited_at_by_project_id = get_project_recent_recruited_at(
+            project_ids
+        )
+        return Response(
+            GetMyProjectBookmarkListResponse(
+                data=[
+                    MyProjectBookmarkListItem(
+                        id=project.id,
+                        category_id=project.category_id,
+                        title=project.title,
+                        simple_description=project.description[:100],
+                        jobs=[
+                            ProjectJobAvailabilities.from_recruit_info(job_recruit)
+                            for job_recruit in job_recruits_by_project_id.get(project.id, [])
+                        ],
+                        experience=project.job_experience_type,
+                        current_recruit_status=project.current_recruit_status,
+                        image=project.main_image,
+                        is_bookmarked=True,
+                        is_leader=False,
+                        is_member_manageable=False,
+                        hours_per_week=project.hours_per_week,
+                        recent_recruited_at=recent_recruited_at_by_project_id.get(project.id),
+                    )
+                    for project in projects
+                ],
+                next_cursor=next_cursor,
+                has_more=has_more,
             ).model_dump(),
             status=200,
         )
