@@ -98,10 +98,7 @@ class HomeProjectListAPIView(APIView):
                 data=[
                     ProjectListItem(
                         id=project.id,
-                        category_display_name=(
-                            project.category.display_name
-                            if project.category else None
-                        ),
+                        category_id=project.category_id,
                         title=project.title,
                         simple_description=project.description[:100],
                         jobs=[
@@ -181,7 +178,7 @@ class ProjectDetailAPIView(APIView):
         return Response(
             ProjectDetailResponse(
                 id=project.id,
-                category_display_name=project.category.display_name if project.category else None,
+                category_id=project.category_id,
                 title=project.title,
                 description=project.description,
                 duration_month=project.duration_month,

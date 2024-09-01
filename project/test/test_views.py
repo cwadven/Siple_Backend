@@ -153,7 +153,7 @@ class HomeProjectListAPIViewTests(APITestCase):
                     {
                         'id': self.project3.id,
                         'title': self.project3.title,
-                        'category_display_name': self.category.display_name,
+                        'category_id': self.project3.category_id,
                         'simple_description': self.project3.description[:100],
                         'jobs': [
                             {
@@ -171,7 +171,7 @@ class HomeProjectListAPIViewTests(APITestCase):
                     },
                     {
                         'id': self.project2.id,
-                        'category_display_name': None,
+                        'category_id': None,
                         'title': self.project2.title,
                         'simple_description': self.project2.description[:100],
                         'jobs': [
@@ -263,7 +263,7 @@ class HomeProjectListAPIViewTests(APITestCase):
                     {
                         'id': self.project3.id,
                         'title': self.project3.title,
-                        'category_display_name': self.category.display_name,
+                        'category_id': self.project3.category_id,
                         'simple_description': self.project3.description[:100],
                         'jobs': [
                             {
@@ -281,7 +281,7 @@ class HomeProjectListAPIViewTests(APITestCase):
                     },
                     {
                         'id': self.project2.id,
-                        'category_display_name': None,
+                        'category_id': None,
                         'title': self.project2.title,
                         'simple_description': self.project2.description[:100],
                         'jobs': [
@@ -530,7 +530,7 @@ class ProjectDetailAPIViewTests(APITestCase):
             response.json(),
             {
                 "id": self.project1.id,
-                "category_display_name": self.project1.category.display_name,
+                "category_id": self.project1.category_id,
                 "title": self.project1.title,
                 "description": self.project1.description,
                 "duration_month": self.project1.duration_month,
@@ -637,7 +637,7 @@ class ProjectDetailAPIViewTests(APITestCase):
             response.json(),
             {
                 "id": self.project1.id,
-                "category_display_name": self.project1.category.display_name,
+                "category_id": self.project1.category_id,
                 "title": self.project1.title,
                 "description": self.project1.description,
                 "duration_month": self.project1.duration_month,
