@@ -1,3 +1,5 @@
+import boto3
+from botocore.config import Config
 from common.common_consts.common_error_messages import InvalidInputResponseErrorStatus
 from common.common_exceptions import PydanticAPIException
 from common.common_utils import generate_pre_signed_url_info
@@ -19,6 +21,7 @@ from common.helpers.constance_helpers import (
     ConstanceJobDetailTypeHelper,
     ConstanceProjectCategoryIconImageTypeHelper,
 )
+from django.conf import settings
 from member.permissions import IsMemberLogin
 from pydantic import ValidationError
 from rest_framework.response import Response
@@ -81,7 +84,16 @@ class GetPreSignedURLView(APIView):
             raise InvalidPathParameterException()
 
         try:
+            s3_client = boto3.client(
+                's3',
+                region_name='ap-northeast-2',
+                aws_access_key_id=settings.AWS_IAM_ACCESS_KEY,
+                aws_secret_access_key=settings.AWS_IAM_SECRET_ACCESS_KEY,
+                config=Config(signature_version='s3v4')
+            )
             info = generate_pre_signed_url_info(
+                s3_client,
+                settings.AWS_S3_BUCKET_NAME,
                 pre_signed_url_request.file_name,
                 constance_type,
                 transaction_pk,
