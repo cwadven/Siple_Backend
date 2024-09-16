@@ -292,3 +292,21 @@ def get_projects_leader_ids(project_ids: List[int]) -> DefaultDict[int, Set[int]
             project_member_management.member_id
         )
     return leader_ids_by_project_id
+
+
+def get_projects_participated_member_ids(project_ids: List[int]) -> DefaultDict[int, Set[int]]:
+    member_ids_by_project_id = defaultdict(set)
+
+    if not project_ids:
+        return member_ids_by_project_id
+
+    project_member_management_qs = ProjectMemberManagement.objects.filter(
+        project_id__in=project_ids,
+        left_status__isnull=True,
+    )
+
+    for project_member_management in project_member_management_qs:
+        member_ids_by_project_id[project_member_management.project_id].add(
+            project_member_management.member_id
+        )
+    return member_ids_by_project_id
