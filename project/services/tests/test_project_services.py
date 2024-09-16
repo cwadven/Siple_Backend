@@ -37,7 +37,9 @@ from project.services.project_services import (
     get_active_project,
     get_active_project_categories,
     get_filtered_project_qs,
-    get_maximum_project_recruit_times, get_projects_leader_ids,
+    get_maximum_project_recruit_times,
+    get_projects_leader_ids,
+    get_projects_participated_member_ids,
 )
 
 
@@ -1292,5 +1294,89 @@ class GetProjectsLeaderIdsTest(TestCase):
         mock_filter.assert_called_once_with(
             project_id__in=project_ids,
             is_leader=True,
+            left_status__isnull=True,
+        )
+
+
+class GetProjectsParticipatedMemberIdsTest(TestCase):
+    @patch('project.services.project_services.ProjectMemberManagement.objects.filter')
+    def test_get_projects_participated_member_ids_empty_project_ids(self, mock_filter):
+        # Given: project_ids가 비어 있음
+        project_ids = []
+
+        # When: get_projects_participated_member_ids 함수 호출
+        result = get_projects_participated_member_ids(project_ids)
+
+        # Then: 빈 딕셔너리가 반환되는지 확인
+        self.assertEqual(result, {})
+        mock_filter.assert_not_called()
+
+    @patch('project.services.project_services.ProjectMemberManagement.objects.filter')
+    def test_get_projects_participated_member_ids_with_members(self, mock_filter):
+        # Given: 유효한 project_ids, 리더가 존재함
+        project_ids = [1, 2]
+
+        # Mocking ProjectMemberManagement queryset
+        mock_member1 = MagicMock(project_id=1, member_id=101)
+        mock_member2 = MagicMock(project_id=1, member_id=102)
+        mock_member3 = MagicMock(project_id=2, member_id=201)
+
+        mock_filter.return_value = [mock_member1, mock_member2, mock_member3]
+
+        # When: get_projects_participated_member_ids 함수 호출
+        result = get_projects_participated_member_ids(project_ids)
+
+        # Then: 예상된 결과가 반환되는지 확인
+        expected_result = defaultdict(set)
+        expected_result[1] = {101, 102}
+        expected_result[2] = {201}
+
+        self.assertEqual(result, expected_result)
+        mock_filter.assert_called_once_with(
+            project_id__in=project_ids,
+            left_status__isnull=True,
+        )
+
+    @patch('project.services.project_services.ProjectMemberManagement.objects.filter')
+    def test_get_projects_participated_member_ids_no_members(self, mock_filter):
+        # Given: 유효한 project_ids, 리더가 존재하지 않음
+        project_ids = [1, 2]
+
+        mock_filter.return_value = []
+
+        # When: get_projects_participated_member_ids 함수 호출
+        result = get_projects_participated_member_ids(project_ids)
+
+        # Then: 빈 defaultdict이 반환되는지 확인
+        expected_result = defaultdict(set)
+
+        self.assertEqual(result, expected_result)
+        mock_filter.assert_called_once_with(
+            project_id__in=project_ids,
+            left_status__isnull=True,
+        )
+
+    @patch('project.services.project_services.ProjectMemberManagement.objects.filter')
+    def test_get_projects_participated_member_ids_with_some_left(self, mock_filter):
+        # Given: 유효한 project_ids, 일부 리더가 프로젝트를 떠남
+        project_ids = [1]
+
+        # Mocking ProjectMemberManagement queryset
+        mock_leader1 = MagicMock(project_id=1, member_id=101, left_status=None)
+        mock_leader2 = MagicMock(project_id=1, member_id=102, left_status=None)
+        MagicMock(project_id=1, member_id=103, left_status=ProjectMemberManagementLeftStatus.LEFT.value)  # 떠난 맴버
+
+        mock_filter.return_value = [mock_leader1, mock_leader2]
+
+        # When: get_projects_participated_member_ids 함수 호출
+        result = get_projects_participated_member_ids(project_ids)
+
+        # Then: 떠난 맴버를 제외한 결과가 반환되는지 확인
+        expected_result = defaultdict(set)
+        expected_result[1] = {101, 102}
+
+        self.assertEqual(result, expected_result)
+        mock_filter.assert_called_once_with(
+            project_id__in=project_ids,
             left_status__isnull=True,
         )
