@@ -37,6 +37,7 @@ class MyProjectBookmarkListItem(BaseModel):
     is_bookmarked: bool = Field(..., description='북마크 여부')
     is_leader: bool = Field(..., description='프로젝트의 리더인지')
     is_member_manageable: bool = Field(..., description='팀원 관리 가능한지')
+    is_participated: bool = Field(..., description='팀원 조회 가능한지')
     recent_recruited_at: Optional[str] = Field(None, description='최근 모집한 날짜')
 
 

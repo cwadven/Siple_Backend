@@ -56,7 +56,7 @@ from project.services.project_recruit_services import get_project_recent_recruit
 from project.services.project_services import (
     ProjectCreationService,
     get_active_project,
-    get_filtered_project_qs, get_projects_leader_ids,
+    get_filtered_project_qs, get_projects_leader_ids, get_projects_participated_member_ids,
 )
 from pydantic import ValidationError
 from rest_framework.response import Response
@@ -360,6 +360,7 @@ class GetMyProjectBookmarkAPIView(APIView):
             project_ids
         )
         leader_ids_by_project_id = get_projects_leader_ids(project_ids)
+        member_ids_by_project_id = get_projects_participated_member_ids(project_ids)
 
         return Response(
             GetMyProjectBookmarkListResponse(
@@ -379,6 +380,7 @@ class GetMyProjectBookmarkAPIView(APIView):
                         is_bookmarked=True,
                         is_leader=request.member.id in leader_ids_by_project_id[project.id],
                         is_member_manageable=request.member.id in leader_ids_by_project_id[project.id],
+                        is_participated=request.member.id in member_ids_by_project_id[project.id],
                         hours_per_week=project.hours_per_week,
                         recent_recruited_at=recent_recruited_at_by_project_id.get(project.id),
                     )
